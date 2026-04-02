@@ -1,6 +1,6 @@
 /**
  * Admin Panel JavaScript
- * Handles: Auth check, PR item CRUD, form toggle
+ * Handles: Auth check, PR item CRUD, form toggle, personnel management
  */
 
 const API_BASE = '/api';
@@ -13,7 +13,7 @@ function getAuthHeaders() {
   return { 'Authorization': `Bearer ${getToken()}` };
 }
 
-// ─── AUTH CHECK (redirect if no token) ──────────────────────────────────────
+// ─── AUTH CHECK ──────────────────────────────────────────────────────────────
 (function checkAuth() {
   if (!window.location.pathname.includes('/login') && !getToken()) {
     window.location.href = '/admin/login';
@@ -90,23 +90,24 @@ function getAuthHeaders() {
   const prDeptGroup = document.getElementById('pr-department-group');
   let allPR = [];
 
-  prCategory.addEventListener('change', (e) => {
+  prCategory?.addEventListener('change', (e) => {
     if (e.target.value === 'ประกาศ') {
-      prDeptGroup.classList.remove('hide');
+      prDeptGroup?.classList.remove('hide');
     } else {
-      prDeptGroup.classList.add('hide');
-      document.getElementById('pr-departmentTag').value = '';
+      prDeptGroup?.classList.add('hide');
+      const deptTagInput = document.getElementById('pr-departmentTag');
+      if (deptTagInput) deptTagInput.value = '';
     }
   });
 
-  prAddBtn.addEventListener('click', () => {
+  prAddBtn?.addEventListener('click', () => {
     prForm.reset();
     document.getElementById('pr-id').value = '';
     prFormContainer.classList.remove('hide');
     prAddBtn.style.display = 'none';
   });
 
-  prCancelBtn.addEventListener('click', () => {
+  prCancelBtn?.addEventListener('click', () => {
     prFormContainer.classList.add('hide');
     prAddBtn.style.display = 'inline-flex';
   });
@@ -118,11 +119,12 @@ function getAuthHeaders() {
       allPR = await res.json();
       renderPR(allPR);
     } catch (e) {
-      prTbody.innerHTML = '<tr><td colspan="4" class="table-empty">Error loading PR items</td></tr>';
+      if (prTbody) prTbody.innerHTML = '<tr><td colspan="4" class="table-empty">Error loading PR items</td></tr>';
     }
   }
 
   function renderPR(items) {
+    if (!prTbody) return;
     if (items.length === 0) {
       prTbody.innerHTML = '<tr><td colspan="4" class="table-empty">ไม่มีรายการข้อมูล</td></tr>';
       return;
@@ -170,23 +172,21 @@ function getAuthHeaders() {
     document.getElementById('pr-content').value = item.content || '';
     
     if (item.category === 'ประกาศ') {
-      prDeptGroup.classList.remove('hide');
+      prDeptGroup?.classList.remove('hide');
     } else {
-      prDeptGroup.classList.add('hide');
+      prDeptGroup?.classList.add('hide');
     }
 
-    // Notice we clear file input when editing so logic is if files selected, upload, else keep old.
-    document.getElementById('pr-images').value = '';
+    const imgInput = document.getElementById('pr-images');
+    if (imgInput) imgInput.value = '';
     
     document.getElementById('pr-form-title').textContent = 'แก้ไขรายการ';
     prFormContainer.classList.remove('hide');
     prAddBtn.style.display = 'none';
-    
-    // scroll to form
     prFormContainer.scrollIntoView({ behavior: 'smooth' });
   };
 
-  prForm.addEventListener('submit', async (e) => {
+  prForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = prForm.querySelector('button[type="submit"]');
     const id = document.getElementById('pr-id').value;
@@ -202,7 +202,8 @@ function getAuthHeaders() {
         await loadPR();
         prCancelBtn.click();
       } else {
-        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+        const errData = await res.json().catch(() => ({}));
+        alert(`บันทึกข้อมูลไม่สำเร็จ: ${errData.message || 'Unknown error'}`);
       }
     } catch (err) {
       alert('Error saving');
@@ -231,7 +232,6 @@ function getAuthHeaders() {
     } catch (err) { alert('Error toggling pin'); }
   };
 
-
   // 3. DOCUMENTS PANEL LOGIC
   const docsTbody = document.getElementById('docs-tbody');
   const docAddBtn = document.getElementById('doc-add-btn');
@@ -240,13 +240,13 @@ function getAuthHeaders() {
   const docForm = document.getElementById('doc-form');
   let allDocs = [];
 
-  docAddBtn.addEventListener('click', () => {
+  docAddBtn?.addEventListener('click', () => {
     docForm.reset();
     docFormContainer.classList.remove('hide');
     docAddBtn.style.display = 'none';
   });
 
-  docCancelBtn.addEventListener('click', () => {
+  docCancelBtn?.addEventListener('click', () => {
     docFormContainer.classList.add('hide');
     docAddBtn.style.display = 'inline-flex';
   });
@@ -257,11 +257,12 @@ function getAuthHeaders() {
       allDocs = await res.json();
       renderDocs(allDocs);
     } catch (e) {
-      docsTbody.innerHTML = '<tr><td colspan="4" class="table-empty">Error loading documents</td></tr>';
+      if (docsTbody) docsTbody.innerHTML = '<tr><td colspan="4" class="table-empty">Error loading documents</td></tr>';
     }
   }
 
   function renderDocs(items) {
+    if (!docsTbody) return;
     if (items.length === 0) {
       docsTbody.innerHTML = '<tr><td colspan="4" class="table-empty">ไม่มีรายการเอกสาร</td></tr>';
       return;
@@ -291,11 +292,10 @@ function getAuthHeaders() {
     `).join('');
   }
 
-  docForm.addEventListener('submit', async (e) => {
+  docForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = docForm.querySelector('button[type="submit"]');
     btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
-    
     try {
       const formData = new FormData(docForm);
       const res = await fetch(`${API_BASE}/docs`, { method: 'POST', headers: getAuthHeaders(), body: formData });
@@ -303,7 +303,7 @@ function getAuthHeaders() {
         await loadDocs();
         docCancelBtn.click();
       } else {
-        alert('เกิดข้อผิดพลาดในการบันทึกเอกสาร');
+        alert('บันทึกเอกสารไม่สำเร็จ');
       }
     } catch (err) {
       alert('Error saving document');
@@ -332,51 +332,155 @@ function getAuthHeaders() {
   const pnImportContainer = document.getElementById('personnel-import-container');
   const pnImportCancelBtn = document.getElementById('personnel-import-cancel-btn');
   const pnImportForm = document.getElementById('personnel-import-form');
+  const pnBulkDeleteBtn = document.getElementById('personnel-bulk-delete-btn');
+  const pnSelectAll = document.getElementById('personnel-select-all');
+  
+  const dutyTagContainer = document.getElementById('duty-tag-container');
+  const newDutyInput = document.getElementById('new-duty-input');
+  const dutyUnifiedField = document.getElementById('duty-unified-field');
+  const dutySuggestions = document.getElementById('duty-suggestions');
   
   let allPersonnel = [];
+  let selectedPersonnelIds = new Set();
+  let currentDuties = [];
+  let allAvailableDuties = [];
 
-  pnAddBtn.addEventListener('click', () => {
+  pnAddBtn?.addEventListener('click', () => {
     pnForm.reset();
     document.getElementById('personnel-id').value = '';
+    currentDuties = [];
+    renderDutyTags();
     pnFormContainer.classList.remove('hide');
     pnImportContainer.classList.add('hide');
   });
 
-  pnCancelBtn.addEventListener('click', () => pnFormContainer.classList.add('hide'));
+  pnCancelBtn?.addEventListener('click', () => pnFormContainer.classList.add('hide'));
 
-  pnImportBtn.addEventListener('click', () => {
+  pnImportBtn?.addEventListener('click', () => {
     pnImportForm.reset();
     pnImportContainer.classList.remove('hide');
     pnFormContainer.classList.add('hide');
   });
   
-  pnImportCancelBtn.addEventListener('click', () => pnImportContainer.classList.add('hide'));
+  pnImportCancelBtn?.addEventListener('click', () => pnImportContainer.classList.add('hide'));
 
   async function loadPersonnel() {
     try {
+      selectedPersonnelIds.clear();
+      updateBulkDeleteUI();
+      if (pnSelectAll) pnSelectAll.checked = false;
       const res = await fetch(`${API_BASE}/personnel`, { headers: getAuthHeaders() });
       allPersonnel = await res.json();
       renderPersonnel(allPersonnel);
     } catch (e) {
-      pnTbody.innerHTML = '<tr><td colspan="4" class="table-empty">Error loading personnel</td></tr>';
+      if (pnTbody) pnTbody.innerHTML = '<tr><td colspan="5" class="table-empty">Error loading personnel</td></tr>';
     }
   }
 
+  function updateBulkDeleteUI() {
+    if (!pnBulkDeleteBtn) return;
+    const count = selectedPersonnelIds.size;
+    if (count > 0) {
+      pnBulkDeleteBtn.classList.remove('hide');
+      pnBulkDeleteBtn.textContent = `ลบที่เลือก (${count})`;
+    } else {
+      pnBulkDeleteBtn.classList.add('hide');
+    }
+  }
+
+  window.togglePersonnelSelection = (id) => {
+    if (selectedPersonnelIds.has(id)) {
+      selectedPersonnelIds.delete(id);
+    } else {
+      selectedPersonnelIds.add(id);
+    }
+    updateBulkDeleteUI();
+    if (pnSelectAll) {
+      pnSelectAll.checked = allPersonnel.length > 0 && selectedPersonnelIds.size === allPersonnel.length;
+    }
+  };
+
+  pnSelectAll?.addEventListener('change', () => {
+    const isChecked = pnSelectAll.checked;
+    if (isChecked) {
+      allPersonnel.forEach(p => selectedPersonnelIds.add(p.id));
+    } else {
+      selectedPersonnelIds.clear();
+    }
+    renderPersonnel(allPersonnel);
+    updateBulkDeleteUI();
+  });
+
+  function updateBulkDeleteUI() {
+    if (!pnBulkDeleteBtn) return;
+    const count = selectedPersonnelIds.size;
+    const countSpan = document.getElementById('bulk-delete-count');
+
+    if (count > 0) {
+      pnBulkDeleteBtn.classList.remove('hide');
+      pnBulkDeleteBtn.style.display = 'inline-flex';
+      if (countSpan) countSpan.textContent = `(${count})`;
+    } else {
+      pnBulkDeleteBtn.classList.add('hide');
+      pnBulkDeleteBtn.style.display = 'none';
+      if (countSpan) countSpan.textContent = '';
+    }
+  }
+
+  pnBulkDeleteBtn?.addEventListener('click', async () => {
+    const count = selectedPersonnelIds.size;
+    if (count === 0) return;
+    if (!confirm(`ยืนยันลบรายชื่อที่เลือกทั้งหมด ${count} รายการ?`)) return;
+    pnBulkDeleteBtn.disabled = true;
+    pnBulkDeleteBtn.textContent = 'กำลังลบ...';
+    try {
+      const res = await fetch(`${API_BASE}/personnel/bulk`, {
+        method: 'DELETE',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: Array.from(selectedPersonnelIds) })
+      });
+      if (res.ok) {
+        selectedPersonnelIds.clear(); // Clear selection after delete
+        await loadPersonnel();
+      } else {
+        alert('ลบข้อมูลไม่สำเร็จ');
+      }
+    } catch (err) {
+      alert('Error during bulk delete');
+    } finally {
+      pnBulkDeleteBtn.disabled = false;
+      updateBulkDeleteUI();
+    }
+  });
+
   function renderPersonnel(items) {
+    if (!pnTbody) return;
     if (items.length === 0) {
-      pnTbody.innerHTML = '<tr><td colspan="4" class="table-empty">ไม่มีรายชื่อบุคลากร</td></tr>';
+      pnTbody.innerHTML = '<tr><td colspan="6" class="table-empty">ไม่มีรายชื่อบุคลากร</td></tr>';
       return;
     }
-    pnTbody.innerHTML = items.map(item => `
-      <tr>
+    pnTbody.innerHTML = items.map((item, idx) => {
+      const isSelected = selectedPersonnelIds.has(item.id);
+      return `
+      <tr class="${isSelected ? 'selected-item' : ''}">
+        <td style="text-align:center;font-weight:600;color:var(--color-text-secondary);">${idx + 1}</td>
         <td>
           <div style="display:flex;align-items:center;gap:0.75rem;">
-            <img src="${item.imageUrl || 'https://placehold.co/40x40/f1f5f9/94a3b8?text=USR'}" alt="" class="table-thumb" onerror="this.src='https://placehold.co/40x40/f1f5f9/94a3b8?text=USR'" style="border-radius:50%">
-            <span style="font-weight:600;">${escapeHtml(item.prefix || '')} ${escapeHtml(item.firstName)} ${escapeHtml(item.lastName)}</span>
+            <img src="${item.imageUrl || 'https://placehold.co/40x40/f1f5f9/94a3b8?text=USR'}" alt="" class="table-thumb" style="border-radius:50%">
+            <div>
+              <div style="font-weight:600;">${escapeHtml(item.prefix || '')} ${escapeHtml(item.firstName)} ${escapeHtml(item.lastName)}</div>
+              ${item.phone ? `<div style="font-size:0.8rem;color:var(--color-text-secondary)">📞 ${escapeHtml(item.phone)}</div>` : ''}
+            </div>
           </div>
         </td>
-        <td>${escapeHtml(item.position || '-')}</td>
-        <td>${escapeHtml(item.phone || '-')}</td>
+        <td>
+          <div style="font-weight:500;">${escapeHtml(item.position || '-')}</div>
+          <div style="font-size:0.85rem;color:var(--color-accent-primary)">${escapeHtml(item.academicStanding || '')}</div>
+        </td>
+        <td>
+          <div style="font-size:0.9rem;">${escapeHtml(item.department || '-')}</div>
+          <div style="font-size:0.8rem;color:var(--color-text-secondary)">${escapeHtml(item.positionNumber || '')}</div>
+        </td>
         <td>
           <div style="display:flex;gap:0.25rem;justify-content:flex-end;">
             <button class="icon-btn" onclick="editPersonnel('${item.id}')" title="แก้ไข">
@@ -387,8 +491,11 @@ function getAuthHeaders() {
             </button>
           </div>
         </td>
-      </tr>
-    `).join('');
+        <td style="text-align:center;">
+          <input type="checkbox" onclick="togglePersonnelSelection('${item.id}')" ${isSelected ? 'checked' : ''} />
+        </td>
+      </tr>`;
+    }).join('');
   }
 
   window.editPersonnel = (id) => {
@@ -400,19 +507,30 @@ function getAuthHeaders() {
     document.getElementById('personnel-firstName').value = item.firstName;
     document.getElementById('personnel-lastName').value = item.lastName;
     document.getElementById('personnel-position').value = item.position || '';
+    document.getElementById('personnel-academicStanding').value = item.academicStanding || '';
+    document.getElementById('personnel-positionNumber').value = item.positionNumber || '';
+    document.getElementById('personnel-department').value = item.department || '';
     document.getElementById('personnel-phone').value = item.phone || '';
     document.getElementById('personnel-order').value = item.order || 0;
     
-    // Parse duties array back to comma separated
-    let dutiesStr = '';
     try {
-      const dArr = JSON.parse(item.duties);
-      dutiesStr = Array.isArray(dArr) ? dArr.join(', ') : '';
-    } catch { dutiesStr = item.duties || ''; }
-    document.getElementById('personnel-duties').value = dutiesStr;
+      const rawDuties = item.duties;
+      if (Array.isArray(rawDuties)) {
+        currentDuties = [...rawDuties];
+      } else if (typeof rawDuties === 'string' && rawDuties.startsWith('[')) {
+        currentDuties = JSON.parse(rawDuties);
+      } else if (rawDuties) {
+        currentDuties = [rawDuties];
+      } else {
+        currentDuties = [];
+      }
+    } catch {
+      currentDuties = [];
+    }
+    renderDutyTags();
     
-    document.getElementById('personnel-image').value = ''; // clear input
-    
+    const imgInput = document.getElementById('personnel-image');
+    if (imgInput) imgInput.value = '';
     document.getElementById('personnel-form-title').textContent = 'แก้ไขบุคลากร';
     
     pnFormContainer.classList.remove('hide');
@@ -420,19 +538,24 @@ function getAuthHeaders() {
     pnFormContainer.scrollIntoView({ behavior: 'smooth' });
   };
 
-  pnForm.addEventListener('submit', async (e) => {
+  pnForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = pnForm.querySelector('button[type="submit"]');
     btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
     try {
       const formData = new FormData(pnForm);
+      formData.set('duties', JSON.stringify(currentDuties));
       const id = document.getElementById('personnel-id').value;
       const url = id ? `${API_BASE}/personnel/${id}` : `${API_BASE}/personnel`;
       const res = await fetch(url, { method: id ? 'PUT' : 'POST', headers: getAuthHeaders(), body: formData });
       if (res.ok) {
         await loadPersonnel();
+        fetchUniqueDuties();
         pnCancelBtn.click();
-      } else alert('บันทึกบุคลากรไม่สำเร็จ');
+        currentDuties = [];
+      } else {
+        alert('บันทึกบุคลากรไม่สำเร็จ');
+      }
     } catch { alert('Error saving personnel'); }
     finally { btn.disabled = false; btn.textContent = 'บันทึกข้อมูล'; }
   });
@@ -445,30 +568,136 @@ function getAuthHeaders() {
     } catch (err) { alert('Error deleting personnel'); }
   };
 
-  pnImportForm.addEventListener('submit', async (e) => {
+  pnImportForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = pnImportForm.querySelector('button[type="submit"]');
-    btn.disabled = true; btn.textContent = 'กําลังนำเข้า...';
+    btn.disabled = true; btn.textContent = 'กำลังนำเข้า...';
     try {
       const formData = new FormData(pnImportForm);
       const res = await fetch(`${API_BASE}/personnel/import`, { method: 'POST', headers: getAuthHeaders(), body: formData });
+      const result = await res.json();
       if (res.ok) {
-        const d = await res.json();
-        alert(d.message);
+        alert(result.message || 'นำเข้าข้อมูลสำเร็จ');
         await loadPersonnel();
+        fetchUniqueDuties();
         pnImportCancelBtn.click();
-      } else alert('นำเข้าข้อมูลล้มเหลว ตรวจสอบรูปแบบไฟล์อีกครั้ง');
+      } else {
+        alert(result.message || 'นำเข้าข้อมูลล้มเหลว');
+      }
     } catch { alert('Error importing file'); }
     finally { btn.disabled = false; btn.textContent = 'เริ่มนำเข้า'; }
+  });
+
+  // Tag Management & Auto-Suggestion Logic
+  dutyUnifiedField?.addEventListener('click', () => newDutyInput?.focus());
+
+  async function fetchUniqueDuties() {
+    try {
+      const res = await fetch(`${API_BASE}/personnel/unique-duties`, { headers: getAuthHeaders() });
+      if (res.ok) {
+        allAvailableDuties = await res.json();
+      }
+    } catch (err) { console.error('Error fetching unique duties:', err); }
+  }
+
+  function showDutySuggestions(filter = '') {
+    if (!dutySuggestions) return;
+    const filtered = allAvailableDuties.filter(d => 
+      d.toLowerCase().includes(filter.toLowerCase()) && !currentDuties.includes(d)
+    );
+    if (filtered.length === 0) {
+      dutySuggestions.style.display = 'none';
+      return;
+    }
+    dutySuggestions.innerHTML = filtered.map(d => `
+      <div class="duty-suggestion-item" onclick="selectDutySuggestion('${escapeHtml(d)}')">
+        ${escapeHtml(d)}
+      </div>
+    `).join('');
+    dutySuggestions.style.display = 'block';
+  }
+
+  window.selectDutySuggestion = (val) => {
+    if (val && !currentDuties.includes(val)) {
+      currentDuties.push(val);
+      if (newDutyInput) newDutyInput.value = '';
+      renderDutyTags();
+      dutySuggestions.style.display = 'none';
+    }
+  };
+
+  const addDuty = () => {
+    const val = newDutyInput?.value.trim();
+    if (val && !currentDuties.includes(val)) {
+      currentDuties.push(val);
+      if (newDutyInput) newDutyInput.value = '';
+      renderDutyTags();
+      if (dutySuggestions) dutySuggestions.style.display = 'none';
+    }
+  };
+
+  window.removeDuty = (index) => {
+    currentDuties.splice(index, 1);
+    renderDutyTags();
+  };
+
+  function renderDutyTags() {
+    if (!dutyTagContainer) return;
+    dutyTagContainer.innerHTML = currentDuties.map((duty, index) => `
+      <div class="duty-tag">
+        <span>${escapeHtml(duty)}</span>
+        <div class="duty-remove-btn" onclick="event.stopPropagation(); removeDuty(${index})">&times;</div>
+      </div>
+    `).join('');
+  }
+
+  newDutyInput?.addEventListener('input', (e) => showDutySuggestions(e.target.value));
+  newDutyInput?.addEventListener('focus', (e) => showDutySuggestions(e.target.value));
+  newDutyInput?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addDuty();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (dutySuggestions && !e.target.closest('#duty-unified-field')) {
+      dutySuggestions.style.display = 'none';
+    }
+  });
+
+  // Sidebar Toggle Logic
+  const sidebar = document.querySelector('.admin-sidebar');
+  const overlay = document.getElementById('admin-overlay');
+  const toggleBtn = document.getElementById('sidebar-toggle');
+
+  const toggleSidebar = () => {
+    sidebar?.classList.toggle('active');
+    overlay?.classList.toggle('active');
+  };
+
+  toggleBtn?.addEventListener('click', toggleSidebar);
+  overlay?.addEventListener('click', toggleSidebar);
+
+  // Auto-close sidebar on mobile after clicking a link
+  navBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (window.innerWidth <= 1024) {
+        sidebar?.classList.remove('active');
+        overlay?.classList.remove('active');
+      }
+    });
   });
 
   // Init loads
   loadPR();
   loadPersonnel();
   loadDocs();
+  fetchUniqueDuties();
   
   // Logout
-  document.getElementById('logout-btn')?.addEventListener('click', () => {
+  const logoutBtn = document.getElementById('logout-btn');
+  logoutBtn?.addEventListener('click', () => {
     localStorage.removeItem('adminToken');
     window.location.href = '/admin/login';
   });
@@ -477,5 +706,5 @@ function getAuthHeaders() {
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 function escapeHtml(str) {
   const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-  return String(str).replace(/[&<>"']/g, m => map[m]);
+  return String(str || '').replace(/[&<>"']/g, m => map[m]);
 }

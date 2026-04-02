@@ -82,14 +82,17 @@ router.post('/pr', authenticateToken, upload.array('images', 10), async (req, re
         departmentTag: departmentTag || null,
         content, 
         image: coverImage,
-        images: imagesArr
+        images: imagesArr || []
       },
     });
 
     res.status(201).json(newItem);
   } catch (error) {
-    console.error('[PR Create]', error);
-    res.status(500).json({ message: 'Failed to create PR item' });
+    console.error('[PR Create Error]', error);
+    res.status(500).json({ 
+      message: 'Failed to create PR item',
+      error: error.message 
+    });
   }
 });
 
@@ -103,9 +106,12 @@ router.put('/pr/:id', authenticateToken, upload.array('images', 10), async (req,
     let keptImages = [];
     if (req.body.existingImages) {
       try {
-        keptImages = JSON.parse(req.body.existingImages);
+        const parsed = typeof req.body.existingImages === 'string' 
+          ? JSON.parse(req.body.existingImages) 
+          : req.body.existingImages;
+        keptImages = Array.isArray(parsed) ? parsed.filter(i => typeof i === 'string') : [];
       } catch (e) {
-        keptImages = Array.isArray(req.body.existingImages) ? req.body.existingImages : [req.body.existingImages];
+        keptImages = [];
       }
     }
 
@@ -145,14 +151,17 @@ router.put('/pr/:id', authenticateToken, upload.array('images', 10), async (req,
         departmentTag: departmentTag || null,
         content, 
         image: finalCover,
-        images: finalImages
+        images: finalImages || []
       },
     });
 
     res.json(updated);
   } catch (error) {
-    console.error('[PR Update]', error);
-    res.status(500).json({ message: 'Failed to update PR item' });
+    console.error('[PR Update Error]', error);
+    res.status(500).json({ 
+      message: 'Failed to update PR item',
+      error: error.message 
+    });
   }
 });
 
@@ -235,12 +244,37 @@ router.get('/personnel', async (req, res) => {
   }
 });
 
+// GET /api/personnel/unique-duties
+router.get('/personnel/unique-duties', async (req, res) => {
+  try {
+    const personnel = await prisma.personnel.findMany({
+      select: { duties: true }
+    });
+    
+    const allDuties = personnel.flatMap(p => {
+      if (Array.isArray(p.duties)) return p.duties;
+      if (typeof p.duties === 'string' && p.duties.startsWith('[')) {
+        try { return JSON.parse(p.duties); } catch (e) { return []; }
+      }
+      return p.duties ? [p.duties] : [];
+    });
+
+    const uniqueDuties = [...new Set(allDuties)]
+      .filter(d => d && typeof d === 'string')
+      .sort((a, b) => a.localeCompare(b, 'th'));
+
+    res.json(uniqueDuties);
+  } catch (error) {
+    console.error('[Unique Duties Error]', error);
+    res.status(500).json({ message: 'Failed to fetch unique duties' });
+  }
+});
+
 // POST /api/personnel (protected)
 router.post('/personnel', authenticateToken, upload.single('image'), async (req, res) => {
   try {
-    const { prefix, firstName, lastName, position, phone, order } = req.body;
+    const { prefix, firstName, lastName, position, academicStanding, positionNumber, department, phone, order } = req.body;
     
-    // Parse duties if sent as string
     let duties = [];
     if (req.body.duties) {
       try { duties = JSON.parse(req.body.duties); } 
@@ -258,7 +292,10 @@ router.post('/personnel', authenticateToken, upload.single('image'), async (req,
         firstName,
         lastName,
         position,
-        duties,
+        academicStanding,
+        positionNumber,
+        department,
+        duties: Array.isArray(duties) ? duties : [],
         phone,
         imageUrl,
         order: order ? parseInt(order) : 0
@@ -267,8 +304,8 @@ router.post('/personnel', authenticateToken, upload.single('image'), async (req,
 
     res.status(201).json(newPerson);
   } catch (error) {
-    console.error('[Personnel Create]', error);
-    res.status(500).json({ message: 'Failed to create personnel' });
+    console.error('[Personnel Create Error]', error);
+    res.status(500).json({ message: 'Failed to create personnel', error: error.message });
   }
 });
 
@@ -276,7 +313,7 @@ router.post('/personnel', authenticateToken, upload.single('image'), async (req,
 router.put('/personnel/:id', authenticateToken, upload.single('image'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { prefix, firstName, lastName, position, phone, order } = req.body;
+    const { prefix, firstName, lastName, position, academicStanding, positionNumber, department, phone, order } = req.body;
     
     let duties = [];
     if (req.body.duties) {
@@ -300,7 +337,10 @@ router.put('/personnel/:id', authenticateToken, upload.single('image'), async (r
         firstName,
         lastName,
         position,
-        duties,
+        academicStanding,
+        positionNumber,
+        department,
+        duties: Array.isArray(duties) ? duties : [],
         phone,
         imageUrl,
         order: order ? parseInt(order) : existing.order
@@ -309,8 +349,37 @@ router.put('/personnel/:id', authenticateToken, upload.single('image'), async (r
 
     res.json(updated);
   } catch (error) {
-    console.error('[Personnel Update]', error);
-    res.status(500).json({ message: 'Failed to update personnel' });
+    console.error('[Personnel Update Error]', error);
+    res.status(500).json({ message: 'Failed to update personnel', error: error.message });
+  }
+});
+
+// DELETE /personnel/bulk (protected)
+router.delete('/personnel/bulk', authenticateToken, async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: 'ไม่มีรายการที่เลือก' });
+    }
+
+    // 1. Get all personnel to delete their images
+    const personnelToDelete = await prisma.personnel.findMany({
+      where: { id: { in: ids } }
+    });
+
+    for (const p of personnelToDelete) {
+      if (p.imageUrl) deleteImage(p.imageUrl);
+    }
+
+    // 2. Perform bulk deletion
+    const result = await prisma.personnel.deleteMany({
+      where: { id: { in: ids } }
+    });
+
+    res.json({ message: `ลบสำเร็จ ${result.count} รายการ` });
+  } catch (error) {
+    console.error('[Personnel Bulk Delete Error]', error);
+    res.status(500).json({ message: 'Failed to delete selected personnel', error: error.message });
   }
 });
 
@@ -329,51 +398,146 @@ router.delete('/personnel/:id', authenticateToken, async (req, res) => {
   }
 });
 
+const { splitThaiName } = require('../utils/nameSplitter');
+
 // POST /api/personnel/import (protected)
 router.post('/personnel/import', authenticateToken, upload.single('excel'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
 
-    const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
-    const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
-    // Expected columns: คำนำหน้า, ชื่อ, นามสกุล, ตำแหน่งหลัก, หน้าที่รับผิดชอบ(คั่นด้วยลูกน้ำ), เบอร์โทร
-    const data = xlsx.utils.sheet_to_json(sheet);
+    let contentString;
+    const buffer = req.file.buffer;
 
-    const createdPersonnel = [];
+    // Check if it's an HTML file (common for faked .xls exports)
+    const isHtml = buffer.slice(0, 100).toString('ascii').toLowerCase().includes('<html') ||
+                   buffer.slice(0, 100).toString('ascii').toLowerCase().includes('<!doctype');
 
-    // Simple bulk creation
-    for (const [idx, row] of data.entries()) {
-      // Map thai keys or english keys based on your excel template
-      const prefix = row['คำนำหน้า'] || row['prefix'] || '';
-      const firstName = row['ชื่อ'] || row['firstName'] || '';
-      const lastName = row['นามสกุล'] || row['lastName'] || '';
-      const position = row['ตำแหน่งหลัก'] || row['ตำแหน่ง'] || row['position'] || '';
-      const phone = row['เบอร์โทร'] || row['เบอร์ติดต่อ'] || row['phone'] || '';
-      
-      const rawDuties = row['หน้าที่รับผิดชอบ'] || row['duties'] || '';
-      const duties = rawDuties ? rawDuties.split(',').map(d => d.trim()).filter(Boolean) : [];
-
-      if (!firstName && !lastName) continue; // Skip invalid rows
-
-      const created = await prisma.personnel.create({
-        data: {
-          prefix,
-          firstName,
-          lastName,
-          position,
-          duties,
-          phone,
-          order: idx + 1
-        }
-      });
-      createdPersonnel.push(created);
+    if (isHtml) {
+      // Look for charset in the first few KB
+      const head = buffer.slice(0, 2048).toString('ascii');
+      if (head.toLowerCase().includes('charset=windows-874') || head.toLowerCase().includes('charset=tis-620')) {
+        const decoder = new TextDecoder('windows-874');
+        contentString = decoder.decode(buffer);
+      } else {
+        contentString = buffer.toString('utf8');
+      }
     }
 
-    res.status(201).json({ message: `นำเข้าสำเร็จ ${createdPersonnel.length} รายการ`, data: createdPersonnel });
+    const workbook = contentString 
+      ? xlsx.read(contentString, { type: 'string' })
+      : xlsx.read(buffer, { type: 'buffer' });
+
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    
+    // Using header: 1 to get raw array mapping for fixed position files
+    const rawData = xlsx.utils.sheet_to_json(sheet, { header: 1 });
+
+    if (rawData.length < 2) return res.status(400).json({ message: 'File is empty or invalid' });
+
+    const createdPersonnel = [];
+    let addedCount = 0;
+    let updatedCount = 0;
+
+    // Skip the first 2-3 rows which are usually titles/headers in official exports
+    // Based on diagnostic: Row 0/1 are metadata, Row 2 is typically the first data row
+    // Start from Row 0 and use dynamic filtering to avoid skipping the first data row
+    const dataRows = rawData; 
+
+    for (const [idx, row] of dataRows.entries()) {
+      // Skip empty or purely metadata rows
+      if (!row || row.length < 3) continue;
+
+      // Dynamic header skip: If row[2] (First Name column) contains the word 'ชื่อ', it's likely a header
+      const checkTitle = String(row[2] || '');
+      if (checkTitle.includes('ชื่อ') || checkTitle.includes('FullName')) continue;
+
+      // บันทึกตำแหน่งคอลัมน์จากไฟล์จริงที่ตรวจสอบล่าสุด:
+      // index 2: ชื่อ
+      // index 3: นามสกุล
+      // index 17: เลขที่ตำแหน่ง (Position Number)
+      // index 18: ตำแหน่ง (Position)
+      // index 19: วิทยฐานะ (Academic Standing)
+      // index 21: เบอร์โทร (Phone) - มักอยู่ในเครื่องหมายคำพูด ""
+      // index 52: หน้าที่รับผิดชอบ (Duties)
+      
+      const rawFullName = String(row[2] || '').trim();
+      const rawLastName = String(row[3] || '').trim();
+      const rawPos = String(row[18] || '').trim();
+      const rawAcad = String(row[19] || '').trim();
+      const rawPosNum = String(row[17] || '').trim();
+      const rawPhone = String(row[21] || '').replace(/"/g, '').trim(); 
+      const rawDuties = String(row[52] || '').trim();
+
+      // 1. Process Name & Split Prefix
+      const fullStringToSplit = `${rawFullName} ${rawLastName}`.trim();
+      const { prefix, firstName, lastName } = splitThaiName(fullStringToSplit);
+      
+      if (!firstName && !lastName) continue;
+
+      // 2. Process Duties & Detect Department
+      // แยกข้อมูลโดยใช้ทั้ง Newline และเครื่องหมาย " - " เพื่อให้ได้แท็กที่ละเอียดขึ้นตั้งแต่ตอนนำเข้า
+      let dutiesArr = rawDuties.split(/\n| - /)
+        .map(d => d.replace(/^-/, '').trim())
+        .filter(Boolean);
+
+      // ดึงเฉพาะชื่อแผนกวิชา (ตัดหน้า-หลัง)
+      let detectedLine = dutiesArr.find(d => d.includes('แผนกวิชา'));
+      let detectedDept = "ฝ่ายสนับสนุนการสอน";
+      
+      if (detectedLine) {
+        // ใช้ Regex เพื่อหาคำว่า แผนกวิชา ตามด้วยข้อความที่ไม่ใช่ช่องว่างหรือขีด
+        const match = detectedLine.match(/แผนกวิชา[^\s-]+/);
+        if (match) {
+          detectedDept = match[0];
+        }
+      }
+
+      // 3. Upsert Logic: Check if person exists by Name (First + Last)
+      const existingPerson = await prisma.personnel.findFirst({
+        where: { firstName, lastName }
+      });
+
+      const personData = {
+        prefix,
+        firstName,
+        lastName,
+        position: rawPos === 'ไม่มี' ? null : rawPos,
+        academicStanding: rawAcad === 'ไม่มี' ? null : rawAcad,
+        positionNumber: rawPosNum || null,
+        department: detectedDept,
+        duties: dutiesArr,
+        phone: rawPhone === '""' ? null : rawPhone,
+        order: idx + 1
+      };
+
+      if (existingPerson) {
+        // Update existing record, preserve imageUrl and isDirector
+        const updated = await prisma.personnel.update({
+          where: { id: existingPerson.id },
+          data: personData
+        });
+        updatedCount++;
+        createdPersonnel.push(updated);
+      } else {
+        // Create new record
+        const created = await prisma.personnel.create({
+          data: personData
+        });
+        addedCount++;
+        createdPersonnel.push(created);
+      }
+    }
+
+    res.status(201).json({ 
+      message: `นำเข้าสำเร็จ: เพิ่มใหม่ ${addedCount} รายการ, อัปเดต ${updatedCount} รายการ`,
+      addedCount,
+      updatedCount,
+      total: addedCount + updatedCount 
+    });
   } catch (error) {
-    console.error('[Personnel Import]', error);
-    res.status(500).json({ message: 'Failed to import personnel' });
+    console.error('[Personnel Import Error]', error);
+    res.status(500).json({ message: 'Failed to import personnel', error: error.message });
   }
 });
 
@@ -410,8 +574,11 @@ router.post('/docs', authenticateToken, upload.single('file'), async (req, res) 
 
     res.status(201).json(newDoc);
   } catch (error) {
-    console.error('[Doc Create]', error);
-    res.status(500).json({ message: 'Failed to create document' });
+    console.error('[Doc Create Error]', error);
+    res.status(500).json({ 
+      message: 'Failed to create document',
+      error: error.message 
+    });
   }
 });
 

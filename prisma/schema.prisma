@@ -40,17 +40,19 @@ model Department {
 }
 
 model Personnel {
-  id           String  @id @default(uuid())
-  prefix       String?
-  firstName    String
-  lastName     String
-  position     String?
-  departmentId String?
-  duties       Json?
-  phone        String?
-  imageUrl     String?
-  isDirector   Boolean @default(false)
-  order        Int     @default(0)
+  id               String  @id @default(uuid())
+  prefix           String?
+  firstName        String
+  lastName         String
+  position         String? // ตำแหน่ง
+  positionNumber   String? // เลขที่ตำแหน่ง
+  academicStanding String? // วิทยฐานะ
+  department       String? // สังกัด
+  duties           Json?   // ตำแหน่งหน้าที่รับผิดชอบในสถานศึกษา
+  phone            String?
+  imageUrl         String?
+  isDirector       Boolean @default(false)
+  order            Int     @default(0)
 }
 
 model SiteSettings {

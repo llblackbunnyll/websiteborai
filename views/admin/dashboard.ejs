@@ -6,10 +6,125 @@
   <title><%= title %></title>
   <link rel="icon" href="/my-logo.webp" type="image/webp" />
   <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    .duty-unified-container {
+      position: relative;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(112, 66, 248, 0.2);
+      border-radius: 12px;
+      padding: 0.6rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      transition: all 0.3s ease;
+      min-height: 54px;
+      cursor: text;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .duty-unified-container:focus-within {
+      border-color: var(--color-accent-primary);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px rgba(112, 66, 248, 0.1);
+    }
+    .duty-tag {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.8rem;
+      background: linear-gradient(135deg, rgba(112, 66, 248, 0.1), rgba(66, 133, 244, 0.1));
+      border: 1px solid rgba(112, 66, 248, 0.2);
+      border-radius: 8px;
+      color: var(--color-text-primary);
+      font-size: 0.85rem;
+      font-weight: 500;
+      animation: chipScale 0.2s ease-out;
+    }
+    @keyframes chipScale {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .duty-remove-btn {
+      cursor: pointer;
+      font-weight: bold;
+      color: var(--color-error);
+      font-size: 1.1rem;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      opacity: 0.6;
+    }
+    .duty-remove-btn:hover { opacity: 1; }
+    .duty-inner-input {
+      flex: 1;
+      min-width: 150px;
+      background: transparent !important;
+      border: none !important;
+      outline: none !important;
+      color: #333 !important;
+      font-weight: 500 !important;
+      padding: 0.5rem !important;
+      font-size: 1rem !important;
+      box-shadow: none !important;
+      caret-color: var(--color-accent-primary);
+    }
+    .duty-inner-input::placeholder {
+      color: rgba(0, 0, 0, 0.35);
+    }
+    .duty-suggestion-list {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: rgba(15, 15, 25, 0.98);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid var(--color-accent-primary);
+      border-radius: 0.8rem;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+      max-height: 220px;
+      overflow-y: auto;
+      display: none;
+      padding: 0.4rem;
+    }
+    .duty-suggestion-item {
+      padding: 0.8rem 1.2rem;
+      cursor: pointer;
+      color: rgba(255, 255, 255, 0.9);
+      border-radius: 0.6rem;
+      transition: all 0.2s ease;
+      font-size: 0.9rem;
+    }
+    .duty-suggestion-item:hover {
+      background: linear-gradient(90deg, rgba(112, 66, 248, 0.3), rgba(66, 133, 244, 0.1));
+      color: white;
+      padding-left: 1.5rem;
+    }
+    .duty-suggestion-list::-webkit-scrollbar { width: 5px; }
+    .duty-suggestion-list::-webkit-scrollbar-thumb {
+      background: var(--color-accent-primary);
+      border-radius: 10px;
+    }
+  </style>
 </head>
 <body class="admin-body">
 
 <div class="admin-layout">
+  <!-- Mobile Header (Visible only on small screens) -->
+  <div class="mobile-header">
+    <button id="sidebar-toggle" class="sidebar-toggle-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="mobile-logo">
+      <img src="/my-logo.webp" alt="Logo" />
+      <span>Admin Panel</span>
+    </div>
+  </div>
+
+  <!-- Sidebar Overlay -->
+  <div class="admin-overlay" id="admin-overlay"></div>
   
   <!-- Sidebar -->
   <aside class="admin-sidebar">
@@ -113,19 +228,21 @@
 
       <!-- PR Table -->
       <div class="admin-card">
-        <table class="admin-table">
-          <thead>
-            <tr>
-              <th>หัวข้อ</th>
-              <th>ประเภท</th>
-              <th>วันที่</th>
-              <th style="text-align:right;">จัดการ</th>
-            </tr>
-          </thead>
-          <tbody id="pr-tbody">
-            <tr><td colspan="4" style="text-align:center;">กำลังโหลด...</td></tr>
-          </tbody>
-        </table>
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>หัวข้อ</th>
+                <th>ประเภท</th>
+                <th>วันที่</th>
+                <th style="text-align:right;">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="pr-tbody">
+              <tr><td colspan="4" style="text-align:center;">กำลังโหลด...</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -146,7 +263,7 @@
       <div id="personnel-import-container" class="admin-card hide" style="border: 2px dashed var(--color-accent-primary); background: rgba(112,66,248,0.03);">
         <h3 class="mb-1">นำเข้าข้อมูลจาก Excel (.xlsx)</h3>
         <p class="text-muted mb-2" style="font-size:0.9rem;">
-          รองรับคอลัมน์: <b>คำนำหน้า, ชื่อ, นามสกุล, ตำแหน่งหลัก, หน้าที่รับผิดชอบ (คั่นด้วยลูกน้ำ), เบอร์โทร</b>
+          ระบบจะตรวจจับคอลลั่มโดยอัตโนมัติจากหัวตาราง (เช่น ชื่อ-สกุล, ตำแหน่ง, วิทยฐานะ, เลขที่ตำแหน่ง, สังกัด)
         </p>
         <form id="personnel-import-form">
           <div style="display:flex; gap:1rem; align-items:center;">
@@ -177,15 +294,31 @@
             </div>
             <div class="form-group">
               <label for="personnel-position">ตำแหน่งหลัก</label>
-              <input id="personnel-position" name="position" type="text" class="form-control" />
+              <input id="personnel-position" name="position" type="text" class="form-control" placeholder="ครู, เจ้าหน้าที่..." />
             </div>
             <div class="form-group">
-              <label for="personnel-duties">หน้าที่รับผิดชอบ (คั่นด้วยจุลภาค ,)</label>
-              <input id="personnel-duties" name="duties" type="text" class="form-control" placeholder="ครูที่ปรึกษา, หัวหน้างาน..." />
+              <label for="personnel-academicStanding">วิทยฐานะ</label>
+              <input id="personnel-academicStanding" name="academicStanding" type="text" class="form-control" placeholder="ชำนาญการ, เชี่ยวชาญ..." />
+            </div>
+            <div class="form-group">
+              <label for="personnel-positionNumber">เลขที่ตำแหน่ง</label>
+              <input id="personnel-positionNumber" name="positionNumber" type="text" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label for="personnel-department">สังกัด/แผนก</label>
+              <input id="personnel-department" name="department" type="text" class="form-control" placeholder="แผนกวิชา..., งาน..." />
             </div>
             <div class="form-group">
               <label for="personnel-phone">เบอร์ติดต่อ</label>
               <input id="personnel-phone" name="phone" type="text" class="form-control" />
+            </div>
+            <div class="form-group form-full">
+              <label>หน้าที่รับผิดชอบ</label>
+              <div id="duty-unified-field" class="duty-unified-container">
+                <div id="duty-tag-container" style="display:contents;"></div>
+                <input type="text" id="new-duty-input" class="duty-inner-input" placeholder="เพิ่ม..." autocomplete="off" />
+                <div id="duty-suggestions" class="duty-suggestion-list"></div>
+              </div>
             </div>
             <div class="form-group">
               <label for="personnel-order">ลำดับการแสดงผล</label>
@@ -204,20 +337,32 @@
       </div>
 
       <!-- Personnel Table -->
-      <div class="admin-card">
-        <table class="admin-table">
-          <thead>
-            <tr>
-              <th>ชื่อ-นามสกุล</th>
-              <th>ตำแหน่ง</th>
-              <th>เบอร์ติดต่อ</th>
-              <th style="text-align:right;">จัดการ</th>
-            </tr>
-          </thead>
-          <tbody id="personnel-tbody">
-            <tr><td colspan="4" style="text-align:center;">กำลังโหลด...</td></tr>
-          </tbody>
-        </table>
+      <div class="admin-card mt-2">
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th style="width: 60px; text-align:center;">ลำดับ</th>
+                <th>ชื่อ-นามสกุล</th>
+                <th>ตำแหน่ง/วิทยฐานะ</th>
+                <th>สังกัด/เลขที่ตำแหน่ง</th>
+                <th style="text-align:right;">จัดการ</th>
+                <th style="width: 70px; text-align:center;">
+                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.25rem; padding: 0.2rem 0;">
+                  <input type="checkbox" id="personnel-select-all" title="เลือกทั้งหมด" />
+                  <button id="personnel-bulk-delete-btn" class="icon-btn danger hide" title="ลบที่เลือก" style="width: 28px; height: 28px; padding: 0; min-height: unset; border-radius: 6px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                    <span id="bulk-delete-count" style="font-size: 0.65rem; font-weight: 700; margin-left: 1px; line-height: 1;"></span>
+                  </button>
+                </div>
+              </th>
+              </tr>
+            </thead>
+            <tbody id="personnel-tbody">
+              <tr><td colspan="6" style="text-align:center;">กำลังโหลด...</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -266,20 +411,22 @@
       </div>
 
       <!-- Docs Table -->
-      <div class="admin-card">
-        <table class="admin-table">
-          <thead>
-            <tr>
-              <th>หัวข้อเอกสาร</th>
-              <th>ประเภท</th>
-              <th>วันที่</th>
-              <th style="text-align:right;">จัดการ</th>
-            </tr>
-          </thead>
-          <tbody id="docs-tbody">
-            <tr><td colspan="4" style="text-align:center;">กำลังโหลด...</td></tr>
-          </tbody>
-        </table>
+      <div class="admin-card mt-2">
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>ชื่อเอกสาร</th>
+                <th>ประเภท</th>
+                <th>วันที่ประกาศ</th>
+                <th style="text-align:right;">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="docs-tbody">
+              <tr><td colspan="4" style="text-align:center;">กำลังโหลด...</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 
