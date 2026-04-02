@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model PRItem {
+  id            String   @id @default(uuid())
+  title         String
+  date          String
+  category      String
+  image         String // keep for cover/legacy
+  images        Json?
+  departmentTag String?
+  content       String?  @db.Text
+  isPinned      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Department {
+  id          String   @id @default(uuid())
+  name        String
+  description String?  @db.Text
+  imageUrl    String?
+  color       String?  @default("#7042f8")
+  order       Int      @default(0)
+}
+
+model Personnel {
+  id           String  @id @default(uuid())
+  prefix       String?
+  firstName    String
+  lastName     String
+  position     String?
+  departmentId String?
+  duties       Json?
+  phone        String?
+  imageUrl     String?
+  isDirector   Boolean @default(false)
+  order        Int     @default(0)
+}
+
+model SiteSettings {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+}
+
+model PublicDocument {
+  id        String   @id @default(uuid())
+  title     String
+  date      String   // e.g., "15 มี.ค. 2569"
+  type      String   // 'bidding' or 'general'
+  fileUrl   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

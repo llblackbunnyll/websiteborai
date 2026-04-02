@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <link rel="icon" href="/my-logo.webp" type="image/webp" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="admin-body">
+
+<div class="admin-layout">
+  
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="admin-sidebar-header">
+      <img src="/my-logo.webp" alt="BICEC Logo" />
+      <div>
+        <h2>Admin Panel</h2>
+        <p>วิทยาลัยการอาชีพบ่อไร่</p>
+      </div>
+    </div>
+    
+    <nav class="admin-nav">
+      <button class="nav-btn active" data-target="pr-panel">
+        <span>📰</span> ข่าวสาร/ประชาสัมพันธ์
+      </button>
+      <button class="nav-btn" data-target="personnel-panel">
+        <span>👥</span> ข้อมูลบุคลากร
+      </button>
+      <button class="nav-btn" data-target="docs-panel">
+        <span>📄</span> เอกสารและประกวดราคา
+      </button>
+      <button class="nav-btn" data-target="others-panel">
+        <span>📦</span> ระบบอื่นๆ
+      </button>
+    </nav>
+    
+    <div class="admin-sidebar-footer">
+      <button class="btn-outline w-full mb-1" onclick="window.location.href='/'">
+        หน้าเว็บไซต์
+      </button>
+      <button id="logout-btn" class="btn-outline btn-danger w-full">
+        ออกจากระบบ
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="admin-main-content">
+    
+    <!-- ========================= PR PANEL ========================= -->
+    <section id="pr-panel" class="admin-panel active">
+      <div class="panel-header">
+        <div>
+          <h1>ข่าวสาร และ ประชาสัมพันธ์</h1>
+          <p>จัดการประกาศ กิจกรรม และข่าวสารหน้าเว็บไซต์</p>
+        </div>
+        <button id="pr-add-btn" class="btn-accent">+ เพิ่มข่าวสาร</button>
+      </div>
+
+      <!-- PR Form -->
+      <div id="pr-form-container" class="admin-card hide">
+        <h3 id="pr-form-title" class="mb-2">เพิ่มรายการใหม่</h3>
+        <form id="pr-form" enctype="multipart/form-data">
+          <input type="hidden" id="pr-id" />
+          <div class="form-grid">
+            <div class="form-group form-full">
+              <label for="pr-title">หัวข้อ</label>
+              <input id="pr-title" name="title" type="text" class="form-control" required />
+            </div>
+
+            <div class="form-group">
+              <label for="pr-category">หมวดหมู่</label>
+              <select id="pr-category" name="category" class="form-control" required>
+                <option value="ข่าวสาร">ข่าวสาร (News)</option>
+                <option value="ประกาศ">ประกาศ (Announcement)</option>
+                <option value="กิจกรรม">กิจกรรม (Activity)</option>
+              </select>
+            </div>
+
+            <div class="form-group hide" id="pr-department-group">
+              <label for="pr-departmentTag">สังกัด (พิเศษ)</label>
+              <select id="pr-departmentTag" name="departmentTag" class="form-control">
+                <option value="">-- ไม่ระบุ --</option>
+                <option value="งานพัสดุ">งานพัสดุ</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="pr-date">วันที่ (ข้อความ)</label>
+              <input id="pr-date" name="date" type="text" class="form-control" placeholder="เช่น 15 มี.ค. 2569" required />
+            </div>
+
+            <div class="form-group form-full">
+              <label for="pr-images">รูปภาพ (เลือกได้หลายรูป)</label>
+              <!-- multiple attribute added -->
+              <input id="pr-images" name="images" type="file" accept="image/*" multiple class="form-control file-input" />
+              <small class="text-muted">รูปแรกจะถูกใช้เป็นภาพหน้าปก</small>
+            </div>
+
+            <div class="form-group form-full">
+              <label for="pr-content">เนื้อหา</label>
+              <textarea id="pr-content" name="content" class="form-control" rows="4"></textarea>
+            </div>
+          </div>
+          <div class="form-actions mt-2">
+            <button type="button" id="pr-cancel-btn" class="btn-outline">ยกเลิก</button>
+            <button type="submit" class="btn-accent">บันทึกข้อมูล</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- PR Table -->
+      <div class="admin-card">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>หัวข้อ</th>
+              <th>ประเภท</th>
+              <th>วันที่</th>
+              <th style="text-align:right;">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="pr-tbody">
+            <tr><td colspan="4" style="text-align:center;">กำลังโหลด...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ========================= PERSONNEL PANEL ========================= -->
+    <section id="personnel-panel" class="admin-panel hide">
+      <div class="panel-header">
+        <div>
+          <h1>ข้อมูลบุคลากร</h1>
+          <p>จัดการรายชื่อ ตำแหน่ง และข้อมูลบุคลากรในวิทยาลัย</p>
+        </div>
+        <div style="display:flex; gap:0.5rem;">
+          <button id="personnel-import-btn" class="btn-outline">📥 นำเข้า Excel</button>
+          <button id="personnel-add-btn" class="btn-accent">+ เพิ่มบุคลากร</button>
+        </div>
+      </div>
+
+      <!-- Personnel Import -->
+      <div id="personnel-import-container" class="admin-card hide" style="border: 2px dashed var(--color-accent-primary); background: rgba(112,66,248,0.03);">
+        <h3 class="mb-1">นำเข้าข้อมูลจาก Excel (.xlsx)</h3>
+        <p class="text-muted mb-2" style="font-size:0.9rem;">
+          รองรับคอลัมน์: <b>คำนำหน้า, ชื่อ, นามสกุล, ตำแหน่งหลัก, หน้าที่รับผิดชอบ (คั่นด้วยลูกน้ำ), เบอร์โทร</b>
+        </p>
+        <form id="personnel-import-form">
+          <div style="display:flex; gap:1rem; align-items:center;">
+            <input type="file" id="excel-file" name="excel" accept=".xlsx, .xls" class="form-control file-input" required style="max-width:300px;" />
+            <button type="submit" class="btn-accent">เริ่มนำเข้า</button>
+            <button type="button" id="personnel-import-cancel-btn" class="btn-outline">ยกเลิก</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Personnel Form -->
+      <div id="personnel-form-container" class="admin-card hide">
+        <h3 id="personnel-form-title" class="mb-2">เพิ่มบุคลากรใหม่</h3>
+        <form id="personnel-form" enctype="multipart/form-data">
+          <input type="hidden" id="personnel-id" />
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="personnel-prefix">คำนำหน้า</label>
+              <input id="personnel-prefix" name="prefix" type="text" class="form-control" placeholder="นาย/นาง/นางสาว" />
+            </div>
+            <div class="form-group">
+              <label for="personnel-firstName">ชื่อ *</label>
+              <input id="personnel-firstName" name="firstName" type="text" class="form-control" required />
+            </div>
+            <div class="form-group">
+              <label for="personnel-lastName">นามสกุล *</label>
+              <input id="personnel-lastName" name="lastName" type="text" class="form-control" required />
+            </div>
+            <div class="form-group">
+              <label for="personnel-position">ตำแหน่งหลัก</label>
+              <input id="personnel-position" name="position" type="text" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label for="personnel-duties">หน้าที่รับผิดชอบ (คั่นด้วยจุลภาค ,)</label>
+              <input id="personnel-duties" name="duties" type="text" class="form-control" placeholder="ครูที่ปรึกษา, หัวหน้างาน..." />
+            </div>
+            <div class="form-group">
+              <label for="personnel-phone">เบอร์ติดต่อ</label>
+              <input id="personnel-phone" name="phone" type="text" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label for="personnel-order">ลำดับการแสดงผล</label>
+              <input id="personnel-order" name="order" type="number" class="form-control" value="0" />
+            </div>
+            <div class="form-group form-full">
+              <label for="personnel-image">รูปประจำตัว</label>
+              <input id="personnel-image" name="image" type="file" accept="image/*" class="form-control file-input" />
+            </div>
+          </div>
+          <div class="form-actions mt-2">
+            <button type="button" id="personnel-cancel-btn" class="btn-outline">ยกเลิก</button>
+            <button type="submit" class="btn-accent">บันทึกข้อมูล</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Personnel Table -->
+      <div class="admin-card">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ชื่อ-นามสกุล</th>
+              <th>ตำแหน่ง</th>
+              <th>เบอร์ติดต่อ</th>
+              <th style="text-align:right;">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="personnel-tbody">
+            <tr><td colspan="4" style="text-align:center;">กำลังโหลด...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ========================= DOCUMENTS PANEL ========================= -->
+    <section id="docs-panel" class="admin-panel hide">
+      <div class="panel-header">
+        <div>
+          <h1>เอกสาร และ ข่าวประกวดราคา</h1>
+          <p>จัดการไฟล์เอกสารเผยแพร่ และข่าวจัดซื้อจัดจ้าง (PDF)</p>
+        </div>
+        <button id="doc-add-btn" class="btn-accent">+ เพิ่มเอกสาร</button>
+      </div>
+
+      <!-- Doc Form -->
+      <div id="doc-form-container" class="admin-card hide">
+        <form id="doc-form" enctype="multipart/form-data">
+          <div class="form-grid">
+            <div class="form-group form-full">
+              <label for="doc-title">หัวข้อเอกสาร</label>
+              <input id="doc-title" name="title" type="text" class="form-control" required />
+            </div>
+
+            <div class="form-group">
+              <label for="doc-type">ประเภท</label>
+              <select id="doc-type" name="type" class="form-control" required>
+                <option value="bidding">ข่าวประกวดราคา (Bidding)</option>
+                <option value="general">เอกสารเผยแพร่ (Document)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="doc-date">วันที่ปะหน้า</label>
+              <input id="doc-date" name="date" type="text" class="form-control" placeholder="เช่น 15 มี.ค. 2569" required />
+            </div>
+
+            <div class="form-group form-full">
+              <label for="doc-file">ไฟล์เอกสาร (PDF เท่านั้น)</label>
+              <input id="doc-file" name="file" type="file" accept=".pdf" class="form-control file-input" required />
+            </div>
+          </div>
+          <div class="form-actions mt-2">
+            <button type="button" id="doc-cancel-btn" class="btn-outline">ยกเลิก</button>
+            <button type="submit" class="btn-accent">บันทึกข้อมูล</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Docs Table -->
+      <div class="admin-card">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>หัวข้อเอกสาร</th>
+              <th>ประเภท</th>
+              <th>วันที่</th>
+              <th style="text-align:right;">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="docs-tbody">
+            <tr><td colspan="4" style="text-align:center;">กำลังโหลด...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ========================= OTHERS PANEL ========================= -->
+    <section id="others-panel" class="admin-panel hide">
+      <div class="panel-header">
+        <div>
+          <h1>ระบบอื่นๆ</h1>
+          <p>ส่วนขยายสำหรับอนาคต</p>
+        </div>
+      </div>
+      <div class="admin-card" style="text-align:center; padding: 4rem 2rem;">
+        <h2 style="color:var(--color-text-secondary); margin-bottom: 1rem;">หน้านี้ยังไม่เปิดใช้งาน</h2>
+        <p class="text-muted">กำลังเตรียมระบบสำหรับฟีเจอร์ใหม่ๆ ในการอัปเดตครั้งถัดไป</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="/js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,363 @@
+<!-- HERO SECTION — dark WebGL aurora background -->
+<section class="hero hero-dark" id="home">
+
+  <!-- Layer 1: WebGL Aurora (deepest) -->
+  <canvas id="hero-webgl" class="hero-layer hero-webgl-layer"></canvas>
+
+  <!-- Layer 2: Particle network (above WebGL) -->
+  <canvas id="hero-canvas" class="hero-layer hero-canvas-layer"></canvas>
+
+  <!-- Layer 3: Background campus image (hover effect) -->
+  <div id="hero-bg-image" class="hero-bg-image">
+    <div class="hero-bg-text"><span>BICEC</span></div>
+    <img src="/bannerImage.webp" alt="Borai College Campus" />
+  </div>
+
+  <!-- Layer 4: Content (topmost) -->
+  <div id="hero-hover-zone" class="hero-content">
+
+    <!-- Logo -->
+    <img id="hero-logo" class="hero-logo animate-float" src="/my-logo.webp" alt="โลโก้วิทยาลัยการอาชีพบ่อไร่" />
+
+    <!-- Title Group -->
+    <div id="hero-title-group" class="hero-title-group" style="transition: opacity 0.5s ease, transform 0.5s ease;">
+      <h1 class="hero-title">วิทยาลัยการอาชีพบ่อไร่</h1>
+      <p class="hero-subtitle">Borai Industrial and Community Education College</p>
+    </div>
+
+    <!-- Hover Quick Buttons (Removed / Replaced with Burst Bubbles) -->
+    <!-- Action Buttons -->
+    <div id="hero-action-btns" class="hero-action-btns"
+      style="transition: transform 0.5s ease; position: relative; display: inline-flex; justify-content: center; align-items: center; gap: 1rem; z-index: 10;">
+
+      <style>
+        .burst-header {
+          position: absolute;
+          top: -365px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 100%;
+          text-align: center;
+          opacity: 0;
+          visibility: hidden;
+          transition: all 0.4s ease;
+          pointer-events: none;
+        }
+
+        #hero-hover-zone:hover .burst-header {
+          opacity: 1;
+          visibility: visible;
+          top: -380px;
+        }
+
+        .burst-header h3 {
+          display: inline-block;
+          font-size: 1.15rem;
+          font-weight: 800;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%);
+          background-clip: text;
+          -webkit-background-clip: text;
+          color: transparent;
+          -webkit-text-fill-color: transparent;
+          text-shadow: none;
+          background-color: rgba(255, 255, 255, 0.15);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          padding: 10px 28px;
+          border-radius: 100px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .burst-header::after {
+          content: '';
+          display: block;
+          width: 50px;
+          height: 3px;
+          background: #a78bfa;
+          margin: 12px auto 0;
+          border-radius: 2px;
+          box-shadow: 0 0 15px rgba(167, 139, 250, 0.6);
+        }
+
+        .burst-origin {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: 5;
+        }
+
+        .hero-burst-bubble {
+          position: absolute;
+          width: 100px;
+          height: 90px;
+          top: -55px;
+          left: -50px;
+          opacity: 0;
+          transform: scale(0.6) translateY(20px);
+          transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.5s ease;
+          pointer-events: none;
+          text-decoration: none;
+        }
+
+        #hero-hover-zone:hover .hero-burst-bubble {
+          pointer-events: auto;
+          opacity: 1;
+        }
+
+        /* Unified Glass Card for Icon + Label */
+        .bubble-unified {
+          width: 100%;
+          height: 100%;
+          border-radius: 20px;
+          background: rgba(255, 255, 255, 0.08);
+          /* frosted white/glass */
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+          transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          padding: 8px;
+        }
+
+        .bubble-unified svg {
+          width: 28px;
+          height: 28px;
+          stroke-width: 1.8;
+          color: #fff;
+          margin-bottom: 8px;
+          transition: all 0.3s ease;
+        }
+
+        .unified-label {
+          font-size: 0.65rem;
+          font-weight: 800;
+          text-align: center;
+          line-height: 1.25;
+          width: 100%;
+          color: #fff;
+          transition: all 0.3s ease;
+        }
+
+        /* Hover Effect */
+        .hero-burst-bubble:hover .bubble-unified {
+          background: rgba(255, 255, 255, 0.15);
+          border-color: rgba(255, 255, 255, 0.4);
+          transform: translateY(-8px);
+          box-shadow: 0 12px 30px rgba(112, 66, 248, 0.25);
+        }
+
+        .hero-burst-bubble:hover .bubble-unified svg {
+          transform: scale(1.15) translateY(-2px);
+          color: #a855f7;
+          /* Matching purple gradient accent */
+        }
+
+        .hero-burst-bubble:hover .unified-label {
+          /* Purple-Blue Gradient match */
+          background-image: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%);
+          background-clip: text;
+          -webkit-background-clip: text;
+          color: transparent;
+          -webkit-text-fill-color: transparent;
+        }
+
+        /* Horizontal Layout - Perfectly Aligned Y-axis */
+        #hero-hover-zone:hover .bubble-1 {
+          transform: scale(1) translate(-260px, -85px);
+          transition-delay: 0.0s;
+        }
+
+        #hero-hover-zone:hover .bubble-2 {
+          transform: scale(1) translate(-130px, -85px);
+          transition-delay: 0.05s;
+        }
+
+        #hero-hover-zone:hover .bubble-3 {
+          transform: scale(1) translate(0px, -85px);
+          transition-delay: 0.1s;
+        }
+
+        #hero-hover-zone:hover .bubble-4 {
+          transform: scale(1) translate(130px, -85px);
+          transition-delay: 0.15s;
+        }
+
+        #hero-hover-zone:hover .bubble-5 {
+          transform: scale(1) translate(260px, -85px);
+          transition-delay: 0.2s;
+        }
+
+        @media (max-width: 1024px) {
+          #hero-hover-zone:hover .bubble-1 {
+            transform: scale(1) translate(-200px, -85px);
+          }
+          #hero-hover-zone:hover .bubble-2 {
+            transform: scale(1) translate(-100px, -85px);
+          }
+          #hero-hover-zone:hover .bubble-3 {
+            transform: scale(1) translate(0px, -85px);
+          }
+          #hero-hover-zone:hover .bubble-4 {
+            transform: scale(1) translate(100px, -85px);
+          }
+          #hero-hover-zone:hover .bubble-5 {
+            transform: scale(1) translate(200px, -85px);
+          }
+        }
+
+        @media (max-width: 768px) {
+          .burst-header {
+            top: -200px;
+          }
+
+          #hero-hover-zone:hover .burst-header {
+            top: -240px;
+          }
+
+          .hero-burst-bubble {
+            width: 85px;
+            height: 95px;
+            top: -47px;
+            left: -42px;
+          }
+
+          .bubble-unified {
+            border-radius: 16px;
+            padding: 8px;
+          }
+
+          .bubble-unified svg {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 4px;
+          }
+
+          .unified-label {
+            font-size: 0.55rem;
+          }
+
+          /* Two-row layout for Mobile to prevent off-screen overflow */
+          /* Row 1: 3 Bubbles */
+          #hero-hover-zone:hover .bubble-1 {
+            transform: scale(1) translate(-100px, -135px);
+          }
+
+          #hero-hover-zone:hover .bubble-2 {
+            transform: scale(1) translate(0px, -135px);
+          }
+
+          #hero-hover-zone:hover .bubble-3 {
+            transform: scale(1) translate(100px, -135px);
+          }
+
+          /* Row 2: 2 Bubbles */
+          #hero-hover-zone:hover .bubble-4 {
+            transform: scale(1) translate(-50px, -30px);
+          }
+
+          #hero-hover-zone:hover .bubble-5 {
+            transform: scale(1) translate(50px, -30px);
+          }
+
+          #hero-action-btns {
+            flex-direction: column;
+            gap: 0.5rem;
+          }
+        }
+      </style>
+
+      <div class="burst-header">
+        <h3>สาขาวิชาที่เปิดสอน</h3>
+      </div>
+
+      <!-- BUBBLES CONTAINER -->
+      <div class="burst-origin">
+        <!-- สาขาวิชาช่างยนต์ -->
+        <a href="/#departments" class="hero-burst-bubble bubble-1">
+          <div class="bubble-unified">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+            </svg>
+            <span class="unified-label">ช่างยนต์</span>
+          </div>
+        </a>
+        <!-- สาขาวิชาช่างไฟฟ้า -->
+        <a href="/#departments" class="hero-burst-bubble bubble-2">
+          <div class="bubble-unified">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
+            </svg>
+            <span class="unified-label">ช่างไฟฟ้า</span>
+          </div>
+        </a>
+        <!-- สาขาวิชาอิเล็กทรอนิกส์ -->
+        <a href="/#departments" class="hero-burst-bubble bubble-3">
+          <div class="bubble-unified">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="4" width="16" height="16" rx="2" />
+              <rect x="9" y="9" width="6" height="6" />
+              <path d="M15 2v2" />
+              <path d="M15 20v2" />
+              <path d="M2 15h2" />
+              <path d="M2 9h2" />
+              <path d="M20 15h2" />
+              <path d="M20 9h2" />
+              <path d="M9 2v2" />
+              <path d="M9 20v2" />
+            </svg>
+            <span class="unified-label">อิเล็กทรอนิกส์</span>
+          </div>
+        </a>
+        <!-- สาขาวิชาการบัญชี -->
+        <a href="/#departments" class="hero-burst-bubble bubble-4">
+          <div class="bubble-unified">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+            <span class="unified-label">การบัญชี</span>
+          </div>
+        </a>
+        <!-- สาขาวิชาเทคโนโลยีธุรกิจดิจิทัล -->
+        <a href="/#departments" class="hero-burst-bubble bubble-5">
+          <div class="bubble-unified">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+            <span class="unified-label">เทคโนโลยี<br>ธุรกิจดิจิทัล</span>
+          </div>
+        </a>
+      </div>
+
+      <button class="btn-hero-primary" style="position: relative; z-index: 10;">สมัครเรียน</button>
+      <a href="#contact" class="btn-hero-secondary" style="position: relative; z-index: 10;">ติดต่อสอบถาม</a>
+    </div>
+  </div>
+
+  <!-- Scroll hint -->
+  <div class="hero-scroll-hint">
+    <span>เลื่อนลงเพื่อดูเพิ่มเติม</span>
+    <div class="hero-scroll-arrow"></div>
+  </div>
+
+  <!-- Corner Decorations -->
+  <div class="hero-corner hero-corner-tl"></div>
+  <div class="hero-corner hero-corner-br"></div>
+
+</section>

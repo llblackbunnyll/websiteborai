@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <link rel="icon" href="/my-logo.webp" type="image/webp" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+<div class="login-page">
+  <div class="login-card">
+    <!-- Header -->
+    <div class="login-header">
+      <img src="/my-logo.webp" alt="BICEC Logo" />
+      <h1 class="login-title">
+        <span class="text-gradient">Admin</span> Login
+      </h1>
+      <p class="login-subtitle">เข้าสู่ระบบจัดการเว็บไซต์วิทยาลัย</p>
+    </div>
+
+    <!-- Error -->
+    <div id="login-error" class="login-error" style="display:none;margin-bottom:1rem;"></div>
+
+    <!-- Form -->
+    <form id="login-form" class="login-form" autocomplete="off">
+      <div>
+        <label for="login-username">ชื่อผู้ใช้</label>
+        <input
+          id="login-username"
+          type="text"
+          class="login-input"
+          placeholder="กรอกชื่อผู้ใช้"
+          required
+          autocomplete="username"
+        />
+      </div>
+      <div>
+        <label for="login-password">รหัสผ่าน</label>
+        <input
+          id="login-password"
+          type="password"
+          class="login-input"
+          placeholder="กรอกรหัสผ่าน"
+          required
+          autocomplete="current-password"
+        />
+      </div>
+
+      <button type="submit" id="login-btn" class="btn-login">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        เข้าสู่ระบบ
+      </button>
+    </form>
+
+    <div class="login-back" onclick="window.location.href='/'">
+      &larr; กลับหน้าเว็บไซต์
+    </div>
+  </div>
+</div>
+
+<script src="/js/admin.js"></script>
+</body>
+</html>
