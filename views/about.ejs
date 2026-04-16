@@ -1320,14 +1320,6 @@
           </svg>
           สถานประกอบการ
         </a>
-        <a href="#budget-info" class="sidebar-link">
-          <svg class="s-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="1" x2="12" y2="23"></line>
-            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-          </svg>
-          งบประมาณสถานศึกษา
-        </a>
         <a href="#community-info" class="sidebar-link">
           <svg class="s-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1915,62 +1907,83 @@
           </div>
 
           <div class="budget-container" style="position: relative; margin-top: 2rem;">
-            <div id="budget-no-data-overlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; z-index: 10; background: rgba(255,255,255,0.4); backdrop-filter: blur(2px); border-radius: 24px;">
-              <div style="background: #fff; padding: 25px 45px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.08); text-align: center; border: 1px solid var(--a-border); transform: translateY(-10px);">
-                <div style="background: rgba(244, 63, 94, 0.1); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-6M6 20V10M18 20V4M3 20h18"/></svg>
+            <% if (budgetInfoStatus === 'maintenance') { %>
+              <!-- Maintenance Mode View -->
+              <div style="background: #fff; padding: 60px 40px; border-radius: 24px; box-shadow: 0 15px 45px rgba(0,0,0,0.05); text-align: center; border: 1px solid var(--a-border); margin: 2rem 0;">
+                <div style="background: rgba(245, 158, 11, 0.1); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                  </svg>
                 </div>
-                <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--a-text); margin-bottom: 6px;">ยังไม่มีข้อมูลในระบบ</h3>
-                <p style="font-size: 0.9rem; color: var(--a-muted); max-width: 240px; line-height: 1.5;">ข้อมูลการบริหารงบประมาณและสถิติทางการเงิน<br>อยู่ระหว่างการประมวลผลสรุปปีงบประมาณ</p>
-              </div>
-            </div>
-
-            <div id="budget-charts-grid" class="budget-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
-              <!-- 1. Budget Source Distribution (Doughnut) -->
-              <div class="budget-card glass" style="padding: 24px; border-radius: 24px; border: 1px solid var(--a-border); background: #fff;">
-                <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--a-text); margin-bottom: 24px; display: flex; align-items: center; gap: 10px;">
-                  <span style="width: 10px; height: 10px; background: #f43f5e; border-radius: 3px; transform: rotate(45deg);"></span>
-                  สัดส่วนหมวดงบประมาณ
-                </h3>
-                <div style="height: 280px; position: relative;">
-                  <canvas id="budgetSourceChart"></canvas>
+                <h3 style="font-size: 1.5rem; font-weight: 800; color: var(--a-text); margin-bottom: 12px; font-family: 'Prompt', sans-serif;">อยู่ระหว่างปรับปรุงข้อมูล</h3>
+                <p style="font-size: 1rem; color: var(--a-muted); max-width: 400px; line-height: 1.6; margin: 0 auto;">
+                  ขออภัยในความไม่สะดวก ข้อมูลการบริหารจัดการงบประมาณและแผนปฏิบัติการประจำปี อยู่ระหว่างการตรวจสอบและปรับปรุงข้อมูลให้เป็นปัจจุบัน
+                </p>
+                <div style="margin-top: 32px; display: flex; justify-content: center; gap: 12px;">
+                  <span style="background: #f8fafc; padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; color: var(--a-muted); font-weight: 600; border: 1px solid var(--a-border);">
+                    📦 อัปเดตล่าสุด: <%= new Date().toLocaleDateString('th-TH') %>
+                  </span>
                 </div>
               </div>
-
-              <!-- 2. Budget Allocation Details (Bar) -->
-              <div class="budget-card glass" style="padding: 24px; border-radius: 24px; border: 1px solid var(--a-border); background: #fff;">
-                <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--a-text); margin-bottom: 24px; display: flex; align-items: center; gap: 10px;">
-                  <span style="width: 10px; height: 10px; background: #3b82f6; border-radius: 3px; transform: rotate(45deg);"></span>
-                  สถิติตามหมวดรายจ่ายการดำเนินงาน
-                </h3>
-                <div style="height: 280px; position: relative;">
-                  <canvas id="budgetAllocationChart"></canvas>
+            <% } else { %>
+              <!-- Normal View -->
+              <div id="budget-no-data-overlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; z-index: 10; background: rgba(255,255,255,0.4); backdrop-filter: blur(2px); border-radius: 24px;">
+                <div style="background: #fff; padding: 25px 45px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.08); text-align: center; border: 1px solid var(--a-border); transform: translateY(-10px);">
+                  <div style="background: rgba(244, 63, 94, 0.1); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-6M6 20V10M18 20V4M3 20h18"/></svg>
+                  </div>
+                  <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--a-text); margin-bottom: 6px;">ยังไม่มีข้อมูลในระบบ</h3>
+                  <p style="font-size: 0.9rem; color: var(--a-muted); max-width: 240px; line-height: 1.5;">ข้อมูลการบริหารงบประมาณและสถิติทางการเงิน<br>อยู่ระหว่างการประมวลผลสรุปปีงบประมาณ</p>
                 </div>
               </div>
-            </div>
 
-            <!-- Dynamic Table Integration -->
-            <div id="budget-table-wrap" class="glass" style="margin-top: 2.5rem; border-radius: 20px; overflow: hidden; border: 1px solid var(--a-border); background: #fff;">
-              <div style="padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--a-border); background: rgba(112, 66, 248, 0.02); display: flex; justify-content: space-between; align-items: center;">
-                 <h3 style="font-size: 1rem; font-weight: 800; color: var(--a-text);">รายการโครงการและแผนปฏิบัติการประจำปี</h3>
-                 <div id="budget-last-update" style="font-size: 0.75rem; color: var(--a-muted); font-weight: 600;"></div>
+              <div id="budget-charts-grid" class="budget-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+                <!-- 1. Budget Source Distribution (Doughnut) -->
+                <div class="budget-card glass" style="padding: 24px; border-radius: 24px; border: 1px solid var(--a-border); background: #fff;">
+                  <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--a-text); margin-bottom: 24px; display: flex; align-items: center; gap: 10px;">
+                    <span style="width: 10px; height: 10px; background: #f43f5e; border-radius: 3px; transform: rotate(45deg);"></span>
+                    สัดส่วนหมวดงบประมาณ
+                  </h3>
+                  <div style="height: 280px; position: relative;">
+                    <canvas id="budgetSourceChart"></canvas>
+                  </div>
+                </div>
+
+                <!-- 2. Budget Allocation Details (Bar) -->
+                <div class="budget-card glass" style="padding: 24px; border-radius: 24px; border: 1px solid var(--a-border); background: #fff;">
+                  <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--a-text); margin-bottom: 24px; display: flex; align-items: center; gap: 10px;">
+                    <span style="width: 10px; height: 10px; background: #3b82f6; border-radius: 3px; transform: rotate(45deg);"></span>
+                    สถิติตามหมวดรายจ่ายการดำเนินงาน
+                  </h3>
+                  <div style="height: 280px; position: relative;">
+                    <canvas id="budgetAllocationChart"></canvas>
+                  </div>
+                </div>
               </div>
-              <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem;">
-                  <thead style="background: rgba(112, 66, 248, 0.03);">
-                    <tr>
-                      <th style="padding: 1.2rem 1.5rem; color: var(--a-text); font-weight: 800; width: 100px;">ปีงบฯ</th>
-                      <th style="padding: 1.2rem 1.5rem; color: var(--a-text); font-weight: 800;">รายการ / โครงการ</th>
-                      <th style="padding: 1.2rem 1.5rem; color: var(--a-text); font-weight: 800; width: 160px;">จำนวนเงิน</th>
-                      <th style="padding: 1.2rem 1.5rem; color: var(--a-text); font-weight: 800; width: 140px;">สถานะ</th>
-                    </tr>
-                  </thead>
-                  <tbody id="public-budget-container">
-                    <!-- Rendered via JS -->
-                  </tbody>
-                </table>
+
+              <!-- Dynamic Table Integration -->
+              <div id="budget-table-wrap" class="glass" style="margin-top: 2.5rem; border-radius: 20px; overflow: hidden; border: 1px solid var(--a-border); background: #fff;">
+                <div style="padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--a-border); background: rgba(112, 66, 248, 0.02); display: flex; justify-content: space-between; align-items: center;">
+                   <h3 style="font-size: 1rem; font-weight: 800; color: var(--a-text);">รายการโครงการและแผนปฏิบัติการประจำปี</h3>
+                   <div id="budget-last-update" style="font-size: 0.75rem; color: var(--a-muted); font-weight: 600;"></div>
+                </div>
+                <div style="overflow-x: auto;">
+                  <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem;">
+                    <thead style="background: rgba(112, 66, 248, 0.03);">
+                      <tr>
+                        <th style="padding: 1.2rem 1.5rem; color: var(--a-text); font-weight: 800; width: 100px;">ปีงบฯ</th>
+                        <th style="padding: 1.2rem 1.5rem; color: var(--a-text); font-weight: 800;">รายการ / โครงการ</th>
+                        <th style="padding: 1.2rem 1.5rem; color: var(--a-text); font-weight: 800; width: 160px;">จำนวนเงิน</th>
+                        <th style="padding: 1.2rem 1.5rem; color: var(--a-text); font-weight: 800; width: 140px;">สถานะ</th>
+                      </tr>
+                    </thead>
+                    <tbody id="public-budget-container">
+                      <!-- Rendered via JS -->
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+            <% } %>
           </div>
         </section>
 

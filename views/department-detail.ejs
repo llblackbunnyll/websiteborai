@@ -10,256 +10,311 @@
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --accent-color: #6b21a8;
-      --accent-light: #9333ea;
-      --text-main: #1e293b;
-      --text-muted: #475569;
-      --glass-border: rgba(107, 33, 168, 0.1);
+      --dept-color: <%= dept.color || '#3b82f6' %>;
+      --dept-color-rgb: <%= dept.color ? (parseInt(dept.color.slice(1,3), 16) + ',' + parseInt(dept.color.slice(3,5), 16) + ',' + parseInt(dept.color.slice(5,7), 16)) : '59,130,246' %>;
+      --dept-light: rgba(var(--dept-color-rgb), 0.1);
+      --dept-medium: rgba(var(--dept-color-rgb), 0.2);
+      
+      --curr-purple: #7042f8;
+      --curr-blue: #0ea5e9;
+      --curr-pink: #ec4899;
+      --curr-dark: #0f172a;
     }
 
-    body {
+    /* ONLY scope to dept-page-wrapper, avoid body { } so navbar/footer don't break */
+    .dept-page-wrapper {
+      padding-top: 80px; /* For navbar */
+      background: #f8fafc;
+      min-height: 100vh;
+      color: #1e293b;
       font-family: 'Sarabun', sans-serif;
-      background: #fcfcfc;
     }
 
-    /* Sub Banner */
-    .dept-hero {
-      height: 380px;
-      background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%);
+    /* ═══ HERO — EXACTLY LIKE CURRICULUM PAGE ════════════════════════════════════════════ */
+    .curr-hero {
+      width: 100%;
+      min-height: 480px;
       position: relative;
+      background: linear-gradient(160deg, #f8f5ff 0%, #eef6ff 50%, #f0f9ff 100%);
       overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: white;
       text-align: center;
+      color: #0f172a;
+      border-bottom: 1px solid rgba(112, 66, 248, 0.1);
     }
 
-    .dept-hero-canvas {
+    /* Decorative rings */
+    .curr-hero-ring {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0.4;
+      border-radius: 50%;
+      border: 1px solid rgba(112, 66, 248, 0.12);
+      pointer-events: none;
     }
+    .ring-1 { width: 460px; height: 460px; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: ringPulse 6s ease-in-out infinite; }
+    .ring-2 { width: 700px; height: 700px; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: ringPulse 9s ease-in-out infinite 1.5s; }
+    .ring-3 { width: 960px; height: 960px; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: ringPulse 12s ease-in-out infinite 3s; }
+    @keyframes ringPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
-    .dept-hero-content {
+    /* Soft orbs */
+    .curr-hero-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      pointer-events: none;
+    }
+    .orb-1 { width: 400px; height: 400px; background: rgba(112, 66, 248, 0.12); top: -80px; left: -60px; animation: floatOrb 9s ease-in-out infinite; }
+    .orb-2 { width: 360px; height: 360px; background: rgba(14, 165, 233, 0.1); bottom: -60px; right: -40px; animation: floatOrb 11s ease-in-out infinite reverse; }
+    .orb-3 { width: 260px; height: 260px; background: rgba(236, 72, 153, 0.07); top: 50%; left: 50%; transform: translate(-50%, -50%); animation: floatOrbCenter 13s ease-in-out infinite 2s; }
+    @keyframes floatOrb { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(30px, -30px); } }
+    @keyframes floatOrbCenter { 0%, 100% { transform: translate(-50%, -50%); } 50% { transform: translate(calc(-50% + 20px), calc(-50% - 20px)); } }
+
+    .curr-hero-content {
       position: relative;
       z-index: 10;
-      padding: 0 20px;
+      padding: 100px 20px 60px;
     }
-
-    .dept-hero-label {
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      font-size: 0.85rem;
+    .curr-hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 18px;
+      background: rgba(112, 66, 248, 0.07);
+      border: 1px solid rgba(112, 66, 248, 0.2);
+      border-radius: 100px;
+      font-size: 0.78rem;
       font-weight: 700;
-      color: #e9d5ff;
-      margin-bottom: 10px;
-      display: block;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      color: var(--curr-purple);
     }
+    .curr-hero-tag::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--curr-blue);
+      border-radius: 50%;
+      animation: pulseDot 2s ease-in-out infinite;
+    }
+    @keyframes pulseDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-    .dept-hero-title {
-      font-size: 3.5rem;
+    .curr-hero-title {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
       font-weight: 800;
-      margin-bottom: 15px;
+      line-height: 1.1;
+      margin-bottom: 18px;
+      letter-spacing: -1px;
+      color: #0f172a;
+    }
+    .curr-hero-title .highlight {
+      background: linear-gradient(90deg, var(--dept-color), var(--curr-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .curr-hero-subtitle {
+      font-size: 1.1rem;
+      color: #64748b;
+      max-width: 560px;
+      margin: 0 auto 30px;
+      line-height: 1.7;
+    }
+    
+    .dept-hero-actions {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 20px;
     }
 
-    .dept-breadcrumb {
-      font-size: 0.9rem;
-      opacity: 0.8;
+    .dept-btn-primary {
+      background: var(--dept-color);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s;
+      box-shadow: 0 8px 20px rgba(var(--dept-color-rgb), 0.3);
     }
-    .dept-breadcrumb a { color: white; text-decoration: none; }
-    .dept-breadcrumb span { margin: 0 8px; }
+    .dept-btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 25px rgba(var(--dept-color-rgb), 0.4);
+    }
+    .dept-btn-secondary {
+      background: white;
+      color: #1e293b;
+      padding: 12px 24px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+    }
+    .dept-btn-secondary:hover {
+      border-color: var(--dept-color);
+      color: var(--dept-color);
+      transform: translateY(-3px);
+    }
 
-    /* Page Layout */
-    .detail-container {
-      max-width: 1200px;
-      margin: -50px auto 100px;
-      padding: 0 20px;
+    .curr-hero-breadcrumb {
+      font-size: 0.85rem;
+      color: #94a3b8;
+    }
+    .curr-hero-breadcrumb a { color: var(--curr-purple); text-decoration: none; }
+    .curr-hero-breadcrumb span { margin: 0 8px; }
+
+    /* --- QUICK HIGHLIGHTS BAR --- */
+    .dept-highlights-bar {
+      max-width: 1100px;
+      margin: -40px auto 60px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 30px 40px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      box-shadow: 0 20px 60px rgba(31, 38, 135, 0.05);
       position: relative;
       z-index: 20;
+      border: 1px solid rgba(255,255,255,0.5);
     }
+    .dept-hl-item { display: flex; align-items: center; gap: 15px; }
+    .dept-hl-icon { width: 50px; height: 50px; border-radius: 14px; background: var(--dept-light); color: var(--dept-color); display: flex; justify-content: center; align-items: center; }
+    .dept-hl-text h4 { margin: 0 0 4px; font-size: 1rem; font-weight: 700; color: #1e293b; }
+    .dept-hl-text p { margin: 0; font-size: 0.85rem; color: #64748b; }
 
-    .grid-layout {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 30px;
+    /* --- BENTO GRID LAYOUT --- */
+    .dept-container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+    .dept-bento-grid { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: auto auto; gap: 24px; margin-bottom: 60px; }
+    .dept-bento-card {
+      background: white; border-radius: 24px; padding: 30px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.02); border: 1px solid #f1f5f9;
     }
+    .dept-bento-card.overview { grid-column: 1 / 2; grid-row: 1 / 3; }
+    .dept-bento-card.skills { grid-column: 2 / 3; grid-row: 1 / 2; }
+    .dept-bento-card.jobs { grid-column: 2 / 3; grid-row: 2 / 3; }
 
-    .detail-card {
-      background: white;
-      border-radius: 24px;
-      padding: 40px;
-      box-shadow: 0 10px 30px rgba(107, 33, 168, 0.04);
-      border: 1px solid #f1f5f9;
-      height: fit-content;
+    .dept-overview-img { 
+      width: calc(100% + 60px); height: 250px; margin: -30px -30px 25px; 
+      overflow: hidden; border-radius: 20px 20px 0 0; position: relative;
     }
+    .dept-overview-img img { width: 100%; height: 100%; object-fit: cover; }
+    .dept-overview-img::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 60%, rgba(255,255,255,0.8)); }
 
-    /* Curriculum Tabs */
-    .tab-nav {
-      display: flex;
-      gap: 15px;
-      margin-bottom: 30px;
-      border-bottom: 2px solid #f1f5f9;
-      padding-bottom: 10px;
+    .dept-card-title { font-size: 1.4rem; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .dept-card-title svg { color: var(--dept-color); }
+
+    .dept-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+    .dept-tag {
+      background: #f8fafc; color: #1e293b; padding: 8px 14px; border-radius: 10px;
+      font-size: 0.9rem; font-weight: 600; border: 1px solid #e2e8f0; transition: all 0.2s;
     }
+    .dept-tag:hover { border-color: var(--dept-color); color: var(--dept-color); transform: translateY(-2px); }
 
-    .tab-btn {
-      padding: 10px 20px;
-      border: none;
-      background: none;
-      font-family: inherit;
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #94a3b8;
-      cursor: pointer;
+    /* --- CURRICULUM SECTION --- */
+    .dept-section-header { text-align: center; margin: 80px 0 40px; }
+    .dept-section-header h2 { font-size: 2.2rem; font-weight: 800; margin: 0; background: linear-gradient(135deg, #0f172a, var(--dept-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .dept-section-header p { color: #64748b; margin-top: 10px; max-width: 600px; margin-left: auto; margin-right: auto; }
+    .dept-header-docs { display: flex; gap: 20px; justify-content: center; margin-top: 30px; flex-wrap: wrap; }
+    .dept-header-doc { 
+      background: white; padding: 15px 25px; border-radius: 16px; border: 1px solid #f1f5f9;
+      display: flex; align-items: center; gap: 12px; text-decoration: none; color: #1e293b;
+      transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+    }
+    .dept-header-doc:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(var(--dept-color-rgb), 0.1); border-color: var(--dept-light); }
+    .dept-header-doc svg { color: var(--dept-color); }
+
+    .dept-curr-grid { display: grid; grid-template-columns: 1fr; gap: 30px; margin-bottom: 80px; }
+    .dept-tabs { background: white; border-radius: 20px; padding: 10px; display: flex; gap: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 20px; width: max-content; }
+    .dept-tab { padding: 12px 24px; border-radius: 12px; font-weight: 700; cursor: pointer; color: #64748b; transition: all 0.3s; }
+    .dept-tab.active { background: var(--dept-color); color: white; box-shadow: 0 4px 10px rgba(var(--dept-color-rgb), 0.3); }
+
+    .dept-pane { display: none; }
+    .dept-pane.active { display: block; animation: fadeUp 0.5s ease; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .dept-subject-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    .dept-subject-card {
+      background: white; border-radius: 16px; padding: 20px; display: flex; align-items: center; gap: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.02); border: 1px solid #f1f5f9; transition: transform 0.3s;
+    }
+    .dept-subject-card:hover { transform: translateY(-3px); border-color: var(--dept-light); }
+    .dept-subject-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--dept-light); color: var(--dept-color); display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
+    .dept-subject-name { font-weight: 600; color: #1e293b; line-height: 1.4; }
+
+    .dept-docs-sidebar { display: flex; flex-direction: column; gap: 15px; }
+    .dept-doc-card {
+      background: white; border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+      border: 1px solid #f1f5f9; text-decoration: none; color: #1e293b; transition: all 0.3s; position: relative; overflow: hidden;
+    }
+    .dept-doc-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--dept-color); opacity: 0; transition: 0.3s; }
+    .dept-doc-card:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(var(--dept-color-rgb), 0.1); }
+    .dept-faculty-card.is-head { 
+      border-color: var(--dept-color); 
+      background: linear-gradient(to bottom, #ffffff, var(--dept-light));
+      box-shadow: 0 10px 25px rgba(var(--dept-color-rgb), 0.1);
+      transform: scale(1.02);
       position: relative;
-      transition: all 0.3s ease;
     }
-
-    .tab-btn.active {
-      color: var(--accent-color);
+    .dept-faculty-card.is-head::before {
+      content: 'หัวหน้าแผนก';
+      position: absolute; top: 12px; right: 12px;
+      background: var(--dept-color); color: white;
+      font-size: 0.65rem; font-weight: 800; padding: 4px 10px;
+      border-radius: 50px; z-index: 10;
+      box-shadow: 0 4px 10px rgba(var(--dept-color-rgb), 0.3);
     }
+    .dept-faculty-card.is-head .dept-faculty-img-wrap::after { border-style: solid; opacity: 0.6; }
 
-    .tab-btn.active::after {
-      content: '';
-      position: absolute;
-      bottom: -12px;
-      left: 0;
-      width: 100%;
-      height: 3px;
-      background: var(--accent-color);
-      border-radius: 10px;
+    .dept-doc-card:hover::before { opacity: 1; }
+    .dept-doc-icon { width: 60px; height: 60px; border-radius: 16px; background: #f8fafc; color: var(--dept-color); display: flex; justify-content: center; align-items: center; margin: 0 auto 15px; }
+
+    /* --- GALLERY --- */
+    .dept-gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
+    .dept-gallery-item { 
+      aspect-ratio: 4/3; border-radius: 16px; overflow: hidden; border: 1px solid #f1f5f9; cursor: pointer;
+      position: relative; transition: all 0.3s;
     }
-
-    .subject-list {
-      list-style: none;
-      padding: 0;
+    .dept-gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+    .dept-gallery-item:hover img { transform: scale(1.1); }
+    .dept-gallery-item::after { 
+      content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.4), transparent); 
+      opacity: 0; transition: 0.3s; 
     }
+    .dept-gallery-item:hover::after { opacity: 1; }
 
-    .subject-item {
-      padding: 15px 20px;
-      background: #f8fafc;
-      border-radius: 12px;
-      margin-bottom: 10px;
-      font-weight: 500;
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
+    /* --- FACULTY GRID --- */
+    .dept-faculty-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 25px; margin-bottom: 100px; }
+    .dept-faculty-card { background: white; border-radius: 24px; padding: 30px 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border: 1px solid #f1f5f9; transition: all 0.3s; }
+    .dept-faculty-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(var(--dept-color-rgb), 0.08); border-color: var(--dept-light); }
+    .dept-faculty-img-wrap { width: 110px; height: 110px; margin: 0 auto 20px; position: relative; }
+    .dept-faculty-img-wrap::after { content: ''; position: absolute; inset: -5px; border-radius: 50%; border: 2px dashed var(--dept-color); opacity: 0.3; transition: 0.5s; }
+    .dept-faculty-card:hover .dept-faculty-img-wrap::after { transform: rotate(45deg); opacity: 1; }
+    .dept-faculty-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: #f1f5f9; position: relative; z-index: 2; }
+    .dept-faculty-name { font-weight: 700; font-size: 1.1rem; margin-bottom: 4px; }
+    .dept-faculty-pos { font-size: 0.85rem; color: #64748b; }
 
-    .subject-item i {
-      color: var(--accent-light);
-    }
-
-    /* Job Section */
-    .sidebar-title {
-      font-size: 1.4rem;
-      font-weight: 800;
-      margin-bottom: 25px;
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .job-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .job-tag {
-      background: #f5f3ff;
-      color: #7c3aed;
-      padding: 12px 18px;
-      border-radius: 14px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      border-left: 4px solid #7c3aed;
-    }
-
-    /* Faculty Section */
-    .faculty-section {
-      margin-top: 80px;
-    }
-
-    .faculty-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 30px;
-      margin-top: 40px;
-    }
-
-    .faculty-card {
-      background: white;
-      border-radius: 20px;
-      padding: 30px;
-      text-align: center;
-      border: 1px solid #f1f5f9;
-      transition: 0.3s ease;
-    }
-
-    .faculty-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 15px 30px rgba(0,0,0,0.05);
-    }
-
-    .faculty-img {
-      width: 120px;
-      height: 120px;
-      border-radius: 100px;
-      object-fit: cover;
-      margin: 0 auto 20px;
-      border: 4px solid #f5f3ff;
-    }
-
-    .faculty-name {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-bottom: 5px;
-    }
-
-    .faculty-pos {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-    }
-
-    .faculty-empty {
-      text-align: center;
-      padding: 60px;
-      background: #f8fafc;
-      border-radius: 20px;
-      color: #94a3b8;
-      grid-column: 1 / -1;
-    }
-
-    .reveal {
-      opacity: 0;
-      transform: translateY(20px);
-      transition: all 0.6s ease-out;
-    }
-    .reveal.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    /* Tabs Content Logic */
-    .tab-pane { display: none; }
-    .tab-pane.active { display: block; animation: fadeIn 0.5s ease; }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @media (max-width: 992px) {
-      .grid-layout { grid-template-columns: 1fr; }
-      .dept-hero-title { font-size: 2.5rem; }
+    /* --- RESPONSIVE --- */
+    @media (max-width: 1024px) {
+      .dept-highlights-bar { grid-template-columns: 1fr; gap: 15px; margin: 20px 20px 40px; }
+      .dept-bento-grid { grid-template-columns: 1fr; }
+      .dept-bento-card.overview, .dept-bento-card.skills, .dept-bento-card.jobs { grid-column: 1 / 2; grid-row: auto; }
+      .dept-curr-grid { grid-template-columns: 1fr; }
+      .dept-subject-grid { grid-template-columns: 1fr; }
+      .dept-tabs { margin: 0 auto 20px; }
     }
   </style>
 </head>
@@ -267,219 +322,353 @@
 <body>
   <%- include('partials/navbar') %>
 
-  <!-- Hero Section -->
-  <header class="dept-hero">
-    <canvas id="hero-canvas" class="dept-hero-canvas"></canvas>
-    <div class="dept-hero-content reveal">
-      <span class="dept-hero-label">สาขาวิชาในสถานศึกษา</span>
-      <h1 class="dept-hero-title">สาขาวิชา<%= dept.name %></h1>
-      <div class="dept-breadcrumb">
-        <a href="/">หน้าแรก</a> <span>/</span> <a href="/curriculum">หลักสูตร</a> <span>/</span> <span><%= dept.name %></span>
+  <div class="dept-page-wrapper">
+    <!-- HERO (Curriculum exact design) -->
+    <header class="curr-hero">
+      <div class="curr-hero-ring ring-1"></div>
+      <div class="curr-hero-ring ring-2"></div>
+      <div class="curr-hero-ring ring-3"></div>
+      <div class="curr-hero-orb orb-1"></div>
+      <div class="curr-hero-orb orb-2"></div>
+      <div class="curr-hero-orb orb-3"></div>
+      <canvas id="particles-canvas" style="position: absolute; top:0; left:0; width:100%; height:100%; z-index: 1; pointer-events: none;"></canvas>
+
+      <div class="curr-hero-content" style="position: relative; z-index: 10;">
+        <span class="curr-hero-tag">สาขาวิชาในสถานศึกษา</span>
+        <h1 class="curr-hero-title">สาขาวิชา<span class="highlight"><%= dept.name %></span></h1>
+        <p class="curr-hero-subtitle">มุ่งเน้นการปฏิบัติจริง พัฒนาความเป็นมืออาชีพ พร้อมก้าวสู่ตลาดแรงงานยุคใหม่ด้วยทักษะแบบครบวงจร</p>
+        
+        <div class="dept-hero-actions">
+          <a href="/admission" class="dept-btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M19 8l2 2 4-4"></path></svg>
+            ยื่นใบสมัครเรียน
+          </a>
+          <a href="#curriculum" class="dept-btn-secondary">
+            ดูรายละเอียดหลักสูตร
+          </a>
+        </div>
+
+        <div class="curr-hero-breadcrumb">
+          <a href="/">หน้าแรก</a> <span>/</span> 
+          <a href="/curriculum">หลักสูตร</a> <span>/</span> 
+          <span style="color: #64748b;"><%= dept.name %></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Highlights Bar -->
+    <div class="dept-highlights-bar">
+      <div class="dept-hl-item">
+        <div class="dept-hl-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+        </div>
+        <div class="dept-hl-text">
+          <h4>ประเภทวิชา</h4>
+          <p><%= dept.type || 'วิชาชีพเฉพาะ' %></p>
+        </div>
+      </div>
+      <div class="dept-hl-item">
+        <div class="dept-hl-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-3-3.87"></path><path d="M9 21v-2a4 4 0 0 1 3-3.87"></path><path d="M21 21v-2a4 4 0 0 0-3-3.87"></path><circle cx="12" cy="7" r="4"></circle><circle cx="18" cy="11" r="3"></circle><circle cx="6" cy="11" r="3"></circle></svg>
+        </div>
+        <div class="dept-hl-text">
+          <h4>กลุ่มอาชีพ</h4>
+          <p><%= dept.jobGroup || 'กำลังปรับปรุง' %></p>
+        </div>
+      </div>
+      <div class="dept-hl-item">
+        <div class="dept-hl-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        </div>
+        <div class="dept-hl-text">
+          <h4>ระดับที่เปิดสอน</h4>
+          <p>
+            <% 
+              let levels = [];
+              if (dept.curriculumPvc && dept.curriculumPvc.length > 0) levels.push('ปวช.');
+              if (dept.curriculumHvc && dept.curriculumHvc.length > 0) levels.push('ปวส.');
+            %>
+            <%= levels.join(' / ') %>
+          </p>
+        </div>
+      </div>
+      <div class="dept-hl-item">
+        <div class="dept-hl-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        </div>
+        <div class="dept-hl-text">
+          <h4>การเรียนการสอน</h4>
+          <p>ทฤษฎีควบคู่ปฏิบัติจริง</p>
+        </div>
       </div>
     </div>
-  </header>
 
-  <main class="detail-container">
-    <div class="grid-layout">
-      <!-- Main Content: Curriculum Subjects -->
-      <section class="detail-card reveal">
-        <div class="sidebar-title">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-          รายวิชาที่น่าสนใจในหลักสูตร
-        </div>
-        
-        <div class="tab-nav">
-          <button class="tab-btn active" onclick="openTab(event, 'pvc')">ระดับ ปวช.</button>
-          <button class="tab-btn" onclick="openTab(event, 'hvc')">ระดับ ปวส.</button>
-        </div>
-
-        <div id="pvc" class="tab-pane active">
-          <ul class="subject-list">
-            <% dept.curriculum.pvc.forEach(subject => { %>
-              <li class="subject-item">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <%= subject %>
-              </li>
-            <% }) %>
-          </ul>
-        </div>
-
-        <div id="hvc" class="tab-pane">
-          <ul class="subject-list">
-            <% dept.curriculum.hvc.forEach(subject => { %>
-              <li class="subject-item">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                <%= subject %>
-              </li>
-            <% }) %>
-          </ul>
-        </div>
-      </section>
-
-      <!-- Sidebar: Description & Career Paths -->
-      <aside class="reveal" style="display: flex; flex-direction: column; gap: 30px;">
-        <div class="detail-card" style="padding: 30px;">
-          <div class="sidebar-title">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-            เกี่ยวกับสาขา
+    <!-- Main Content: Bento Grid -->
+    <main class="dept-container">
+      <div class="dept-bento-grid">
+        <!-- Overview Card -->
+        <div class="dept-bento-card overview">
+          <% if(dept.imageUrl) { %>
+            <div class="dept-overview-img">
+              <img src="<%= dept.imageUrl %>" alt="<%= dept.name %> Cover">
+            </div>
+          <% } %>
+          <div class="dept-card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            เกี่ยวกับสาขาวิชานี้
           </div>
-          <p style="color: var(--text-muted); line-height: 1.8; font-size: 1.05rem; margin-bottom: 20px;">
-            <%= dept.description %>
+          <p style="font-size: 1.15rem; line-height: 1.8; color: #64748b;">
+            <%= dept.description || 'สาขาวิชาที่มุ่งเน้นการสร้างผู้สำเร็จการศึกษาที่มีความรู้ความสามารถตรงตามความต้องการของ สถานประกอบการ พร้อมด้วยคุณธรรมจริยธรรม' %>
           </p>
-          <div class="dept-skills" style="display: flex; flex-wrap: wrap; gap: 8px;">
-            <% (dept.skills || []).forEach(skill => { %>
-              <span class="skill-tag" style="font-size: 0.8rem; background: #f8fafc; color: #64748b; padding: 6px 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-weight: 600;"><%= skill %></span>
-            <% }) %>
+        </div>
+
+        <!-- Skills Card -->
+        <div class="dept-bento-card skills">
+          <div class="dept-card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            ทักษะที่ได้รับ
+          </div>
+          <div class="dept-tags">
+            <% if(dept.skills && dept.skills.length > 0) { %>
+              <% dept.skills.forEach(skill => { %>
+                <span class="dept-tag"><%= skill %></span>
+              <% }) %>
+            <% } else { %>
+              <span class="dept-tag" style="background:#f8fafc; color:#94a3b8; border-style:dashed;">เตรียมข้อมูลทักษะ</span>
+            <% } %>
           </div>
         </div>
 
-        <div class="detail-card" style="padding: 30px;">
-          <div class="sidebar-title">
+        <!-- Jobs Card -->
+        <div class="dept-bento-card jobs">
+          <div class="dept-card-title">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
             อาชีพที่รองรับ
           </div>
-          <div class="job-list">
-            <% dept.jobs.forEach(job => { %>
-              <div class="job-tag"><%= job %></div>
-            <% }) %>
+          <div class="dept-tags">
+            <% if(dept.jobs && dept.jobs.length > 0) { %>
+              <% dept.jobs.forEach(job => { %>
+                <span class="dept-tag"><%= job %></span>
+              <% }) %>
+            <% } else { %>
+              <span class="dept-tag" style="background:#f8fafc; color:#94a3b8; border-style:dashed;">เตรียมข้อมูลอาชีพ</span>
+            <% } %>
           </div>
         </div>
-        <div class="detail-card" style="padding: 30px;">
-          <div class="sidebar-title">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            เอกสารหลักสูตร
-          </div>
-          <a href="<%= dept.pdfUrl %>" target="_blank" class="job-tag" style="display: flex; align-items: center; justify-content: space-between; text-decoration: none; border-left: 4px solid #7c3aed; background: #f5f3ff;">
-            <span>หลักสูตร ปวช. 2567 (ไฟล์จริง)</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-          </a>
-          <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 10px;">* ข้อมูลจากสำนักมาตรฐานการอาชีวศึกษา (อ้างอิงไฟล์ล่าสุด)</p>
-        </div>
-      </aside>
-    </div>
-
-    <!-- Faculty Section -->
-    <section class="faculty-section reveal">
-      <div class="sidebar-title" style="justify-content: center; font-size: 1.8rem; margin-bottom: 10px;">
-        คณะครูผู้สอนประจำสาขา
       </div>
-      <p style="text-align: center; color: var(--text-muted); margin-bottom: 40px;">ทีมครูผู้เชี่ยวชาญพร้อมถ่ายทอดความรู้และประสบการณ์</p>
-      
-      <div class="faculty-grid">
+
+      <!-- Activity Gallery Section (NEW) -->
+      <% if(dept.activityImages && dept.activityImages.length > 0) { %>
+      <div class="dept-section-header">
+        <h2>บรรยากาศการเรียนและกิจกรรม</h2>
+        <p>ภาพบรรยากาศการเรียนการสอนและกิจกรรมต่างๆ ในสาขาวิชา</p>
+      </div>
+      <div class="dept-gallery-grid">
+        <% dept.activityImages.forEach(img => { %>
+          <div class="dept-gallery-item" onclick="openLightbox('<%= img %>')">
+            <img src="<%= img %>" alt="Activity Image">
+          </div>
+        <% }) %>
+      </div>
+
+      <!-- Minimal Lightbox -->
+      <div id="dept-lightbox" onclick="this.style.display='none'" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:9999; display:none; align-items:center; justify-content:center; padding:40px; cursor:zoom-out;">
+        <img id="lightbox-img" src="" style="max-width:100%; max-height:100%; border-radius:12px; box-shadow:0 20px 50px rgba(0,0,0,0.5);">
+        <div style="position:absolute; top:20px; right:20px; color:white; font-size:30px; cursor:pointer;">&times;</div>
+      </div>
+
+      <script>
+        function openLightbox(url) {
+          const lb = document.getElementById('dept-lightbox');
+          const img = document.getElementById('lightbox-img');
+          img.src = url;
+          lb.style.display = 'flex';
+        }
+      </script>
+      <% } %>
+
+      <!-- Curriculum Details -->
+      <div id="curriculum" class="dept-section-header">
+        <h2>โครงสร้างหลักสูตรและรายวิชา</h2>
+        <p>วางแผนอนาคตด้วยหลักสูตรที่ทันสมัย มาตรฐานสากล พร้อมไฟล์โครงสร้างรายวิชาฉบับเต็ม</p>
+        
+        <div class="dept-header-docs">
+          <% if(dept.pdfUrl) { %>
+            <a href="<%= dept.pdfUrl %>" target="_blank" class="dept-header-doc">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+              <span>เอกสารหลักสูตรฉบับเต็ม</span>
+            </a>
+          <% } %>
+          <% if(dept.studyPlanUrl) { %>
+            <a href="<%= dept.studyPlanUrl %>" target="_blank" class="dept-header-doc">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+              <span>แผนการเรียนแนะนำ</span>
+            </a>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="dept-curr-grid">
+        <div style="background: white; border-radius: 24px; padding: 40px; border: 1px solid #f1f5f9; box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
+          <div style="margin-bottom: 30px;">
+            <h3 style="font-size: 1.4rem; font-weight: 800; color: #1e293b; margin: 0 0 8px;">ตัวอย่างรายวิชาที่น่าสนใจในแต่ละระดับชั้น</h3>
+            <p style="margin: 0; color: #64748b; font-size: 0.95rem;">เน้นการเรียนรู้ที่ได้รับจากการปฏิบัติจริงในห้องเรียนและเวิร์กชอป</p>
+          </div>
+          <!-- Custom Tabs -->
+          <div class="dept-tabs">
+            <% if(dept.curriculumPvc && dept.curriculumPvc.length > 0) { %>
+              <div class="dept-tab active" onclick="switchCurrTab('pvc')">ระดับ ปวช.</div>
+            <% } %>
+            <% if(dept.curriculumHvc && dept.curriculumHvc.length > 0) { %>
+              <div class="dept-tab <%= !(dept.curriculumPvc && dept.curriculumPvc.length > 0) ? 'active' : '' %>" onclick="switchCurrTab('hvc')">ระดับ ปวส.</div>
+            <% } %>
+          </div>
+
+          <!-- Pvc Pane -->
+          <% if(dept.curriculumPvc && dept.curriculumPvc.length > 0) { %>
+          <div id="pane-pvc" class="dept-pane active">
+            <div class="dept-subject-grid">
+              <% (dept.curriculumPvc || []).forEach(sub => { 
+                const sName = typeof sub === 'object' ? sub.name : sub;
+                const sDesc = typeof sub === 'object' ? sub.desc : '';
+              %>
+                <div class="dept-subject-card">
+                  <div class="dept-subject-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                  </div>
+                  <div style="flex:1;">
+                    <div class="dept-subject-name"><%= sName %></div>
+                    <% if(sDesc) { %><div style="font-size:0.85rem; color:#64748b; margin-top:2px;"><%= sDesc %></div><% } %>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+          <% } %>
+
+          <!-- Hvc Pane -->
+          <% if(dept.curriculumHvc && dept.curriculumHvc.length > 0) { %>
+          <div id="pane-hvc" class="dept-pane <%= !(dept.curriculumPvc && dept.curriculumPvc.length > 0) ? 'active' : '' %>">
+            <div class="dept-subject-grid">
+              <% (dept.curriculumHvc || []).forEach(sub => { 
+                const sName = typeof sub === 'object' ? sub.name : sub;
+                const sDesc = typeof sub === 'object' ? sub.desc : '';
+              %>
+                <div class="dept-subject-card">
+                  <div class="dept-subject-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                  </div>
+                  <div style="flex:1;">
+                    <div class="dept-subject-name"><%= sName %></div>
+                    <% if(sDesc) { %><div style="font-size:0.85rem; color:#64748b; margin-top:2px;"><%= sDesc %></div><% } %>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Faculty Details -->
+      <div class="dept-section-header">
+        <h2>คณะครูผู้สอนประจำสาขา</h2>
+        <p>ทีมครูผู้เชี่ยวชาญพร้อมถ่ายทอดความรู้และประสบการณ์</p>
+      </div>
+
+      <div class="dept-faculty-grid">
         <% if (faculty && faculty.length > 0) { %>
-          <% faculty.forEach(teacher => { %>
-            <div class="faculty-card reveal">
-              <img src="<%= teacher.imageUrl || '/images/default-person.svg' %>" 
-                   alt="<%= teacher.firstName %>" 
-                   class="faculty-img" 
-                   onerror="this.onerror=null; this.src='/images/default-person.svg';"
-                   style="background: #f1f5f9;">
-              <div class="faculty-name">
+          <% faculty.forEach(teacher => { 
+               const isHead = (teacher.position || '').includes('หัวหน้าแผนก') || 
+                            (Array.isArray(teacher.duties) && teacher.duties.some(d => d.includes('หัวหน้าแผนก')));
+          %>
+            <div class="dept-faculty-card <%= isHead ? 'is-head' : '' %>">
+              <div class="dept-faculty-img-wrap">
+                <img src="<%= teacher.imageUrl || '/images/default-person.svg' %>" 
+                     alt="<%= teacher.firstName %>" 
+                     class="dept-faculty-img" 
+                     onerror="this.onerror=null; this.src='/images/default-person.svg';">
+              </div>
+              <div class="dept-faculty-name">
                 <%= (teacher.prefix || '') %><%= teacher.firstName %> <%= teacher.lastName %>
               </div>
-              <div class="faculty-pos"><%= teacher.position || 'ครูผู้สอนประจำแผนก' %></div>
+              <% if(isHead) { %><div style="font-weight: 800; color: var(--dept-color); font-size: 0.85rem; margin-bottom: 2px;">หัวหน้าแผนกวิชา</div><% } %>
+              <div class="dept-faculty-pos"><%= teacher.position || 'ครูผู้สอนประจำแผนก' %></div>
             </div>
           <% }) %>
         <% } else { %>
-          <div class="faculty-empty">
-             <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 15px; opacity: 0.5;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-             <p>กำลังอัปเดตรายชื่อครูในแผนก...</p>
+          <div style="grid-column: 1 / -1; text-align: center; color: #64748b; padding: 50px;">
+            กำลังอัปเดตรายชื่อครูในแผนก...
           </div>
         <% } %>
       </div>
-    </section>
-  </main>
+
+    </main>
+  </div>
 
   <%- include('partials/footer') %>
 
+  <!-- External particles library if not already in main.js, or simply the canvas script -->
+  <script src="/js/particles.js"></script>
   <script>
-    function openTab(evt, tabName) {
-      const tabPanes = document.querySelectorAll('.tab-pane');
-      tabPanes.forEach(pane => pane.classList.remove('active'));
+    function switchCurrTab(target) {
+      document.querySelectorAll('.dept-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.dept-pane').forEach(p => p.classList.remove('active'));
 
-      const tabBtns = document.querySelectorAll('.tab-btn');
-      tabBtns.forEach(btn => btn.classList.remove('active'));
+      const tabs = Array.from(document.querySelectorAll('.dept-tab'));
+      const activeTab = tabs.find(t => t.textContent.includes(target === 'pvc' ? 'ปวช.' : 'ปวส.'));
+      if(activeTab) activeTab.classList.add('active');
 
-      const targetPane = document.getElementById(tabName);
-      if (targetPane) {
-        targetPane.classList.add('active');
-      }
-
-      // If called via event (click)
-      if (evt && evt.currentTarget) {
-        evt.currentTarget.classList.add('active');
-      } else {
-        // Find button by tabName for automatic switching
-        const matchingBtn = document.querySelector(`button[onclick*="'${tabName}'"]`);
-        if (matchingBtn) matchingBtn.classList.add('active');
-      }
+      const pane = document.getElementById('pane-' + target);
+      if(pane) pane.classList.add('active');
     }
 
-    // Handle initial hash on load
-    window.addEventListener('DOMContentLoaded', () => {
-      const hash = window.location.hash.replace('#', '');
-      if (hash === 'pvc' || hash === 'hvc') {
-        openTab(null, hash);
+    document.addEventListener("DOMContentLoaded", function() {
+      // Initialize particles on the hero canvas if particles.js is loaded
+      // (This assumes you have a basic canvas setup, or we write a simple static one here)
+      const canvas = document.getElementById('particles-canvas');
+      if(canvas) {
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let w, h;
+        
+        function resize() {
+          w = canvas.width = window.innerWidth;
+          h = canvas.height = canvas.parentElement.offsetHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        for(let i = 0; i < 50; i++) {
+          particles.push({
+            x: Math.random() * w, 
+            y: Math.random() * h,
+            r: Math.random() * 2 + 1,
+            sx: (Math.random() - 0.5) * 0.5,
+            sy: (Math.random() - 0.5) * 0.5,
+            opacity: Math.random() * 0.5 + 0.2
+          });
+        }
+
+        function draw() {
+          ctx.clearRect(0, 0, w, h);
+          particles.forEach(p => {
+            p.x += p.sx;
+            p.y += p.sy;
+            if(p.x < 0 || p.x > w) p.sx *= -1;
+            if(p.y < 0 || p.y > h) p.sy *= -1;
+            
+            ctx.fillStyle = `rgba(112, 66, 248, ${p.opacity})`;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          requestAnimationFrame(draw);
+        }
+        draw();
       }
     });
 
-    // Scroll Reveal
-    const reveal = () => {
-      const reveals = document.querySelectorAll('.reveal');
-      reveals.forEach(el => {
-        const windowHeight = window.innerHeight;
-        const revealTop = el.getBoundingClientRect().top;
-        if (revealTop < windowHeight - 50) {
-          el.classList.add('visible');
-        }
-      });
-    }
-    window.addEventListener('scroll', reveal);
-    reveal();
-
-    // Hero Canvas
-    const canvas = document.getElementById('hero-canvas');
-    const ctx = canvas.getContext('2d');
-    let particles = [];
-
-    function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = 380;
-    }
-    window.addEventListener('resize', resize);
-    resize();
-
-    class Particle {
-      constructor() { this.reset(); }
-      reset() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
-        this.size = Math.random() * 2 + 1;
-        this.speedX = Math.random() * 0.4 - 0.2;
-        this.speedY = Math.random() * 0.4 - 0.2;
-        this.opacity = Math.random() * 0.5;
-      }
-      update() {
-        this.x += this.speedX;
-        this.y += this.speedY;
-        if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
-        if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
-      }
-      draw() {
-        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-    for (let i = 0; i < 40; i++) particles.push(new Particle());
-    function animate() {
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      particles.forEach(p => { p.update(); p.draw(); });
-      requestAnimationFrame(animate);
-    }
-    animate();
   </script>
 </body>
-
 </html>

@@ -7,6 +7,60 @@
   <link rel="icon" href="/my-logo.webp" type="image/webp" />
   <link rel="stylesheet" href="/css/style.css" />
   <style>
+    /* ─── GROUPED SIDEBAR NAV ─────────────────────────────────────────────── */
+    .nav-group {
+      margin-bottom: 4px;
+    }
+    .nav-group-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.45rem 0.85rem;
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #94a3b8;
+      user-select: none;
+      transition: color 0.2s, background 0.2s;
+    }
+    .nav-group-header:hover {
+      color: #475569;
+      background: #f8fafc;
+    }
+    .nav-group-header.has-active {
+      color: var(--color-accent-primary, #7042f8);
+    }
+    .nav-group-arrow {
+      transition: transform 0.25s ease;
+      display: flex;
+      align-items: center;
+      color: #cbd5e1;
+    }
+    .nav-group-header:hover .nav-group-arrow {
+      color: #94a3b8;
+    }
+    .nav-group.collapsed .nav-group-arrow {
+      transform: rotate(-90deg);
+    }
+    .nav-group-items {
+      overflow: hidden;
+      max-height: 500px;
+      transition: max-height 0.3s ease, opacity 0.25s ease;
+      opacity: 1;
+    }
+    .nav-group.collapsed .nav-group-items {
+      max-height: 0;
+      opacity: 0;
+    }
+    .nav-group-divider {
+      height: 1px;
+      background: #f1f5f9;
+      margin: 4px 8px;
+    }
+
     .duty-unified-container {
       position: relative;
       background: rgba(255, 255, 255, 0.05);
@@ -278,33 +332,89 @@
     </div>
     
     <nav class="admin-nav">
-      <button class="nav-btn active" data-target="pr-panel">
-        <span>📰</span> ข่าวสาร/ประชาสัมพันธ์
-      </button>
-      <button class="nav-btn" data-target="personnel-panel">
-        <span>👥</span> ข้อมูลบุคลากร
-      </button>
-      <button class="nav-btn" data-target="docs-panel">
-        <span>📄</span> เอกสารเผยแพร่
-      </button>
-      <button class="nav-btn" data-target="ita-panel">
-        <span>📊</span> ระบบประเมิน ITA
-      </button>
-      <button class="nav-btn" data-target="student-panel">
-        <span>🎓</span> จัดการข้อมูลนักเรียน
-      </button>
-      <button class="nav-btn" data-target="facility-panel">
-        <span>🏢</span> บริหารข้อมูลอาคารสถานที่
-      </button>
-      <button class="nav-btn" data-target="partner-panel">
-        <span>🤝</span> สถานประกอบการ
-      </button>
-      <button class="nav-btn" data-target="budget-panel">
-        <span>💰</span> ข้อมูลงบประมาณ
-      </button>
-      <button class="nav-btn" data-target="others-panel">
-        <span>📦</span> ระบบอื่นๆ
-      </button>
+
+      <!-- Group 1: เนื้อหาสาธารณะ -->
+      <div class="nav-group" id="navgroup-content">
+        <div class="nav-group-header" onclick="toggleNavGroup('navgroup-content')">
+          <span>เนื้อหาสาธารณะ</span>
+          <span class="nav-group-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </div>
+        <div class="nav-group-items">
+          <button class="nav-btn active" data-target="pr-panel">
+            <span>📰</span> ข่าวสาร / ประชาสัมพันธ์
+          </button>
+          <button class="nav-btn" data-target="docs-panel">
+            <span>📄</span> เอกสารเผยแพร่
+          </button>
+          <button class="nav-btn" data-target="achievements-panel">
+            <span>🏆</span> ผลงานเด่น
+          </button>
+          <button class="nav-btn" data-target="images-panel">
+            <span>🖼️</span> รูปภาพเว็บไซต์
+          </button>
+        </div>
+      </div>
+
+      <div class="nav-group-divider"></div>
+
+      <!-- Group 2: ข้อมูลสถาบัน -->
+      <div class="nav-group collapsed" id="navgroup-institute">
+        <div class="nav-group-header" onclick="toggleNavGroup('navgroup-institute')">
+          <span>ข้อมูลสถาบัน</span>
+          <span class="nav-group-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </div>
+        <div class="nav-group-items">
+          <button class="nav-btn" data-target="personnel-panel">
+            <span>👥</span> บุคลากร
+          </button>
+          <button class="nav-btn" data-target="student-panel">
+            <span>🎓</span> ข้อมูลนักเรียน
+          </button>
+          <button class="nav-btn" data-target="curriculum-panel">
+            <span>📚</span> สาขาวิชา/หลักสูตร
+          </button>
+          <button class="nav-btn" data-target="facility-panel">
+            <span>🏢</span> อาคารสถานที่
+          </button>
+          <button class="nav-btn" data-target="partner-panel">
+            <span>🤝</span> สถานประกอบการ
+          </button>
+        </div>
+      </div>
+
+      <div class="nav-group-divider"></div>
+
+      <!-- Group 3: การเงินและงบประมาณ -->
+      <div class="nav-group collapsed" id="navgroup-finance">
+        <div class="nav-group-header" onclick="toggleNavGroup('navgroup-finance')">
+          <span>การเงินและงบประมาณ</span>
+          <span class="nav-group-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </div>
+        <div class="nav-group-items">
+          <button class="nav-btn" data-target="budget-panel">
+            <span>💰</span> ข้อมูลงบประมาณ
+          </button>
+        </div>
+      </div>
+
+      <div class="nav-group-divider"></div>
+
+      <!-- Group 4: ระบบและการประเมิน -->
+      <div class="nav-group collapsed" id="navgroup-system">
+        <div class="nav-group-header" onclick="toggleNavGroup('navgroup-system')">
+          <span>ระบบและการประเมิน</span>
+          <span class="nav-group-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </div>
+        <div class="nav-group-items">
+          <button class="nav-btn" data-target="ita-panel">
+            <span>📊</span> ระบบประเมิน ITA
+          </button>
+          <button class="nav-btn" data-target="others-panel">
+            <span>📦</span> ระบบอื่นๆ
+          </button>
+        </div>
+      </div>
+
     </nav>
     
     <div class="admin-sidebar-footer">
@@ -803,6 +913,145 @@
       </div>
     </section>
 
+    <!-- ========================= CURRICULUM PANEL ========================= -->
+    <section id="curriculum-panel" class="admin-panel hide">
+      <div class="panel-header">
+        <div>
+          <h1>จัดการสาขาวิชาและหลักสูตร</h1>
+          <p>เพิ่ม แก้ไข ระดับชั้น และเอกสารแผนการเรียนของแต่ละสาขาวิชา</p>
+        </div>
+        <button id="curr-add-btn" class="btn-accent">+ เพิ่มสาขาวิชา</button>
+      </div>
+
+      <!-- Curriculum Form -->
+      <div id="curr-form-container" class="admin-card hide" style="margin-bottom: 2rem;">
+        <h3 id="curr-form-title" class="mb-2">เพิ่มสาขาวิชา</h3>
+        <form id="curr-form" enctype="multipart/form-data">
+          <input type="hidden" id="curr-id" />
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="curr-slug">รหัส URL (Slug) *</label>
+              <input id="curr-slug" name="slug" type="text" class="form-control" required placeholder="เช่น automotive, accounting" />
+            </div>
+            <div class="form-group">
+              <label for="curr-name">ชื่อสาขาวิชา *</label>
+              <input id="curr-name" name="name" type="text" class="form-control" required placeholder="เช่น ช่างยนต์" />
+            </div>
+            <div class="form-group form-full">
+              <label for="curr-description">เกี่ยวกับสาขา (Description)</label>
+              <textarea id="curr-description" name="description" class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="curr-type">ประเภทวิชา *</label>
+              <input id="curr-type" name="type" type="text" class="form-control" required placeholder="เช่น อุตสาหกรรม, บริหารธุรกิจ" />
+            </div>
+            <div class="form-group">
+              <label for="curr-jobGroup">กลุ่มงาน (Job Group) *</label>
+              <input id="curr-jobGroup" name="jobGroup" type="text" class="form-control" required placeholder="เช่น กลุ่มงานอาชีพธุรกิจค้าปลีก" />
+            </div>
+            <div class="form-group">
+              <label for="curr-icon">ไอคอน (ชื่อ Feather Icon)</label>
+              <input id="curr-icon" name="icon" type="text" class="form-control" placeholder="เช่น truck, cpu" />
+            </div>
+
+            <div class="form-group">
+              <label for="curr-order">ลำดับการแสดงผล</label>
+              <input id="curr-order" name="order" type="number" class="form-control" value="0" />
+            </div>
+            <div class="form-group">
+              <label for="curr-image">ภาพปกสาขา (Upload)</label>
+              <input id="curr-image" name="image" type="file" accept="image/*" class="form-control file-input" />
+            </div>
+
+            <div class="form-group form-full">
+              <label>คลังภาพกิจกรรม (Activity Gallery - อัปโหลดได้หลายภาพ)</label>
+              <input id="curr-activityImages" name="activityImages" type="file" accept="image/*" multiple class="form-control file-input" />
+              <div id="curr-activity-preview" class="mt-1" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
+              <input type="hidden" id="curr-existingActivityImages" name="existingActivityImages" value="[]" />
+            </div>
+
+            <div class="form-group form-full">
+              <label>ทักษะที่ได้รับ (Skills, กด Enter เพื่อแยกคำ)</label>
+              <input type="text" id="curr-skills-input" class="form-control" placeholder="พิมพ์แล้วกด Enter..." />
+              <div id="curr-skills-tags" class="mt-1" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
+              <input type="hidden" id="curr-skills" name="skills" value="[]" />
+            </div>
+
+            <div class="form-group form-full">
+              <label>อาชีพที่รองรับ (Jobs, กด Enter เพื่อแยกคำ)</label>
+              <input type="text" id="curr-jobs-input" class="form-control" placeholder="พิมพ์แล้วกด Enter..." />
+              <div id="curr-jobs-tags" class="mt-1" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
+              <input type="hidden" id="curr-jobs" name="jobs" value="[]" />
+            </div>
+
+            <!-- Pvc Subjects -->
+            <div class="form-group form-full">
+              <label>รายวิชาที่น่าสนใจ (ระดับ ปวช.)</label>
+              <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <input type="text" id="curr-pvc-name-input" class="form-control" style="flex: 1;" placeholder="ชื่อวิชา (เช่น งานยนต์เบื้องต้น)..." />
+                <input type="text" id="curr-pvc-desc-input" class="form-control" style="flex: 2;" placeholder="รายละเอียดสั้นๆ (เช่น พื้นฐานเครื่องยนต์และการบำรุงรักษา)..." />
+                <button type="button" id="curr-pvc-add-btn" class="btn-accent" style="padding: 0 15px;">เพิ่ม</button>
+              </div>
+              <div id="curr-pvc-list" class="mt-1" style="display: flex; flex-direction: column; gap: 8px;"></div>
+              <input type="hidden" id="curr-pvc" name="curriculumPvc" value="[]" />
+            </div>
+
+            <!-- Hvc Subjects -->
+            <div class="form-group form-full">
+              <label>รายวิชาที่น่าสนใจ (ระดับ ปวส.)</label>
+              <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <input type="text" id="curr-hvc-name-input" class="form-control" style="flex: 1;" placeholder="ชื่อวิชา (เช่น การโปรแกรมคอมพิวเตอร์)..." />
+                <input type="text" id="curr-hvc-desc-input" class="form-control" style="flex: 2;" placeholder="รายละเอียดสั้นๆ (เช่น การพัฒนาแอปพลิเคชันด้วยเทคโนโลยีสมัยใหม่)..." />
+                <button type="button" id="curr-hvc-add-btn" class="btn-accent" style="padding: 0 15px;">เพิ่ม</button>
+              </div>
+              <div id="curr-hvc-list" class="mt-1" style="display: flex; flex-direction: column; gap: 8px;"></div>
+              <input type="hidden" id="curr-hvc" name="curriculumHvc" value="[]" />
+            </div>
+            
+            <div class="form-group">
+              <label for="curr-pdf-upload">เอกสารหลักสูตร (อัปโหลด PDF)</label>
+              <input id="curr-pdf-upload" name="pdfUrl" type="file" accept="application/pdf" class="form-control file-input" />
+              <div class="mt-1"><small class="text-muted">หรือวางลิงก์ไฟล์ PDF:</small></div>
+              <input id="curr-pdfUrlText" name="pdfUrlText" type="url" class="form-control mt-1" placeholder="https://..." />
+            </div>
+
+            <div class="form-group">
+              <label for="curr-studyplan-upload">แผนการเรียน (อัปโหลด PDF)</label>
+              <input id="curr-studyplan-upload" name="studyPlanUrl" type="file" accept="application/pdf" class="form-control file-input" />
+            </div>
+          </div>
+          
+          <div class="form-actions mt-2">
+            <button type="button" id="curr-cancel-btn" class="btn-outline">ยกเลิก</button>
+            <button type="submit" class="btn-accent">บันทึกข้อมูลสาขา</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Curriculum List -->
+      <div class="admin-card">
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th style="width: 60px;">ลำดับ</th>
+                <th>ชื่อสาขาวิชา</th>
+                <th>รหัส URL</th>
+                <th>ไฟล์หลักสูตร</th>
+                <th>แผนการเรียน</th>
+                <th style="text-align:right;">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="curr-tbody">
+              <tr><td colspan="6" style="text-align:center;">กำลังโหลด...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <!-- ========================= FACILITY PANEL ========================= -->
     <section id="facility-panel" class="admin-panel hide">
       <div class="panel-header">
@@ -983,6 +1232,53 @@
         border-radius: 6px;
         font-weight: 600;
       }
+
+      /* Admin Switch & Slider */
+      .admin-switch {
+        position: relative;
+        display: inline-block;
+        width: 48px;
+        height: 24px;
+      }
+
+      .admin-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .admin-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #cbd5e1;
+        transition: .4s;
+        border-radius: 24px;
+      }
+
+      .admin-slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+      input:checked + .admin-slider {
+        background-color: #7042f8;
+      }
+
+      input:checked + .admin-slider:before {
+        transform: translateX(24px);
+      }
     </style>
 
     <section id="budget-panel" class="admin-panel hide">
@@ -1012,6 +1308,17 @@
           <div class="stat-mini-label">ดำเนินการเสร็จสิ้น</div>
           <div class="stat-large-value"><span id="budget-completed-items">0</span> <span style="font-size: 0.9rem; font-weight: 500;">รายการ</span></div>
           <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.5rem;">โครงการที่ปิดงานเรียบร้อย</div>
+        </div>
+        <div class="admin-card" style="border: 1px solid var(--color-accent-primary); background: rgba(112,66,248,0.02);">
+          <div class="stat-mini-label" style="color: var(--color-accent-primary);">สถานะการแสดงหน้าเว็บ (Public)</div>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.85rem;">
+            <div id="budget-status-text" style="font-size: 0.95rem; font-weight: 800; color: #10b981;">🟢 เปิดใช้งานปกติ</div>
+            <label class="admin-switch">
+              <input type="checkbox" id="budget-status-toggle" checked>
+              <span class="admin-slider"></span>
+            </label>
+          </div>
+          <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.8rem; line-height: 1.4;">ปิดเพื่อแสดงข้อความ "อยู่ระหว่างปรับปรุง" ในหน้าข้อมูลวิทยาลัย</div>
         </div>
       </div>
 
@@ -1096,6 +1403,127 @@
     </section>
 
 
+    <!-- ========================= IMAGES PANEL ========================= -->
+    <section id="images-panel" class="admin-panel hide">
+      <div class="panel-header">
+        <div>
+          <h1>จัดการรูปภาพเว็บไซต์</h1>
+          <p>อัปโหลดและจัดการภาพ Hero และ Sub-Banner Slideshow</p>
+        </div>
+      </div>
+
+      <!-- Hero Image Card -->
+      <div class="admin-card mb-2">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+          <div>
+            <h3 style="margin:0;">🏔️ ภาพพื้นหลัง Hero</h3>
+            <p class="text-muted" style="margin:0.25rem 0 0;">ภาพที่แสดงเมื่อ hover บนส่วน Hero ของหน้าหลัก</p>
+          </div>
+          <label for="hero-upload-input" class="btn-accent" style="cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            อัปโหลดภาพใหม่
+          </label>
+          <input type="file" id="hero-upload-input" accept="image/*" style="display:none;" />
+        </div>
+        <div id="hero-images-grid" style="display:flex; flex-wrap:wrap; gap:1rem;">
+          <div style="text-align:center; color:var(--color-text-secondary); padding: 2rem 0; width:100%;">กำลังโหลด...</div>
+        </div>
+      </div>
+
+      <!-- Sub-Banner Slideshow Card -->
+      <div class="admin-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+          <div>
+            <h3 style="margin:0;">🎞️ รูป Sub-Banner Slideshow</h3>
+            <p class="text-muted" style="margin:0.25rem 0 0;">สไลด์โชว์ที่แสดงใต้เมนูลัด — รองรับหลายภาพ สลับอัตโนมัติ</p>
+          </div>
+          <label for="subbanner-upload-input" class="btn-accent" style="cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            + เพิ่มรูปภาพ
+          </label>
+          <input type="file" id="subbanner-upload-input" accept="image/*" style="display:none;" />
+        </div>
+        <div id="subbanner-images-grid" style="display:flex; flex-wrap:wrap; gap:1rem;">
+          <div style="text-align:center; color:var(--color-text-secondary); padding: 2rem 0; width:100%;">กำลังโหลด...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================= ACHIEVEMENTS PANEL ========================= -->
+    <section id="achievements-panel" class="admin-panel hide">
+      <div class="panel-header">
+        <div>
+          <h1>ผลงานเด่นของวิทยาลัย</h1>
+          <p>จัดการการ์ดผลงานและความสำเร็จ เพื่อแสดงในส่วน "ผลงานเด่น" หน้าหลัก</p>
+        </div>
+        <button id="achieve-add-btn" class="btn-accent">+ เพิ่มผลงาน</button>
+      </div>
+
+      <!-- Achievement Form (Modal-like card) -->
+      <div id="achieve-form-container" class="admin-card hide">
+        <h3 id="achieve-form-title" class="mb-2">เพิ่มผลงานเด่น</h3>
+        <form id="achieve-form" enctype="multipart/form-data">
+          <input type="hidden" id="achieve-id" />
+          <div class="form-grid">
+            <div class="form-group form-full">
+              <label for="achieve-title">หัวข้อผลงาน *</label>
+              <input id="achieve-title" name="title" type="text" class="form-control" required />
+            </div>
+
+            <div class="form-group form-full">
+              <label for="achieve-description">คำอธิบายสั้นๆ *</label>
+              <textarea id="achieve-description" name="description" class="form-control" rows="2" required></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="achieve-awardLabel">ป้ายรางวัล (เช่น รางวัลชนะเลิศ)</label>
+              <input id="achieve-awardLabel" name="awardLabel" type="text" class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="achieve-awardText">รายละเอียดรางวัล (เช่น ผลงานเตาแก๊ส...)</label>
+              <input id="achieve-awardText" name="awardText" type="text" class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="achieve-order">ลำดับการแสดงผล</label>
+              <input id="achieve-order" name="order" type="number" class="form-control" value="0" />
+            </div>
+
+            <div class="form-group">
+              <label for="achieve-image">รูปภาพประกอบ (ถ้ามี)</label>
+              <input id="achieve-image" name="image" type="file" accept="image/*" class="form-control file-input" />
+              <small class="text-muted">หากไม่ใส่รูป ระบบจะใช้ไอคอนมาตรฐานตามลำดับ</small>
+            </div>
+          </div>
+          <div class="form-actions mt-2">
+            <button type="button" id="achieve-cancel-btn" class="btn-outline">ยกเลิก</button>
+            <button type="submit" class="btn-accent">บันทึกข้อมูล</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Achievement List -->
+      <div class="admin-card">
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th style="width: 80px;">ลำดับ</th>
+                <th>รูป</th>
+                <th>หัวข้อ</th>
+                <th>คำอธิบาย</th>
+                <th style="text-align:right;">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="achieve-tbody">
+              <tr><td colspan="5" style="text-align:center;">กำลังโหลด...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <!-- ========================= OTHERS PANEL ========================= -->
     <section id="others-panel" class="admin-panel hide">
       <div class="panel-header">
@@ -1114,5 +1542,6 @@
 </div>
 
 <script src="/js/admin.js"></script>
+<script src="/js/curriculum-admin.js"></script>
 </body>
 </html>

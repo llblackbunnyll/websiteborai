@@ -230,6 +230,168 @@ router.get('/departments', async (req, res) => {
   }
 });
 
+// Helper for safe JSON parsing
+function safeJsonParse(data, fallback = []) {
+  if (!data) return fallback;
+  try {
+    return JSON.parse(data);
+  } catch (e) {
+    console.error('[JSON Parse Error]', e, 'Data:', data);
+    return fallback;
+  }
+}
+
+// POST /api/departments (protected)
+router.post('/departments', authenticateToken, upload.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'pdfUrl', maxCount: 1 },
+  { name: 'studyPlanUrl', maxCount: 1 },
+  { name: 'activityImages', maxCount: 10 }
+]), async (req, res) => {
+  try {
+    const {
+      slug, name, icon, type, jobGroup, description, color, order
+    } = req.body;
+
+    const keywords = safeJsonParse(req.body.keywords);
+    const skills = safeJsonParse(req.body.skills);
+    const jobs = safeJsonParse(req.body.jobs);
+    const curriculumPvc = safeJsonParse(req.body.curriculumPvc);
+    const curriculumHvc = safeJsonParse(req.body.curriculumHvc);
+
+    let imageUrl = null;
+    let pdfUrl = req.body.pdfUrlText || null;
+    let studyPlanUrl = null;
+    let activityImages = [];
+
+    if (req.files?.['image']) {
+      imageUrl = await processAndSaveImage(req.files['image'][0].buffer, `dept-${slug}`);
+    }
+    if (req.files?.['pdfUrl']) {
+      pdfUrl = saveFile(req.files['pdfUrl'][0], `curriculum-${slug}`);
+    }
+    if (req.files?.['studyPlanUrl']) {
+      studyPlanUrl = saveFile(req.files['studyPlanUrl'][0], `studyplan-${slug}`);
+    }
+    if (req.files?.['activityImages']) {
+      const uploadPromises = req.files['activityImages'].map((file, idx) => 
+        processAndSaveImage(file.buffer, `dept-${slug}-act-${idx}`)
+      );
+      activityImages = await Promise.all(uploadPromises);
+    }
+
+    const newDept = await prisma.department.create({
+      data: {
+        slug, name, icon, type, jobGroup, description, color,
+        keywords, skills, jobs, curriculumPvc, curriculumHvc,
+        imageUrl, pdfUrl, studyPlanUrl, activityImages,
+        order: parseInt(order) || 0
+      }
+    });
+
+    res.status(201).json(newDept);
+  } catch (error) {
+    console.error('[Create Department Error]', error);
+    res.status(500).json({ message: 'Failed to create department', error: error.message });
+  }
+});
+
+// PUT /api/departments/:id (protected)
+router.put('/departments/:id', authenticateToken, upload.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'pdfUrl', maxCount: 1 },
+  { name: 'studyPlanUrl', maxCount: 1 },
+  { name: 'activityImages', maxCount: 10 }
+]), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      slug, name, icon, type, jobGroup, description, color, order
+    } = req.body;
+
+    const existing = await prisma.department.findUnique({ where: { id } });
+    if (!existing) return res.status(404).json({ message: 'Department not found' });
+
+    const keywords = req.body.keywords ? safeJsonParse(req.body.keywords, existing.keywords) : existing.keywords;
+    const skills = req.body.skills ? safeJsonParse(req.body.skills, existing.skills) : existing.skills;
+    const jobs = req.body.jobs ? safeJsonParse(req.body.jobs, existing.jobs) : existing.jobs;
+    const curriculumPvc = req.body.curriculumPvc ? safeJsonParse(req.body.curriculumPvc, existing.curriculumPvc) : existing.curriculumPvc;
+    const curriculumHvc = req.body.curriculumHvc ? safeJsonParse(req.body.curriculumHvc, existing.curriculumHvc) : existing.curriculumHvc;
+
+    let imageUrl = existing.imageUrl;
+    let pdfUrl = req.body.pdfUrlText !== undefined ? req.body.pdfUrlText : existing.pdfUrl;
+    let studyPlanUrl = existing.studyPlanUrl;
+    
+    // Activity Images Gallery logic
+    let activityImages = [];
+    if (req.body.existingActivityImages) {
+      activityImages = safeJsonParse(req.body.existingActivityImages, existing.activityImages || []);
+    } else {
+      activityImages = existing.activityImages || [];
+    }
+
+    // Identify deleted images to cleanup storage
+    const oldActList = Array.isArray(existing.activityImages) ? existing.activityImages : [];
+    oldActList.forEach(img => {
+      if (!activityImages.includes(img)) deleteImage(img);
+    });
+
+    if (req.files?.['image']) {
+      if (imageUrl) deleteImage(imageUrl);
+      imageUrl = await processAndSaveImage(req.files['image'][0].buffer, `dept-${slug || existing.slug}`);
+    }
+    if (req.files?.['pdfUrl']) {
+      if (existing.pdfUrl && existing.pdfUrl.startsWith('/uploads')) deleteFile(existing.pdfUrl);
+      pdfUrl = saveFile(req.files['pdfUrl'][0], `curriculum-${slug || existing.slug}`);
+    }
+    if (req.files?.['studyPlanUrl']) {
+      if (studyPlanUrl && studyPlanUrl.startsWith('/uploads')) deleteFile(studyPlanUrl);
+      studyPlanUrl = saveFile(req.files['studyPlanUrl'][0], `studyplan-${slug || existing.slug}`);
+    }
+    if (req.files?.['activityImages']) {
+      const uploadPromises = req.files['activityImages'].map((file, idx) => 
+        processAndSaveImage(file.buffer, `dept-${slug || existing.slug}-act-${Date.now()}-${idx}`)
+      );
+      const newUrls = await Promise.all(uploadPromises);
+      activityImages = [...activityImages, ...newUrls];
+    }
+
+    const updated = await prisma.department.update({
+      where: { id },
+      data: {
+        slug: slug || existing.slug,
+        name, icon, type, jobGroup, description, color,
+        keywords, skills, jobs, curriculumPvc, curriculumHvc,
+        imageUrl, pdfUrl, studyPlanUrl, activityImages,
+        order: parseInt(order) || existing.order
+      }
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error('[Update Department Error]', error);
+    res.status(500).json({ message: 'Failed to update department' });
+  }
+});
+
+// DELETE /api/departments/:id (protected)
+router.delete('/departments/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const existing = await prisma.department.findUnique({ where: { id } });
+    if (existing) {
+      if (existing.imageUrl) deleteImage(existing.imageUrl);
+      if (existing.pdfUrl && existing.pdfUrl.startsWith('/uploads')) deleteFile(existing.pdfUrl);
+      if (existing.studyPlanUrl && existing.studyPlanUrl.startsWith('/uploads')) deleteFile(existing.studyPlanUrl);
+      await prisma.department.delete({ where: { id } });
+    }
+    res.json({ message: 'Deleted successfully' });
+  } catch (error) {
+    console.error('[Delete Department Error]', error);
+    res.status(500).json({ message: 'Failed to delete department' });
+  }
+});
+
 // ──────────────────────────────────────────────────────────────────────────────
 // PERSONNEL
 // ──────────────────────────────────────────────────────────────────────────────
@@ -778,12 +940,13 @@ router.get('/students', authenticateToken, async (req, res) => {
     const { year, semester } = req.query;
     
     // Fetch current settings as defaults
-    const settings = await prisma.siteSettings.findMany({
-      where: { key: { in: ['current_semester', 'academic_year'] } }
+    const siteSettings = await prisma.siteSettings.findMany({
+      where: { key: { in: ['current_semester', 'academic_year', 'budget_info_status'] } }
     });
     
-    const academicYear = year || settings.find(s => s.key === 'academic_year')?.value || '2567';
-    const currentSemester = semester || settings.find(s => s.key === 'current_semester')?.value || '1';
+    const academicYear = year || siteSettings.find(s => s.key === 'academic_year')?.value || '2567';
+    const currentSemester = semester || siteSettings.find(s => s.key === 'current_semester')?.value || '1';
+    const budgetStatus = siteSettings.find(s => s.key === 'budget_info_status')?.value || 'active';
 
     const enrollments = await prisma.studentEnrollment.findMany({
       where: { 
@@ -796,7 +959,8 @@ router.get('/students', authenticateToken, async (req, res) => {
       enrollments, 
       settings: {
         academic_year: academicYear,
-        current_semester: currentSemester
+        current_semester: currentSemester,
+        budget_info_status: budgetStatus
       }
     });
   } catch (error) {
@@ -814,8 +978,11 @@ router.post('/students', authenticateToken, async (req, res) => {
     const saveYear = targetYear || settings?.academic_year;
     const saveSemester = targetSemester || settings?.current_semester;
 
-    if (!saveYear || !saveSemester) {
-      return res.status(400).json({ message: 'Missing target academic year or semester' });
+    // Only require year/semester if we are actually saving enrollment data
+    if (enrollments && Array.isArray(enrollments) && enrollments.length > 0) {
+      if (!saveYear || !saveSemester) {
+        return res.status(400).json({ message: 'Missing target academic year or semester for enrollment data' });
+      }
     }
 
     // 1. Update enrollments for the specific target year/semester
@@ -903,4 +1070,212 @@ router.delete('/students/period', authenticateToken, async (req, res) => {
   }
 });
 
+// ──────────────────────────────────────────────────────────────────────────────
+// SITE IMAGES (Hero + Sub-Banner)
+// ──────────────────────────────────────────────────────────────────────────────
+
+// GET /api/site-images — fetch hero + sub-banner image lists
+router.get('/site-images', async (req, res) => {
+  try {
+    const settings = await prisma.siteSettings.findMany({
+      where: { key: { in: ['hero_images', 'sub_banner_images'] } }
+    });
+    const heroSetting = settings.find(s => s.key === 'hero_images');
+    const subSetting  = settings.find(s => s.key === 'sub_banner_images');
+    const heroImages    = heroSetting   ? JSON.parse(heroSetting.value)  : [];
+    const subBannerImages = subSetting  ? JSON.parse(subSetting.value)   : [];
+    res.json({ heroImages, subBannerImages });
+  } catch (error) {
+    console.error('[SiteImages GET]', error);
+    res.status(500).json({ message: 'Failed to fetch site images' });
+  }
+});
+
+// POST /api/site-images/hero — upload a hero image
+router.post('/site-images/hero', authenticateToken, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'No image uploaded' });
+    const newUrl = await processAndSaveImage(req.file.buffer, 'hero');
+
+    const existing = await prisma.siteSettings.findUnique({ where: { key: 'hero_images' } });
+    const list = existing ? JSON.parse(existing.value) : [];
+    list.push(newUrl);
+
+    await prisma.siteSettings.upsert({
+      where: { key: 'hero_images' },
+      update: { value: JSON.stringify(list) },
+      create: { key: 'hero_images', value: JSON.stringify(list) }
+    });
+    res.json({ url: newUrl, heroImages: list });
+  } catch (error) {
+    console.error('[SiteImages Hero Upload]', error);
+    res.status(500).json({ message: 'Failed to upload hero image' });
+  }
+});
+
+// DELETE /api/site-images/hero/:index — delete a hero image by index
+router.delete('/site-images/hero/:index', authenticateToken, async (req, res) => {
+  try {
+    const idx = parseInt(req.params.index);
+    const existing = await prisma.siteSettings.findUnique({ where: { key: 'hero_images' } });
+    let list = existing ? JSON.parse(existing.value) : [];
+    if (idx < 0 || idx >= list.length) return res.status(404).json({ message: 'Index out of range' });
+
+    const removed = list.splice(idx, 1)[0];
+    deleteImage(removed);
+
+    await prisma.siteSettings.upsert({
+      where: { key: 'hero_images' },
+      update: { value: JSON.stringify(list) },
+      create: { key: 'hero_images', value: JSON.stringify(list) }
+    });
+    res.json({ heroImages: list });
+  } catch (error) {
+    console.error('[SiteImages Hero Delete]', error);
+    res.status(500).json({ message: 'Failed to delete hero image' });
+  }
+});
+
+// POST /api/site-images/subbanner — upload a sub-banner image
+router.post('/site-images/subbanner', authenticateToken, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'No image uploaded' });
+    const newUrl = await processAndSaveImage(req.file.buffer, 'subbanner');
+
+    const existing = await prisma.siteSettings.findUnique({ where: { key: 'sub_banner_images' } });
+    const list = existing ? JSON.parse(existing.value) : [];
+    list.push(newUrl);
+
+    await prisma.siteSettings.upsert({
+      where: { key: 'sub_banner_images' },
+      update: { value: JSON.stringify(list) },
+      create: { key: 'sub_banner_images', value: JSON.stringify(list) }
+    });
+    res.json({ url: newUrl, subBannerImages: list });
+  } catch (error) {
+    console.error('[SiteImages SubBanner Upload]', error);
+    res.status(500).json({ message: 'Failed to upload sub-banner image' });
+  }
+});
+
+// DELETE /api/site-images/subbanner/:index — delete a sub-banner image by index
+router.delete('/site-images/subbanner/:index', authenticateToken, async (req, res) => {
+  try {
+    const idx = parseInt(req.params.index);
+    const existing = await prisma.siteSettings.findUnique({ where: { key: 'sub_banner_images' } });
+    let list = existing ? JSON.parse(existing.value) : [];
+    if (idx < 0 || idx >= list.length) return res.status(404).json({ message: 'Index out of range' });
+
+    const removed = list.splice(idx, 1)[0];
+    deleteImage(removed);
+
+    await prisma.siteSettings.upsert({
+      where: { key: 'sub_banner_images' },
+      update: { value: JSON.stringify(list) },
+      create: { key: 'sub_banner_images', value: JSON.stringify(list) }
+    });
+    res.json({ subBannerImages: list });
+  } catch (error) {
+    console.error('[SiteImages SubBanner Delete]', error);
+    res.status(500).json({ message: 'Failed to delete sub-banner image' });
+  }
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+// ACHIEVEMENTS (Outstanding Works)
+// ──────────────────────────────────────────────────────────────────────────────
+
+// GET /api/achievements
+router.get('/achievements', async (req, res) => {
+  try {
+    const list = await prisma.achievement.findMany({
+      orderBy: { order: 'asc' }
+    });
+    res.json(list);
+  } catch (error) {
+    console.error('[Achievements GET]', error);
+    res.status(500).json({ message: 'Failed to fetch achievements' });
+  }
+});
+
+// POST /api/achievements
+router.post('/achievements', authenticateToken, upload.single('image'), async (req, res) => {
+  try {
+    let imageUrl = null;
+    if (req.file) {
+      imageUrl = await processAndSaveImage(req.file.buffer, 'achieve');
+    }
+
+    const { title, description, awardLabel, awardText, order } = req.body;
+    const newItem = await prisma.achievement.create({
+      data: {
+        title,
+        description,
+        awardLabel,
+        awardText,
+        imageUrl,
+        order: parseInt(order) || 0
+      }
+    });
+
+    res.json(newItem);
+  } catch (error) {
+    console.error('[Achievements POST]', error);
+    res.status(500).json({ message: 'Failed to create achievement' });
+  }
+});
+
+// PUT /api/achievements/:id
+router.put('/achievements/:id', authenticateToken, upload.single('image'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, awardLabel, awardText, order } = req.body;
+
+    const existing = await prisma.achievement.findUnique({ where: { id } });
+    if (!existing) return res.status(404).json({ message: 'Achievement not found' });
+
+    let imageUrl = existing.imageUrl;
+    if (req.file) {
+      // Delete old image if exists
+      if (existing.imageUrl) deleteImage(existing.imageUrl);
+      imageUrl = await processAndSaveImage(req.file.buffer, 'achieve');
+    }
+
+    const updated = await prisma.achievement.update({
+      where: { id },
+      data: {
+        title,
+        description,
+        awardLabel,
+        awardText,
+        imageUrl,
+        order: parseInt(order) || 0
+      }
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error('[Achievements PUT]', error);
+    res.status(500).json({ message: 'Failed to update achievement' });
+  }
+});
+
+// DELETE /api/achievements/:id
+router.delete('/achievements/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const existing = await prisma.achievement.findUnique({ where: { id } });
+    if (!existing) return res.status(404).json({ message: 'Achievement not found' });
+
+    if (existing.imageUrl) deleteImage(existing.imageUrl);
+
+    await prisma.achievement.delete({ where: { id } });
+    res.json({ message: 'Achievement deleted' });
+  } catch (error) {
+    console.error('[Achievements DELETE]', error);
+    res.status(500).json({ message: 'Failed to delete achievement' });
+  }
+});
+
 module.exports = router;
+

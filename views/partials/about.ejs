@@ -3,14 +3,14 @@
   <div class="container">
 
     <!-- 1. TYPOGRAPHIC REVEAL (Philosophy) -->
-    <div style="text-align: center; margin-top: 1 rem; margin-bottom: 1rem;" class="reveal">
+    <div style="text-align: center; margin-top: 1rem; margin-bottom: 1rem;" class="reveal">
       <h2
         style="font-family: var(--font-script); font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 700; line-height: 1.6; opacity: 0.15; letter-spacing: 0.02em; color: var(--color-accent-primary);">
         "&nbsp;มุ่งคุณภาพเด่น&nbsp;&nbsp;เน้นคุณธรรม <br> นำวิชาการ&nbsp;&nbsp;สร้างสรรค์ชุมชน&nbsp;"
       </h2>
     </div>
-    <!-- 2. MAIN HEADER -->
 
+    <!-- 2. MAIN HEADER -->
     <div style="text-align: center; margin-bottom: 1rem;">
       <h2 class="section-title reveal">
         <span class="text-gradient">วิทยาลัยการอาชีพบ่อไร่</span>
@@ -19,7 +19,6 @@
         มุ่งมั่นเป็นผู้นำด้านการจัดการศึกษาวิชาชีพ เพื่อผลิตกำลังคนให้ตอบสนองต่อตลาดแรงงานและเทคโนโลยีสมัยใหม่
       </p>
     </div>
-
 
     <!-- 5. VIDEO portal enhanced -->
     <div class="video-info-portal reveal">
@@ -77,124 +76,107 @@
     </div>
 
     <div class="cards-grid">
+      <%
+        // Fallback data if DB has no records yet
+        const displayAchievements = (typeof achievements !== 'undefined' && achievements && achievements.length > 0) ? achievements : [
+          {
+            title: 'นวัตกรรมสิ่งประดิษฐ์',
+            description: 'การันตีด้วยรางวัลสิ่งประดิษฐ์ระดับชาติ มุ่งสร้างสรรค์ผลงานที่ตอบโจทย์เทคโนโลยีและชุมชน',
+            awardLabel: 'รางวัลชนะเลิศ',
+            awardText: 'ผลงาน เตาแก๊สจากเศษถ่านพลังงานสะอาด สิ่งประดิษฐ์คนรุ่นใหม่ ระดับกลุ่มจังหวัด ประจำปีการศึกษา 2568',
+            imageUrl: null,
+            color: '#0ea5e9',
+            icon: 'bulb'
+          },
+          {
+            title: 'ทักษะวิชาชีพ',
+            description: 'ความเป็นเลิศด้านทักษะ ตอกย้ำด้วยผลงานชนะเลิศการแข่งขันทักษะวิชาชีพระดับภาคและระดับชาติ',
+            awardLabel: 'รางวัล',
+            awardText: 'เหรียญทอง การแข่งขันทักษะวิชาชีพ (ระดับภาคตะวันออก)',
+            imageUrl: null,
+            color: '#7042f8',
+            icon: 'medal'
+          },
+          {
+            title: 'ศูนย์บ่มเพาะผู้ประกอบการ',
+            description: 'ปั้นนักธุรกิจรุ่นใหม่ ส่งเสริมผลงานที่สอดคล้องกับมาตรฐานคุณภาพระดับสถานศึกษาดีเด่น',
+            awardLabel: 'รางวัล ระดับ 4 ดาว',
+            awardText: 'ศูนย์บ่มเพาะวิสาหกิจเพื่อการศึกษา ผ่านเกณฑ์ระดับ 4 ดาว ประจำปี 2566',
+            imageUrl: null,
+            color: '#ec4899',
+            icon: 'star'
+          }
+        ];
+      %>
 
-      <!-- Card 1: นวัตกรรมสิ่งประดิษฐ์ -->
-      <div class="card reveal" style="transition-delay: 0.1s;">
-        <!-- Icon Panel -->
-        <div class="card-icon-wrap" style="color: #0ea5e9;">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path
-              d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A5 5 0 0 0 8 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5" />
-            <path d="M9 18h6" />
-            <path d="M10 22h4" />
-          </svg>
-          <span class="card-num">01</span>
-        </div>
-        <!-- Content -->
-        <div class="card-body">
-          <h3 class="card-title">นวัตกรรมสิ่งประดิษฐ์</h3>
-          <p class="card-text">การันตีด้วยรางวัลสิ่งประดิษฐ์ระดับชาติ มุ่งสร้างสรรค์ผลงานที่ตอบโจทย์เทคโนโลยีและชุมชน
-          </p>
-          <div class="card-award-preview">
-            <span class="award-medal">🏆</span>
-            <div class="award-content">
-              <span class="award-label">รางวัลชนะเลิศ</span>
-              <span class="award-text">ผลงาน เตาแก๊สจากเศษถ่านพลังงานสะอาด สิ่งประดิษฐ์คนรุ่นใหม่
-                ระดับกลุ่มจังหวัด ประจำปีการศึกษา 2568</span>
+      <% displayAchievements.forEach((item, index) => { %>
+        <div class="card reveal" style="transition-delay: <%= (index + 1) * 0.1 %>s;">
+
+          <% if (item.imageUrl) { %>
+            <!-- Image Panel (when image is uploaded) -->
+            <div class="card-image-wrap">
+              <img src="<%= item.imageUrl %>" alt="<%= item.title %>" class="card-featured-img">
+              <span class="card-num"><%= (index + 1).toString().padStart(2, '0') %></span>
             </div>
+          <% } else { %>
+            <!-- Original Icon Panel (no image) -->
+            <div class="card-icon-wrap" style="color: <%= item.color || '#7042f8' %>;">
+              <% if (item.icon === 'bulb' || index === 0) { %>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A5 5 0 0 0 8 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5" />
+                  <path d="M9 18h6" />
+                  <path d="M10 22h4" />
+                </svg>
+              <% } else if (item.icon === 'medal' || index === 1) { %>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                  <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                  <path d="M4 22h16" />
+                  <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                  <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                  <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                </svg>
+              <% } else { %>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="20" height="14" x="2" y="7" rx="2" ry="2" />
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                </svg>
+              <% } %>
+              <span class="card-num"><%= (index + 1).toString().padStart(2, '0') %></span>
+            </div>
+          <% } %>
+
+          <!-- Content -->
+          <div class="card-body">
+            <h3 class="card-title"><%= item.title %></h3>
+            <p class="card-text"><%= item.description %></p>
+
+            <% if (item.awardLabel || item.awardText) { %>
+              <div class="card-award-preview">
+                <span class="award-medal">
+                  <% if (index === 0) { %>🏆<% } else if (index === 1) { %>🥇<% } else { %>⭐<% } %>
+                </span>
+                <div class="award-content">
+                  <% if (item.awardLabel) { %><span class="award-label"><%= item.awardLabel %></span><% } %>
+                  <% if (item.awardText) { %><span class="award-text"><%= item.awardText %></span><% } %>
+                </div>
+              </div>
+            <% } %>
+          </div>
+
+          <!-- CTA -->
+          <div class="card-cta">
+            <a href="/news" class="card-link-more">
+              <span><%= index === 1 ? 'ดูผลงานเด่นทั้งหมด' : 'ดูความสำเร็จทั้งหมด' %></span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </a>
           </div>
         </div>
-        <!-- CTA -->
-        <div class="card-cta">
-          <a href="/news-list" class="card-link-more">
-            <span>ดูความสำเร็จทั้งหมด</span>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12" />
-              <polyline points="12 5 19 12 12 19" />
-            </svg>
-          </a>
-        </div>
-      </div>
-
-      <!-- Card 2: ทักษะวิชาชีพ -->
-      <div class="card reveal" style="transition-delay: 0.2s;">
-        <!-- Icon Panel -->
-        <div class="card-icon-wrap" style="color: #7042f8;">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-            <path d="M4 22h16" />
-            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-          </svg>
-          <span class="card-num">02</span>
-        </div>
-        <!-- Content -->
-        <div class="card-body">
-          <h3 class="card-title">ทักษะวิชาชีพ</h3>
-          <p class="card-text">ความเป็นเลิศด้านทักษะ ตอกย้ำด้วยผลงานชนะเลิศการแข่งขันทักษะวิชาชีพระดับภาคและระดับชาติ
-          </p>
-          <div class="card-award-preview">
-            <span class="award-medal">🥇</span>
-            <div class="award-content">
-              <span class="award-label">รางวัล</span>
-              <span class="award-text">เหรียญทอง การแข่งขันทักษะวิชาชีพ (ระดับภาคตะวันออก)</span>
-            </div>
-          </div>
-        </div>
-        <!-- CTA -->
-        <div class="card-cta">
-          <a href="/news-list" class="card-link-more">
-            <span>ดูผลงานเด่นทั้งหมด</span>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12" />
-              <polyline points="12 5 19 12 12 19" />
-            </svg>
-          </a>
-        </div>
-      </div>
-
-      <!-- Card 3: ศูนย์บ่มเพาะผู้ประกอบการ -->
-      <div class="card reveal" style="transition-delay: 0.3s;">
-        <!-- Icon Panel -->
-        <div class="card-icon-wrap" style="color: #ec4899;">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <rect width="20" height="14" x="2" y="7" rx="2" ry="2" />
-            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-          </svg>
-          <span class="card-num">03</span>
-        </div>
-        <!-- Content -->
-        <div class="card-body">
-          <h3 class="card-title">ศูนย์บ่มเพาะผู้ประกอบการ</h3>
-          <p class="card-text">ปั้นนักธุรกิจรุ่นใหม่ ส่งเสริมผลงานที่สอดคล้องกับมาตรฐานคุณภาพระดับสถานศึกษาดีเด่น</p>
-          <div class="card-award-preview">
-            <span class="award-medal">⭐</span>
-            <div class="award-content">
-              <span class="award-label">รางวัล ระดับ 4 ดาว</span>
-              <span class="award-text">ศูนย์บ่มเพาะวิสาหกิจเพื่อการศึกษา ผ่านเกณฑ์ระดับ 4 ดาว ประจำปี 2566</span>
-            </div>
-          </div>
-        </div>
-        <!-- CTA -->
-        <div class="card-cta">
-          <a href="/news-list" class="card-link-more">
-            <span>ดูความสำเร็จทั้งหมด</span>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12" />
-              <polyline points="12 5 19 12 12 19" />
-            </svg>
-          </a>
-        </div>
-      </div>
-
+      <% }) %>
     </div>
 
     <!-- 7. CTA -->

@@ -1,4 +1,4 @@
-<!-- ═══════════════════ SUB-BANNER + QUICK LINKS ═══════════════════ -->
+﻿<!-- ═══════════════════ SUB-BANNER + QUICK LINKS ═══════════════════ -->
 <section class="sub-banner-section" id="sub-banner">
 
   <!-- ─── Quick-Link Menu Row (บน) ────────────────────────────────── -->
@@ -90,15 +90,79 @@
 
 
 
-  <!-- ─── Floating Banner Image (ล่าง) ────────────────────────────── -->
-  <div class="sub-banner-card reveal">
+  <!-- ─── Floating Banner Slideshow (ล่าง) ────────────────────────── -->
+  <div class="sub-banner-card reveal" id="sub-banner-card">
     <div class="sub-banner-overlay"></div>
-    <img src="/subbannerImage.png" alt="วิทยาลัยการอาชีพบ่อไร่ — แบนเนอร์" class="sub-banner-img" loading="lazy" />
+
+    <!-- Slides Container -->
+    <div class="sub-banner-slides" id="sub-banner-slides">
+      <% const sbImages = typeof subBannerImages !== 'undefined' && subBannerImages.length > 0
+           ? subBannerImages : ['/subbannerImage.png']; %>
+      <% sbImages.forEach((img, idx) => { %>
+        <img
+          src="<%= img %>"
+          alt="วิทยาลัยการอาชีพบ่อไร่ — แบนเนอร์ <%= idx + 1 %>"
+          class="sub-banner-slide<%= idx === 0 ? ' active' : '' %>"
+          loading="<%= idx === 0 ? 'eager' : 'lazy' %>"
+        />
+      <% }) %>
+    </div>
+
+    <!-- Dots Indicator (only show when >1 image) -->
+    <% if (sbImages.length > 1) { %>
+    <div class="sub-banner-dots" id="sub-banner-dots">
+      <% sbImages.forEach((_, idx) => { %>
+        <button class="sub-banner-dot<%= idx === 0 ? ' active' : '' %>" data-idx="<%= idx %>" aria-label="ภาพที่ <%= idx + 1 %>"></button>
+      <% }) %>
+    </div>
+    <% } %>
+
+    <!-- Badge -->
     <div class="sub-banner-badge">
       <span class="sub-banner-badge-dot"></span>
       วิทยาลัยการอาชีพบ่อไร่ · BICEC
     </div>
-
   </div>
 
 </section>
+
+<script>
+(function() {
+  const card   = document.getElementById('sub-banner-card');
+  const slides = document.querySelectorAll('.sub-banner-slide');
+  const dots   = document.querySelectorAll('.sub-banner-dot');
+  if (!card || slides.length <= 1) return;
+
+  let current  = 0;
+  let timer    = null;
+  const DELAY  = 4500;
+
+  function goTo(n) {
+    slides[current].classList.remove('active');
+    if (dots[current]) dots[current].classList.remove('active');
+    current = (n + slides.length) % slides.length;
+    slides[current].classList.add('active');
+    if (dots[current]) dots[current].classList.add('active');
+  }
+
+  function start() {
+    timer = setInterval(() => goTo(current + 1), DELAY);
+  }
+
+  function stop() {
+    clearInterval(timer);
+  }
+
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      stop();
+      goTo(parseInt(dot.dataset.idx));
+      start();
+    });
+  });
+
+  card.addEventListener('mouseenter', stop);
+  card.addEventListener('mouseleave', start);
+  start();
+})();
+</script>

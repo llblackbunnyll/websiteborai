@@ -274,6 +274,71 @@ a {
   color: var(--color-accent-secondary);
 }
 
+/* ── Navbar Dropdown ─────────────────────────────────────────────────────── */
+.nav-dropdown {
+  position: relative;
+}
+
+.nav-dropdown-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+}
+
+.nav-dropdown-toggle svg {
+  transition: transform 0.25s ease;
+  opacity: 0.6;
+}
+
+.nav-dropdown:hover .nav-dropdown-toggle svg {
+  transform: rotate(180deg);
+}
+
+.nav-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.75rem);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 160px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(112, 66, 248, 0.12);
+  border-radius: 1rem;
+  box-shadow: 0 12px 40px rgba(31, 38, 135, 0.1);
+  list-style: none;
+  padding: 0.5rem;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-50%) translateY(-6px);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+  z-index: 200;
+}
+
+.nav-dropdown:hover .nav-dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.nav-dropdown-menu li a {
+  display: block;
+  padding: 0.55rem 1rem;
+  border-radius: 0.65rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--color-text-primary) !important;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nav-dropdown-menu li a:hover {
+  background: rgba(112, 66, 248, 0.08);
+  color: var(--color-accent-primary) !important;
+}
+
+
 .nav-hamburger {
   display: none;
   background: none;
@@ -1069,6 +1134,37 @@ a {
 }
 
 /* Main content */
+.card-image-wrap {
+  width: 100%;
+  height: 180px;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-featured-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.card:hover .card-featured-img {
+  transform: scale(1.1);
+}
+
+.card-image-wrap .card-num {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.2rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  opacity: 1; /* override original opacity for image mode */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
 .card-body {
   padding: 0 1.75rem 1.75rem;
   display: flex;
@@ -1886,7 +1982,7 @@ a {
 .contact-card {
   position: relative;
   z-index: 1;
-  max-width: 900px;
+  max-width: 1100px;
   margin: 0 auto 3rem;
   padding: 3rem;
   border-radius: var(--radius-card);
@@ -2004,7 +2100,7 @@ textarea.form-input {
   transition: filter 0.5s ease;
 }
 
-.map-wrapper:hover iframe {
+.contact-map-grid:hover iframe {
   filter: none;
 }
 
@@ -2090,6 +2186,8 @@ textarea.form-input {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .nav-btn {
@@ -2106,6 +2204,7 @@ textarea.form-input {
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: left;
+  width: 100%;
 }
 
 .nav-btn:hover {
@@ -2728,6 +2827,62 @@ textarea.form-input {
   50% {
     box-shadow: 0 0 0 6px rgba(112, 66, 248, 0.08);
   }
+}
+
+/* ── Sub-banner Slideshow ─────────────────────────────────────────────────── */
+.sub-banner-slides {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.sub-banner-slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 40%;
+  opacity: 0;
+  transition: opacity 0.9s ease-in-out, transform 8s ease;
+  transform: scale(1.02);
+}
+
+.sub-banner-slide.active {
+  opacity: 1;
+  transform: scale(1.06);
+}
+
+.sub-banner-dots {
+  position: absolute;
+  bottom: 4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  display: flex;
+  gap: 0.45rem;
+}
+
+.sub-banner-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.3s ease;
+}
+
+.sub-banner-dot.active {
+  background: rgba(255, 255, 255, 0.95);
+  width: 22px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(112, 66, 248, 0.3);
+}
+
+.sub-banner-dot:hover {
+  background: rgba(255, 255, 255, 0.75);
 }
 
 /* ── Quick-Link Menu Bar ─────────────────────────────────────────────────── */

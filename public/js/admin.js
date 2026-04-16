@@ -69,16 +69,39 @@ function getAuthHeaders() {
   const navBtns = document.querySelectorAll('.nav-btn');
   const panels = document.querySelectorAll('.admin-panel');
 
+  // Toggle group open/closed
+  window.toggleNavGroup = function(groupId) {
+    const group = document.getElementById(groupId);
+    if (group) group.classList.toggle('collapsed');
+  };
+
+  // Auto-expand group that contains the active button, and collapse others
+  function expandGroupOfActiveBtn(activeBtn) {
+    const parentGroup = activeBtn.closest('.nav-group');
+    if (!parentGroup) return;
+    // Expand the parent group
+    parentGroup.classList.remove('collapsed');
+    // Mark header as has-active
+    document.querySelectorAll('.nav-group-header').forEach(h => h.classList.remove('has-active'));
+    const header = parentGroup.querySelector('.nav-group-header');
+    if (header) header.classList.add('has-active');
+  }
+
   navBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       navBtns.forEach(b => b.classList.remove('active'));
       panels.forEach(p => p.classList.add('hide'));
-      
+
       btn.classList.add('active');
       const targetId = btn.getAttribute('data-target');
-      document.getElementById(targetId).classList.remove('hide');
+      document.getElementById(targetId)?.classList.remove('hide');
+      expandGroupOfActiveBtn(btn);
     });
   });
+
+  // On load: find the currently active button and expand its group
+  const initialActive = document.querySelector('.nav-btn.active');
+  if (initialActive) expandGroupOfActiveBtn(initialActive);
 
   // 2. PR PANEL LOGIC
   const prTbody = document.getElementById('pr-tbody');
@@ -1574,7 +1597,59 @@ function getAuthHeaders() {
       saveBudgets();
     }
     renderBudgets();
+    loadBudgetStatus(); // Added: Fetch and set initial toggle state
   };
+
+  // ─── BUDGET STATUS MANAGEMENT ──────────────────────────────────────────
+  const budgetStatusToggle = document.getElementById('budget-status-toggle');
+  const budgetStatusText = document.getElementById('budget-status-text');
+
+  async function loadBudgetStatus() {
+    if (!budgetStatusToggle) return;
+    try {
+      const res = await fetch('/api/students', { headers: getAuthHeaders() }); // Global settings are inside this endpoint
+      if (res.ok) {
+        const { settings } = await res.json();
+        const status = settings.budget_info_status || 'active';
+        budgetStatusToggle.checked = (status === 'active');
+        updateBudgetStatusUI(status);
+      }
+    } catch (e) { console.error('Error loading budget status:', e); }
+  }
+
+  function updateBudgetStatusUI(status) {
+    if (!budgetStatusText) return;
+    if (status === 'active') {
+      budgetStatusText.innerHTML = '🟢 เปิดใช้งานปกติ';
+      budgetStatusText.style.color = '#10b981';
+    } else {
+      budgetStatusText.innerHTML = '🟠 อยู่ระหว่างปรับปรุง';
+      budgetStatusText.style.color = '#f59e0b';
+    }
+  }
+
+  budgetStatusToggle?.addEventListener('change', async () => {
+    const newStatus = budgetStatusToggle.checked ? 'active' : 'maintenance';
+    updateBudgetStatusUI(newStatus);
+    
+    try {
+      const res = await fetch(`${API_BASE}/students`, {
+        method: 'POST',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          settings: { budget_info_status: newStatus }
+        })
+      });
+      if (!res.ok) {
+        alert('ไม่สามารถบันทึกสถานะได้');
+        loadBudgetStatus(); // revert on error
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error saving budget status');
+      loadBudgetStatus(); // revert on error
+    }
+  });
 
   const renderBudgets = () => {
     if (!budgetListContainer) return;
@@ -1681,6 +1756,98 @@ function getAuthHeaders() {
     budgetModal.classList.remove('active');
   });
 
+  // ─── SITE IMAGES PANEL ───────────────────────────────────────────────────────
+
+  async function loadSiteImages() {
+    const token = localStorage.getItem('adminToken');
+    try {
+      const res = await fetch('/api/site-images', { headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      renderImageGrid('hero-images-grid', data.heroImages || [], 'hero');
+      renderImageGrid('subbanner-images-grid', data.subBannerImages || [], 'subbanner');
+    } catch (e) {
+      console.error('[SiteImages]', e);
+    }
+  }
+
+  function renderImageGrid(gridId, images, type) {
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
+
+    if (images.length === 0) {
+      grid.innerHTML = `<div style="text-align:center;color:var(--color-text-secondary);padding:2rem 0;width:100%;">
+        ยังไม่มีรูปภาพ — กดปุ่มอัปโหลดเพื่อเพิ่ม 🖼️
+      </div>`;
+      return;
+    }
+
+    grid.innerHTML = images.map((url, idx) => `
+      <div style="position:relative; border-radius:12px; overflow:hidden; width:200px; height:130px; border:2px solid rgba(112,66,248,0.2); flex-shrink:0; background:#0a0a14;">
+        <img src="${escapeHtml(url)}" alt="รูปที่ ${idx + 1}" style="width:100%;height:100%;object-fit:cover;display:block;" />
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:0.4rem;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:space-between;">
+          <span style="color:#fff;font-size:0.72rem;font-weight:600;">ภาพที่ ${idx + 1}${idx === 0 && type === 'hero' ? ' (default)' : ''}</span>
+          <button onclick="deleteSiteImage('${type}', ${idx})"
+            style="background:rgba(239,68,68,0.85);border:none;color:#fff;border-radius:6px;cursor:pointer;padding:2px 8px;font-size:0.75rem;font-weight:700;line-height:1.6;">
+            ลบ
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  window.deleteSiteImage = async function(type, idx) {
+    if (!confirm(`ต้องการลบรูปที่ ${idx + 1} ใช่หรือไม่?`)) return;
+    const token = localStorage.getItem('adminToken');
+    const endpoint = type === 'hero'
+      ? `/api/site-images/hero/${idx}`
+      : `/api/site-images/subbanner/${idx}`;
+    try {
+      const res = await fetch(endpoint, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'ลบไม่สำเร็จ');
+      if (type === 'hero') renderImageGrid('hero-images-grid', data.heroImages || [], 'hero');
+      else renderImageGrid('subbanner-images-grid', data.subBannerImages || [], 'subbanner');
+    } catch (e) {
+      alert('เกิดข้อผิดพลาด: ' + e.message);
+    }
+  };
+
+  // Hero upload
+  document.getElementById('hero-upload-input')?.addEventListener('change', async function() {
+    const file = this.files[0];
+    if (!file) return;
+    const token = localStorage.getItem('adminToken');
+    const fd = new FormData();
+    fd.append('image', file);
+    try {
+      const res = await fetch('/api/site-images/hero', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'อัปโหลดไม่สำเร็จ');
+      renderImageGrid('hero-images-grid', data.heroImages || [], 'hero');
+    } catch (e) {
+      alert('เกิดข้อผิดพลาด: ' + e.message);
+    }
+    this.value = '';
+  });
+
+  // Sub-banner upload
+  document.getElementById('subbanner-upload-input')?.addEventListener('change', async function() {
+    const file = this.files[0];
+    if (!file) return;
+    const token = localStorage.getItem('adminToken');
+    const fd = new FormData();
+    fd.append('image', file);
+    try {
+      const res = await fetch('/api/site-images/subbanner', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'อัปโหลดไม่สำเร็จ');
+      renderImageGrid('subbanner-images-grid', data.subBannerImages || [], 'subbanner');
+    } catch (e) {
+      alert('เกิดข้อผิดพลาด: ' + e.message);
+    }
+    this.value = '';
+  });
+
   // ─── INITIALIZE ALL COMPONENTS ──────────────────────────────────────────────
   loadPR();
   loadPersonnel();
@@ -1691,6 +1858,140 @@ function getAuthHeaders() {
   loadFacilities();
   loadPartners();
   loadBudgets();
+  loadSiteImages();
+
+  // ─── ACHIEVEMENTS PANEL ───────────────────────────────────────────────────
+  const achieveFormContainer = document.getElementById('achieve-form-container');
+  const achieveForm = document.getElementById('achieve-form');
+  const achieveTbody = document.getElementById('achieve-tbody');
+  const achieveAddBtn = document.getElementById('achieve-add-btn');
+  const achieveCancelBtn = document.getElementById('achieve-cancel-btn');
+
+  async function loadAchievements() {
+    const token = localStorage.getItem('adminToken');
+    try {
+      const res = await fetch('/api/achievements', { headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      renderAchievements(data);
+    } catch (e) {
+      console.error('[Achievements]', e);
+    }
+  }
+
+  function renderAchievements(list) {
+    if (!achieveTbody) return;
+    if (list.length === 0) {
+      achieveTbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:3rem;">ยังไม่มีข้อมูลผลงานเด่น — กดปุ่ม "+ เพิ่มผลงาน" เพื่อเริ่มต้น ✨</td></tr>`;
+      return;
+    }
+
+    achieveTbody.innerHTML = list.map(item => `
+      <tr>
+        <td style="font-weight:700;">#${item.order || 0}</td>
+        <td>
+          ${item.imageUrl ? `<img src="${item.imageUrl}" style="width:50px;height:50px;object-fit:cover;border-radius:4px;">` : '<span style="color:#cbd5e1;font-size:1.5rem;">🖼️</span>'}
+        </td>
+        <td>
+          <div style="font-weight:700;">${escapeHtml(item.title)}</div>
+          <div style="font-size:0.75rem;color:var(--color-accent-primary);">${escapeHtml(item.awardLabel || '')}</div>
+        </td>
+        <td><div style="font-size:0.85rem;color:var(--color-text-secondary);max-width:300px;" class="line-clamp-2">${escapeHtml(item.description)}</div></td>
+        <td style="text-align:right;">
+          <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+            <button class="icon-btn edit-achieve-btn" data-id="${item.id}" title="แก้ไข">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+            </button>
+            <button class="icon-btn danger delete-achieve-btn" data-id="${item.id}" title="ลบ">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></polyline></svg>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+
+    // Re-attach listeners
+    document.querySelectorAll('.edit-achieve-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        const token = localStorage.getItem('adminToken');
+        const res = await fetch('/api/achievements', { headers: { 'Authorization': `Bearer ${token}` } });
+        const list = await res.json();
+        const item = list.find(x => x.id === id);
+        if (item) {
+          document.getElementById('achieve-id').value = item.id;
+          document.getElementById('achieve-title').value = item.title;
+          document.getElementById('achieve-description').value = item.description;
+          document.getElementById('achieve-awardLabel').value = item.awardLabel || '';
+          document.getElementById('achieve-awardText').value = item.awardText || '';
+          document.getElementById('achieve-order').value = item.order || 0;
+          
+          document.getElementById('achieve-form-title').textContent = 'แก้ไขผลงานเด่น';
+          achieveFormContainer.classList.remove('hide');
+          achieveFormContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+
+    document.querySelectorAll('.delete-achieve-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('ยืนยันการลบผลงานนี้?')) return;
+        const id = btn.getAttribute('data-id');
+        const token = localStorage.getItem('adminToken');
+        try {
+          const res = await fetch(`/api/achievements/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            alert('ลบข้อมูลสำเร็จ');
+            loadAchievements();
+          }
+        } catch (e) { console.error(e); }
+      });
+    });
+  }
+
+  achieveAddBtn?.addEventListener('click', () => {
+    achieveForm.reset();
+    document.getElementById('achieve-id').value = '';
+    document.getElementById('achieve-form-title').textContent = 'เพิ่มผลงานเด่น';
+    achieveFormContainer.classList.remove('hide');
+  });
+
+  achieveCancelBtn?.addEventListener('click', () => {
+    achieveFormContainer.classList.add('hide');
+  });
+
+  achieveForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('adminToken');
+    const formData = new FormData(achieveForm);
+    const id = document.getElementById('achieve-id').value;
+    
+    const url = id ? `/api/achievements/${id}` : '/api/achievements';
+    const method = id ? 'PUT' : 'POST';
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+      if (res.ok) {
+        alert('บันทึกข้อมูลสำเร็จ');
+        achieveFormContainer.classList.add('hide');
+        loadAchievements();
+      } else {
+        const error = await res.json();
+        alert('เกิดข้อผิดพลาด: ' + error.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+    }
+  });
+
+  loadAchievements();
 
   // Logout
   const logoutBtn = document.getElementById('logout-btn');

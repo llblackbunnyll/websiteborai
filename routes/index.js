@@ -3,6 +3,20 @@ const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
+// Global Middleware for Navigation (Departments dropdown)
+router.use(async (req, res, next) => {
+  try {
+    res.locals.globalNavDepartments = await prisma.department.findMany({
+      orderBy: { order: 'asc' },
+      select: { name: true, slug: true }
+    });
+  } catch (err) {
+    console.error('[Nav Middleware Error]', err);
+    res.locals.globalNavDepartments = [];
+  }
+  next();
+});
+
 // GET / — Homepage
 router.get('/', async (req, res) => {
   try {
@@ -63,13 +77,30 @@ router.get('/', async (req, res) => {
       ];
     }
 
+    // 6. Load site images (hero + sub-banner)
+    const siteImgSettings = await prisma.siteSettings.findMany({
+      where: { key: { in: ['hero_images', 'sub_banner_images'] } }
+    });
+    const heroImgSetting = siteImgSettings.find(s => s.key === 'hero_images');
+    const subBannerImgSetting = siteImgSettings.find(s => s.key === 'sub_banner_images');
+    const heroImages = heroImgSetting ? JSON.parse(heroImgSetting.value) : [];
+    const subBannerImages = subBannerImgSetting ? JSON.parse(subBannerImgSetting.value) : [];
+
+    // 7. Load achievements (outstanding works)
+    const achievements = await prisma.achievement.findMany({
+      orderBy: { order: 'asc' }
+    });
+
     res.render('index', {
       title: 'วิทยาลัยการอาชีพบ่อไร่ | BICEC',
       newsItems,
       sidebarNews,
       biddingNews,
       publishedDocs,
-      departments: DEPARTMENTS_DATA
+      departments: await getDepartments(),
+      heroImage: heroImages.length > 0 ? heroImages[0] : '/bannerImage.webp',
+      subBannerImages: subBannerImages.length > 0 ? subBannerImages : ['/subbannerImage.png'],
+      achievements
     });
   } catch (error) {
     console.error(error);
@@ -77,6 +108,10 @@ router.get('/', async (req, res) => {
       title: 'วิทยาลัยการอาชีพบ่อไร่ | BICEC',
       newsItems: [],
       sidebarNews: [],
+      heroImage: '/bannerImage.webp',
+      subBannerImages: ['/subbannerImage.png'],
+      achievements: [],
+      departments: await getDepartments()
     });
   }
 });
@@ -155,107 +190,29 @@ router.get('/documents', async (req, res) => {
   }
 });
 
-// --- Department Data Mapping ---
-const DEPARTMENTS_DATA = {
-  'automotive': {
-    name: 'ช่างยนต์',
-    slug: 'automotive',
-    icon: 'truck',
-    type: 'Industrial',
-    pvcName: 'ช่างยนต์',
-    hvcName: 'เทคนิคยานยนต์',
-    imageUrl: '/images/dept-auto.png',
-    description: 'มุ่งเน้นการผลิตและพัฒนากำลังคนในสาขางานยานยนต์ ให้มีความรู้ความชำนาญทั้งในด้านทฤษฎีและปฏิบัติ ครอบคลุมระบบเครื่องยนต์ดีเซลและเบนซิน รวมถึงเทคโนโลยียานยนต์สมัยใหม่',
-    keywords: ['ช่างยนต์', 'ยานยนต์'],
-    skills: ['Engine Maintenance', 'Transmission Systems', 'Auto Electronics'],
-    jobs: ['ช่างซ่อมบำรุงรักษาเครื่องยนต์', 'ที่ปรึกษาด้านบริการยานยนต์', 'เจ้าของกิจการอู่ซ่อมรถ', 'พนักงานตรวจสภาพรถ'],
-    curriculum: {
-      pvc: ['งานเครื่องยนต์แก๊สโซลีน', 'งานเครื่องยนต์ดีเซล', 'งานไฟฟ้ายานยนต์', 'งานส่งกำลังยานยนต์', 'งานบำรุงรักษารถยนต์'],
-      hvc: ['เทคนิคยานยนต์', 'การวิเคราะห์ปัญหารถยนต์', 'เทคโนโลยีระบบฉีดเชื้อเพลิง', 'การจัดการศูนย์บริการ', 'งานเครื่องยนต์แก๊สโซลีนควบคุมด้วยอิเล็กทรอนิกส์']
-    },
-    pdfUrl: 'https://bsq.vec.go.th/wp-content/uploads/sites/13/2026/03/20101v8.pdf'
-  },
-  'electrical': {
-    name: 'ช่างไฟฟ้ากำลัง',
-    slug: 'electrical',
-    icon: 'zap',
-    type: 'Technology',
-    pvcName: 'ช่างไฟฟ้ากำลัง',
-    hvcName: 'ไฟฟ้า',
-    imageUrl: '/images/dept-electric.png',
-    description: 'สร้างผู้เชี่ยวชาญด้านระบบไฟฟ้าอาคารและอุตสาหกรรม การทำงานกับระบบพลังงานสะอาด และเทคโนโลยีควบคุมอัตโนมัติ (PLC) เพื่อรองรับตลาดแรงงานยุคอุตสาหกรรม 4.0',
-    keywords: ['ไฟฟ้ากำลัง', 'ช่างไฟฟ้า'],
-    skills: ['Home Wiring', 'Motor Control', 'PLC Systems'],
-    jobs: ['ช่างไฟฟ้าอาคาร', 'ช่างควบคุมระบบไฟฟ้าโรงงาน', 'พนักงานรัฐวิสาหกิจการไฟฟ้า', 'ผู้ออกแบบระบบไฟฟ้า'],
-    curriculum: {
-      pvc: ['การติดตั้งไฟฟ้าในอาคาร', 'เครื่องกลไฟฟ้า', 'การควบคุมมอเตอร์', 'การวัดและวงจรไฟฟ้า', 'การติดตั้งไฟฟ้านอกอาคาร'],
-      hvc: ['ระบบควบคุมอัตโนมัติ (PLC)', 'การออกแบบระบบไฟฟ้า', 'เครื่องกำเนิดไฟฟ้า', 'ระบบส่งจ่ายกำลังไฟฟ้า', 'พลังงานลมและแสงอาทิตย์']
-    },
-    pdfUrl: 'https://bsq.vec.go.th/wp-content/uploads/sites/13/2026/03/20104v6.pdf'
-  },
-  'electronics': {
-    name: 'ช่างอิเล็กทรอนิกส์',
-    slug: 'electronics',
-    icon: 'cpu',
-    type: 'Technology',
-    pvcName: 'ช่างอิเล็กทรอนิกส์',
-    hvcName: 'อิเล็กทรอนิกส์',
-    imageUrl: '/images/dept-electro.png',
-    description: 'ศึกษาการทำงานของเทคโนโลยีสมองกลฝังตัว (Embedded Systems) ระบบสื่อสารโทรคมนาคม และงานซ่อมบำรุงระบบควบคุมอิเล็กทรอนิกส์ รวมถึงเทคโนโลยี IoT สู่บ้านอัจฉริยะ',
-    keywords: ['อิเล็กทรอนิกส์', 'ช่างอิเล็ก'],
-    skills: ['Microcontroller', 'IoT Systems', 'PCB Design'],
-    jobs: ['ช่างซ่อมบำรุงอุปกรณ์อิเล็กทรอนิกส์', 'ช่างเทคนิคระบบสื่อสาร', 'ผู้ออกแบบวงจร PCB', 'ที่ปรึกษาด้านระบบรักษาความปลอดภัย'],
-    curriculum: {
-      pvc: ['วงจรไฟฟ้าและวิเคราะห์วงจร', 'อุปกรณ์อิเล็กทรอนิกส์และวงจร', 'การวัดและเครื่องวัดไฟฟ้า', 'งานเชื่อมโลหะพื้นฐาน', 'งานนิวแมติกส์และไฮดรอลิกส์เบื้องต้น'],
-      hvc: ['ไมโครคอนโทรลเลอร์ (Microcontroller)', 'เทคโนโลยี IoT (Internet of Things)', 'ระบบควบคุมในอุตสาหกรรม', 'การออกแบบวงจรด้วยคอมพิวเตอร์', 'การเขียนโปรแกรมควบคุมคอมพิวเตอร์']
-    },
-    pdfUrl: 'https://bsq.vec.go.th/wp-content/uploads/sites/13/2026/03/20105v6.pdf'
-  },
-  'accounting': {
-    name: 'การบัญชี',
-    slug: 'accounting',
-    icon: 'book',
-    type: 'Business',
-    pvcName: 'การบัญชี',
-    hvcName: 'การบัญชี',
-    imageUrl: '/images/dept-acc.png',
-    description: 'เตรียมความพร้อมสู่สายงานบริหารจัดการการเงิน การรายงานบัญชีที่แม่นยำ และการใช้ซอฟต์แวร์ทางธุรกิจระดับสากล รวมถึงการวางแผนภาษีอากรอย่างมืออาชีพ',
-    keywords: ['การบัญชี', 'บัญชี', 'Accounting'],
-    skills: ['Financial Accounting', 'Taxation', 'ERP Systems'],
-    jobs: ['พนักงานบัญชีประจำบริษัท', 'เจ้าหน้าที่ธุรการการเงิน', 'ผู้ช่วยผู้ตรวจสอบบัญชี', 'ที่ปรึกษาด้านภาษีอากร'],
-    curriculum: {
-      pvc: ['การเขียนโปรแกรมบัญชี', 'การบัญชีเบื้องต้น 1-2', 'การบัญชีเดี่ยวและระบบใบสำคัญ', 'คณิตศาสตร์พาณิชยกรรม', 'กฎหมายธุรกิจ'],
-      hvc: ['การบัญชีชั้นสูง', 'การตรวจสอบบัญชี', 'การบัญชีเพื่อการจัดการ', 'โปรแกรมสำเร็จรูปเพื่องานบัญชี', 'การภาษีอากร']
-    },
-    pdfUrl: 'https://bsq.vec.go.th/wp-content/uploads/sites/13/2026/03/20201v8.pdf'
-  },
-  'digital-business': {
-    name: 'เทคโนโลยีธุรกิจดิจิทัล',
-    slug: 'digital-business',
-    icon: 'briefcase',
-    type: 'Digital & Business',
-    pvcName: 'เทคโนโลยีธุรกิจดิจิทัล',
-    hvcName: 'เทคโนโลยีธุรกิจดิจิทัล',
-    imageUrl: '/images/dept-it.png',
-    description: 'มุ่งเน้นการสร้างนักบริหารจัดการดิจิทัลยุคใหม่ พัฒนาทักษะด้านพาณิชย์อิเล็กทรอนิกส์ การตลาดออนไลน์ และการจัดการนวัตกรรมธุรกิจด้วยเทคโนโลยีที่ทันสมัย',
-    keywords: ['เทคโนโลยีธุรกิจดิจิทัล', 'คอมพิวเตอร์ธุรกิจ', 'ธุรกิจดิจิทัล', 'DBT', 'ไอที', 'IT'],
-    skills: ['Digital Marketing', 'E-Commerce', 'Data Analysis'],
-    jobs: ['เจ้าของธุรกิจออนไลน์', 'นักการตลาดดิจิทัล (Digital Marketer)', 'Social Media Admin', 'เจ้าหน้าที่กราฟิกธุรกิจ', 'นักวิเคราะห์ข้อมูลธุรกิจ'],
-    curriculum: {
-      pvc: ['การเริ่มต้นธุรกิจดิจิทัล', 'การตลาดดิจิทัลเบื้องต้น', 'การใช้โปรแกรมสำนักงานขั้นสูง', 'ธุรกิจและการเป็นผู้ประกอบการ', 'พื้นฐานกราฟิกคอมพิวเตอร์'],
-      hvc: ['พาณิชย์อิเล็กทรอนิกส์ขั้นสูง', 'การวิเคราะห์ข้อมูลขนาดใหญ่ (Big Data)', 'ความปลอดภัยในอาชญากรรมทางคอมพิวเตอร์', 'การจัดการสื่อสังคมออนไลน์', 'การเขียนแผนธุรกิจดิจิทัล']
-    },
-    pdfUrl: 'https://bsq.vec.go.th/wp-content/uploads/sites/13/2026/03/21910v8.pdf'
+// --- Department Data Helper ---
+async function getDepartments() {
+  const depts = await prisma.department.findMany({ orderBy: { order: 'asc' } });
+  const dict = {};
+  for (const d of depts) {
+    dict[d.slug] = {
+      ...d,
+      curriculum: {
+        pvc: d.curriculumPvc || [],
+        hvc: d.curriculumHvc || []
+      }
+    };
   }
-};
+  return dict;
+}
 
 
-// GET /curriculum — Main Curriculum Hub
 router.get('/curriculum', async (req, res) => {
   try {
+    const departmentsData = await getDepartments();
     res.render('curriculum', {
       title: 'หลักสูตรที่เปิดสอน | วิทยาลัยการอาชีพบ่อไร่',
-      departments: DEPARTMENTS_DATA
+      departments: departmentsData
     });
   } catch (error) {
     console.error(error);
@@ -265,9 +222,11 @@ router.get('/curriculum', async (req, res) => {
 
 // GET /curriculum/:slug — Department Detail Page (Dynamic)
 router.get('/curriculum/:slug', async (req, res) => {
+  let departmentInfo = null;
   try {
     const { slug } = req.params;
-    const departmentInfo = DEPARTMENTS_DATA[slug];
+    const departmentsData = await getDepartments();
+    departmentInfo = departmentsData[slug];
 
     if (!departmentInfo) {
       return res.status(404).render('404', { title: 'ไม่พบสาขาวิชานี้' });
@@ -275,7 +234,7 @@ router.get('/curriculum/:slug', async (req, res) => {
 
     // Smart Integration: Fetch teachers for this department using multiple possible keywords
     const keywords = [departmentInfo.name, ...(departmentInfo.keywords || [])];
-    const faculty = await prisma.personnel.findMany({
+    let faculty = await prisma.personnel.findMany({
       where: {
         OR: keywords.map(k => ({
           department: { contains: k }
@@ -284,16 +243,55 @@ router.get('/curriculum/:slug', async (req, res) => {
       orderBy: { order: 'asc' }
     });
 
+    // Smart Sorting Hierarchy: 
+    // 1. Head of Dept (หัวหน้าแผนก)
+    // 2. Regular Teachers (sorted by Academic Standing)
+    // 3. Government Employees (พนักงานราชการ)
+    // 4. Contract Teachers (ครูอัตราจ้าง)
+    const getPriority = (p) => {
+      const pos = p.position || '';
+      const stand = p.academicStanding || '';
+      const duties = Array.isArray(p.duties) ? p.duties : [];
+      
+      const hasHeadDuty = pos.includes('หัวหน้าแผนก') || duties.some(d => d.includes('หัวหน้าแผนก'));
+
+      // Level 1: Head of Department
+      if (hasHeadDuty) return 0;
+      
+      // Level 2: Regular Teachers by Academic Standing
+      if (stand.includes('เชี่ยวชาญพิเศษ')) return 10;
+      if (stand.includes('เชี่ยวชาญ')) return 11;
+      if (stand.includes('ชำนาญการพิเศษ')) return 12;
+      if (stand.includes('ชำนาญการ')) return 13;
+      // Regular Teacher (no standing yet)
+      if (pos.includes('ครู') && !pos.includes('พนักงาน') && !pos.includes('อัตรา')) return 14; 
+      
+      // Level 3: Government Employees
+      if (pos.includes('พนักงานราชการ')) return 50;
+      
+      // Level 4: Contract Teachers
+      if (pos.includes('ครูอัตราจ้าง')) return 60;
+      
+      return 100; // Fallback
+    };
+
+    faculty.sort((a, b) => {
+      const toolA = getPriority(a);
+      const toolB = getPriority(b);
+      if (toolA !== toolB) return toolA - toolB;
+      return a.order - b.order; // Fallback to custom order if priority is same
+    });
+
     res.render('department-detail', {
       title: `${departmentInfo.name} | วิทยาลัยการอาชีพบ่อไร่`,
       dept: departmentInfo,
       faculty
     });
   } catch (error) {
-    console.warn('[Database Offline] Rendering department detail without faculty data.');
+    console.warn('[Database Offline] Rendering department detail without faculty data.', error);
     res.render('department-detail', {
-      title: `${departmentInfo.name} | วิทยาลัยการอาชีพบ่อไร่`,
-      dept: departmentInfo,
+      title: departmentInfo ? `${departmentInfo.name} | วิทยาลัยการอาชีพบ่อไร่` : 'หลักสูตร | วิทยาลัยการอาชีพบ่อไร่',
+      dept: departmentInfo || {},
       faculty: [] // Fallback to empty list instead of crashing
     });
   }
@@ -318,14 +316,16 @@ router.get('/about', async (req, res) => {
       orderBy: [{ order: 'asc' }, { firstName: 'asc' }]
     });
     const settings = await prisma.siteSettings.findMany({
-      where: { key: { in: ['current_semester', 'academic_year'] } }
+      where: { key: { in: ['current_semester', 'academic_year', 'budget_info_status'] } }
     });
     
     const semesterSetting = settings.find(s => s.key === 'current_semester');
     const yearSetting = settings.find(s => s.key === 'academic_year');
+    const budgetStatusSetting = settings.find(s => s.key === 'budget_info_status');
     
     const currentSemester = semesterSetting ? semesterSetting.value : '1';
     const academicYear = yearSetting ? yearSetting.value : '2567';
+    const budgetInfoStatus = budgetStatusSetting ? budgetStatusSetting.value : 'active';
 
     const enrollments = await prisma.studentEnrollment.findMany({
       where: {
@@ -336,22 +336,25 @@ router.get('/about', async (req, res) => {
 
     res.render('about', {
       title: 'ข้อมูลวิทยาลัย | วิทยาลัยการอาชีพบ่อไร่',
-      departments: DEPARTMENTS_DATA,
+      departments: await getDepartments(),
       allPersonnel,
       enrollments,
       currentSemester,
       academicYear,
+      budgetInfoStatus,
       budgetData: null // Set to null to show 'No Data' state as requested
     });
   } catch (error) {
     console.error(error);
     res.render('about', {
       title: 'ข้อมูลวิทยาลัย | วิทยาลัยการอาชีพบ่อไร่',
-      departments: DEPARTMENTS_DATA,
+      departments: await getDepartments(),
       allPersonnel: [],
       enrollments: [],
       currentSemester: '1',
-      academicYear: '2567'
+      academicYear: '2567',
+      budgetInfoStatus: 'active',
+      budgetData: null
     });
   }
 });
