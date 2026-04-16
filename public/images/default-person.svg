@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8fafc" />
+      <stop offset="100%" stop-color="#f1f5f9" />
+    </linearGradient>
+    <linearGradient id="person" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#cbd5e1" />
+      <stop offset="100%" stop-color="#94a3b8" />
+    </linearGradient>
+    <clipPath id="circle">
+      <circle cx="60" cy="60" r="60" />
+    </clipPath>
+  </defs>
+  <rect width="120" height="120" fill="url(#bg)" />
+  <g clip-path="url(#circle)">
+    <!-- Head -->
+    <circle cx="60" cy="45" r="22" fill="url(#person)" />
+    <!-- Shoulders / Body -->
+    <path d="M 20 120 Q 20 75 60 75 Q 100 75 100 120 Z" fill="url(#person)" />
+  </g>
+</svg>

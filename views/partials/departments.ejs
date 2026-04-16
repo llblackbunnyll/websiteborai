@@ -5,68 +5,62 @@
       แผนกวิชา<span class="text-gradient">ที่เปิดสอน</span>
     </h2>
 
-    <div class="dept-grid" style="margin-top:2.5rem;">
+    <div class="dept-grid" style="margin-top:2.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
+      <% 
+        if (typeof departments !== 'undefined') {
+          const displayOrder = ['automotive', 'electrical', 'electronics', 'accounting', 'digital-business'];
+          const colors = {
+            'automotive': '#ef4444',
+            'electrical': '#10b981',
+            'electronics': '#06b6d4',
+            'accounting': '#f59e0b',
+            'digital-business': '#8b5cf6'
+          };
+          displayOrder.forEach((slug, index) => {
+            const d = departments[slug];
+            if (!d) return;
+            const iconColor = colors[slug] || '#7042f8';
+      %>
+        <div class="dept-card glass reveal-scale" 
+             style="transition-delay:<%= index * 0.1 %>s; border-radius: 20px; padding: 24px; text-align: center; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.7); backdrop-filter: blur(12px); box-shadow: 0 4px 16px rgba(0,0,0,0.05); position: relative; transition: all 0.3s ease;">
+          
+          <div class="dept-icon" style="background: linear-gradient(135deg, <%= iconColor %>40, <%= iconColor %>); width: 60px; height: 60px; border-radius: 16px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; color: white;">
+            <% if (d.icon === 'truck') { %>
+              <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            <% } else if (d.icon === 'zap') { %>
+              <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <% } else if (d.icon === 'cpu') { %>
+              <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+            <% } else if (d.icon === 'book') { %>
+              <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            <% } else if (d.icon === 'briefcase') { %>
+              <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            <% } %>
+          </div>
+          
+          <h3 class="dept-name" style="font-size: 1.15rem; font-weight: 800; color: var(--color-text-primary); margin-bottom: 20px;"><%= d.name %></h3>
+          
+          <div style="display: flex; gap: 10px; justify-content: center;">
+            <a href="/curriculum/<%= d.slug %>#pvc" 
+               class="glass-badge" 
+               style="flex: 1; padding: 10px 6px; background: rgba(255,255,255,0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(112, 66, 248, 0.2); border-radius: 12px; color: var(--color-accent-primary); font-size: 0.85rem; font-weight: 800; text-decoration: none; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 2px;">
+              ปวช.
+              <span style="font-size: 0.65rem; font-weight: 600; opacity: 0.8;">(ปกติ)</span>
+            </a>
+            <a href="/curriculum/<%= d.slug %>#hvc" 
+               class="glass-badge" 
+               style="flex: 1; padding: 10px 6px; background: rgba(255,255,255,0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(112, 66, 248, 0.2); border-radius: 12px; color: var(--color-accent-primary); font-size: 0.85rem; font-weight: 800; text-decoration: none; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 2px;">
+              ปวส.
+              <span style="font-size: 0.65rem; font-weight: 600; opacity: 0.8;">(ทวิภาคี)</span>
+            </a>
+          </div>
 
-      <!-- IT -->
-      <div class="dept-card glass reveal-scale" data-dept="it" style="transition-delay:0s;">
-        <div class="dept-icon" style="background: linear-gradient(135deg, #8b5cf640, #8b5cf6);">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <a href="/curriculum/<%= d.slug %>" style="position: absolute; top:0; left:0; width:100%; height:60%; z-index:1;"></a>
         </div>
-        <h3 class="dept-name">คอมพิวเตอร์ธุรกิจ/ไอที</h3>
-        <span class="dept-link">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-          แผนการเรียน
-        </span>
-      </div>
-
-      <!-- Accounting -->
-      <div class="dept-card glass reveal-scale" data-dept="acc" style="transition-delay:0.1s;">
-        <div class="dept-icon" style="background: linear-gradient(135deg, #f59e0b40, #f59e0b);">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-        </div>
-        <h3 class="dept-name">การบัญชี</h3>
-        <span class="dept-link">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-          แผนการเรียน
-        </span>
-      </div>
-
-      <!-- Mechanic -->
-      <div class="dept-card glass reveal-scale" data-dept="mech" style="transition-delay:0.2s;">
-        <div class="dept-icon" style="background: linear-gradient(135deg, #ef444440, #ef4444);">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-        </div>
-        <h3 class="dept-name">ช่างยนต์</h3>
-        <span class="dept-link">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-          แผนการเรียน
-        </span>
-      </div>
-
-      <!-- Electrical -->
-      <div class="dept-card glass reveal-scale" data-dept="elec" style="transition-delay:0.3s;">
-        <div class="dept-icon" style="background: linear-gradient(135deg, #10b98140, #10b981);">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-        </div>
-        <h3 class="dept-name">ช่างไฟฟ้ากำลัง</h3>
-        <span class="dept-link">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-          แผนการเรียน
-        </span>
-      </div>
-
-      <!-- Electronics -->
-      <div class="dept-card glass reveal-scale" data-dept="electronics" style="transition-delay:0.4s;">
-        <div class="dept-icon" style="background: linear-gradient(135deg, #06b6d440, #06b6d4);">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
-        </div>
-        <h3 class="dept-name">อิเล็กทรอนิกส์</h3>
-        <span class="dept-link">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-          แผนการเรียน
-        </span>
-      </div>
-
+      <% 
+          });
+        } 
+      %>
     </div>
   </div>
 </section>

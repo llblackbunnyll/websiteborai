@@ -98,14 +98,155 @@
       font-size: 0.9rem;
     }
     .duty-suggestion-item:hover {
-      background: linear-gradient(90deg, rgba(112, 66, 248, 0.3), rgba(66, 133, 244, 0.1));
+      background: rgba(112, 66, 248, 0.2);
       color: white;
-      padding-left: 1.5rem;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 15, 25, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 2000;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      padding: 1.5rem;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+    .modal-overlay.active {
+      visibility: visible;
+      opacity: 1;
+      pointer-events: all;
+    }
+    .modal-content {
+      background: white;
+      width: 100%;
+      max-width: 800px;
+      margin: 2rem auto;
+      border-radius: 24px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      position: relative;
+      transform: scale(0.95) translateY(-20px);
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+    }
+    .modal-overlay.active .modal-content {
+      transform: scale(1) translateY(0);
+    }
+    .modal-header {
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fafafa;
+    }
+    .modal-body {
+      padding: 2rem;
+    }
+    .modal-close-btn {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 50%;
+      transition: all 0.2s;
+      display: flex;
+    }
+    .modal-close-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+    .modal-overlay::-webkit-scrollbar { width: 8px; }
+    .modal-overlay::-webkit-scrollbar-track { background: transparent; }
+    .modal-overlay::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
     }
     .duty-suggestion-list::-webkit-scrollbar { width: 5px; }
     .duty-suggestion-list::-webkit-scrollbar-thumb {
       background: var(--color-accent-primary);
       border-radius: 10px;
+    }
+
+    /* Facility Tree Styles */
+    .fac-tree-node {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      margin-bottom: 0.75rem;
+      background: #fff;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+    .fac-tree-node:hover {
+      border-color: rgba(112, 66, 248, 0.4);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    }
+    .fac-tree-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.25rem;
+      background: #f8fafc;
+      cursor: pointer;
+    }
+    .fac-tree-title {
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--color-text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .fac-tree-cap {
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+      background: #e2e8f0;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      margin-left: 0.5rem;
+    }
+    .fac-tree-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .fac-tree-children {
+      padding: 0.5rem 1.25rem 1rem 3rem;
+      border-top: 1px solid #e2e8f0;
+      display: none;
+    }
+    .fac-tree-node.expanded .fac-tree-children {
+      display: block;
+    }
+    .fac-tree-child {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem;
+      border-bottom: 1px dashed #e2e8f0;
+    }
+    .fac-tree-child:last-child {
+      border-bottom: none;
+    }
+    .fac-chevron {
+      transition: transform 0.3s;
+    }
+    .fac-tree-node.expanded .fac-chevron {
+      transform: rotate(90deg);
     }
   </style>
 </head>
@@ -144,7 +285,22 @@
         <span>👥</span> ข้อมูลบุคลากร
       </button>
       <button class="nav-btn" data-target="docs-panel">
-        <span>📄</span> เอกสารและประกวดราคา
+        <span>📄</span> เอกสารเผยแพร่
+      </button>
+      <button class="nav-btn" data-target="ita-panel">
+        <span>📊</span> ระบบประเมิน ITA
+      </button>
+      <button class="nav-btn" data-target="student-panel">
+        <span>🎓</span> จัดการข้อมูลนักเรียน
+      </button>
+      <button class="nav-btn" data-target="facility-panel">
+        <span>🏢</span> บริหารข้อมูลอาคารสถานที่
+      </button>
+      <button class="nav-btn" data-target="partner-panel">
+        <span>🤝</span> สถานประกอบการ
+      </button>
+      <button class="nav-btn" data-target="budget-panel">
+        <span>💰</span> ข้อมูลงบประมาณ
       </button>
       <button class="nav-btn" data-target="others-panel">
         <span>📦</span> ระบบอื่นๆ
@@ -274,66 +430,79 @@
         </form>
       </div>
 
-      <!-- Personnel Form -->
-      <div id="personnel-form-container" class="admin-card hide">
-        <h3 id="personnel-form-title" class="mb-2">เพิ่มบุคลากรใหม่</h3>
-        <form id="personnel-form" enctype="multipart/form-data">
-          <input type="hidden" id="personnel-id" />
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="personnel-prefix">คำนำหน้า</label>
-              <input id="personnel-prefix" name="prefix" type="text" class="form-control" placeholder="นาย/นาง/นางสาว" />
-            </div>
-            <div class="form-group">
-              <label for="personnel-firstName">ชื่อ *</label>
-              <input id="personnel-firstName" name="firstName" type="text" class="form-control" required />
-            </div>
-            <div class="form-group">
-              <label for="personnel-lastName">นามสกุล *</label>
-              <input id="personnel-lastName" name="lastName" type="text" class="form-control" required />
-            </div>
-            <div class="form-group">
-              <label for="personnel-position">ตำแหน่งหลัก</label>
-              <input id="personnel-position" name="position" type="text" class="form-control" placeholder="ครู, เจ้าหน้าที่..." />
-            </div>
-            <div class="form-group">
-              <label for="personnel-academicStanding">วิทยฐานะ</label>
-              <input id="personnel-academicStanding" name="academicStanding" type="text" class="form-control" placeholder="ชำนาญการ, เชี่ยวชาญ..." />
-            </div>
-            <div class="form-group">
-              <label for="personnel-positionNumber">เลขที่ตำแหน่ง</label>
-              <input id="personnel-positionNumber" name="positionNumber" type="text" class="form-control" />
-            </div>
-            <div class="form-group">
-              <label for="personnel-department">สังกัด/แผนก</label>
-              <input id="personnel-department" name="department" type="text" class="form-control" placeholder="แผนกวิชา..., งาน..." />
-            </div>
-            <div class="form-group">
-              <label for="personnel-phone">เบอร์ติดต่อ</label>
-              <input id="personnel-phone" name="phone" type="text" class="form-control" />
-            </div>
-            <div class="form-group form-full">
-              <label>หน้าที่รับผิดชอบ</label>
-              <div id="duty-unified-field" class="duty-unified-container">
-                <div id="duty-tag-container" style="display:contents;"></div>
-                <input type="text" id="new-duty-input" class="duty-inner-input" placeholder="เพิ่ม..." autocomplete="off" />
-                <div id="duty-suggestions" class="duty-suggestion-list"></div>
+      <!-- Personnel Modal -->
+      <div id="personnel-modal" class="modal-overlay">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 id="personnel-form-title">เพิ่มบุคลากรใหม่</h3>
+            <button type="button" class="modal-close-btn" id="modal-close-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="personnel-form" enctype="multipart/form-data">
+              <input type="hidden" id="personnel-id" />
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="personnel-prefix">คำนำหน้า</label>
+                  <input id="personnel-prefix" name="prefix" type="text" class="form-control" placeholder="นาย/นาง/นางสาว" />
+                </div>
+                <div class="form-group">
+                  <label for="personnel-firstName">ชื่อ *</label>
+                  <input id="personnel-firstName" name="firstName" type="text" class="form-control" required />
+                </div>
+                <div class="form-group">
+                  <label for="personnel-lastName">นามสกุล *</label>
+                  <input id="personnel-lastName" name="lastName" type="text" class="form-control" required />
+                </div>
+                <div class="form-group">
+                  <label for="personnel-position">ตำแหน่งหลัก</label>
+                  <input id="personnel-position" name="position" type="text" class="form-control" placeholder="ครู, เจ้าหน้าที่..." />
+                </div>
+                <div class="form-group">
+                  <label for="personnel-academicStanding">วิทยฐานะ</label>
+                  <input id="personnel-academicStanding" name="academicStanding" type="text" class="form-control" placeholder="ชำนาญการ, เชี่ยวชาญ..." />
+                </div>
+                <div class="form-group">
+                  <label for="personnel-positionNumber">เลขที่ตำแหน่ง</label>
+                  <input id="personnel-positionNumber" name="positionNumber" type="text" class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label for="personnel-department">สังกัด/แผนก</label>
+                  <input id="personnel-department" name="department" type="text" class="form-control" placeholder="แผนกวิชา..., งาน..." />
+                </div>
+                <div class="form-group">
+                  <label for="personnel-phone">เบอร์ติดต่อ</label>
+                  <input id="personnel-phone" name="phone" type="text" class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label for="personnel-email">อีเมล</label>
+                  <input id="personnel-email" name="email" type="text" class="form-control" placeholder="example@borai.ac.th (หรือใส่ - หากไม่มี)" />
+                </div>
+                <div class="form-group form-full">
+                  <label>หน้าที่รับผิดชอบ</label>
+                  <div id="duty-unified-field" class="duty-unified-container">
+                    <div id="duty-tag-container" style="display:contents;"></div>
+                    <input type="text" id="new-duty-input" class="duty-inner-input" placeholder="เพิ่ม..." autocomplete="off" />
+                    <div id="duty-suggestions" class="duty-suggestion-list"></div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="personnel-order">ลำดับการแสดงผล</label>
+                  <input id="personnel-order" name="order" type="number" class="form-control" value="0" />
+                </div>
+                <div class="form-group form-full">
+                  <label for="personnel-image">รูปประจำตัว</label>
+                  <input id="personnel-image" name="image" type="file" accept="image/*" class="form-control file-input" />
+                </div>
               </div>
-            </div>
-            <div class="form-group">
-              <label for="personnel-order">ลำดับการแสดงผล</label>
-              <input id="personnel-order" name="order" type="number" class="form-control" value="0" />
-            </div>
-            <div class="form-group form-full">
-              <label for="personnel-image">รูปประจำตัว</label>
-              <input id="personnel-image" name="image" type="file" accept="image/*" class="form-control file-input" />
-            </div>
+              <div class="form-actions mt-2">
+                <button type="button" id="personnel-cancel-btn" class="btn-outline">ยกเลิก</button>
+                <button type="submit" class="btn-accent">บันทึกข้อมูล</button>
+              </div>
+            </form>
           </div>
-          <div class="form-actions mt-2">
-            <button type="button" id="personnel-cancel-btn" class="btn-outline">ยกเลิก</button>
-            <button type="submit" class="btn-accent">บันทึกข้อมูล</button>
-          </div>
-        </form>
+        </div>
       </div>
 
       <!-- Personnel Table -->
@@ -429,6 +598,503 @@
         </div>
       </div>
     </section>
+
+    <!-- ========================= ITA PANEL ========================= -->
+    <section id="ita-panel" class="admin-panel hide">
+      <div class="panel-header">
+        <div>
+          <h1>ระบบจัดการเกณฑ์ประเมิน ITA (O1 - O37)</h1>
+          <p>จัดการข้อมูลการเปิดเผยข้อมูลสาธารณะ (OIT) ตามเกณฑ์อาชีวศึกษา</p>
+        </div>
+        <button id="ita-init-btn" class="btn-outline">🔄 รีเซ็ต/เริ่มระบบ</button>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th style="width: 80px;">รหัส</th>
+                <th>รายการประเมิน</th>
+                <th>สถานะข้อมูล</th>
+                <th style="text-align:right;">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="ita-tbody">
+              <tr><td colspan="4" style="text-align:center;">กำลังโหลดรายการ...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ITA Edit Modal -->
+      <div id="ita-modal" class="modal-overlay">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 id="ita-modal-title">จัดการข้อมูล ITA</h3>
+            <button type="button" class="modal-close-btn" id="ita-modal-close-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="ita-form">
+              <input type="hidden" id="ita-code" />
+              <div class="form-group form-full mb-2">
+                <label>หัวข้อการประเมิน</label>
+                <div id="ita-display-title" style="font-weight: 600; font-size: 1.1rem; color: var(--color-accent-primary);"></div>
+                <div id="ita-display-desc" style="font-size: 0.9rem; color: var(--color-text-secondary); margin-top: 4px; padding: 0.8rem; background: #f8fafc; border-radius: 8px; border-left: 4px solid var(--color-accent-primary);"></div>
+              </div>
+
+              <!-- Attachments List -->
+              <div class="form-group form-full">
+                <label>รายการเอกสาร/ลิงก์ที่แนบไว้</label>
+                <div id="ita-attachments-list" class="mt-1" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                  <!-- Dynamic Items -->
+                </div>
+              </div>
+
+              <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid #eee;" />
+
+              <div class="form-grid">
+                <div class="form-group form-full">
+                  <label>เพิ่มเอกสารใหม่ (PDF เท่านั้น)</label>
+                  <input type="file" id="ita-new-files" multiple accept=".pdf" class="form-control file-input" />
+                </div>
+                
+                <div class="form-group form-full">
+                  <label>เพิ่มลิงก์ภายนอกใหม่</label>
+                  <div style="display:flex; gap:0.5rem;">
+                    <input type="text" id="ita-new-link-label" placeholder="ชื่อเรียก (เช่น เว็บไซต์ สอศ.)" class="form-control" />
+                    <input type="text" id="ita-new-link-url" placeholder="URL (http://...)" class="form-control" />
+                    <button type="button" id="ita-add-link-btn" class="btn-accent" style="padding: 0 1rem;">เพิ่ม</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-actions mt-3">
+                <button type="button" id="ita-cancel-btn" class="btn-outline">ยกเลิก</button>
+                <button type="submit" class="btn-accent">บันทึกข้อมูลทั้งหมด</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================= STUDENT PANEL ========================= -->
+    <section id="student-panel" class="admin-panel hide">
+      <div class="panel-header">
+        <div>
+          <h1>จัดการข้อมูลนักเรียน นักศึกษา</h1>
+          <p>จัดการจำนวนนักเรียนแต่ละแผนก และตั้งค่าปีการศึกษา/ภาคเรียน</p>
+        </div>
+        <button class="btn-accent student-save-trigger">💾 บันทึกข้อมูลทั้งหมด</button>
+      </div>
+
+      <div class="form-grid">
+        <!-- Academic Settings -->
+        <div class="admin-card">
+          <h3 class="mb-2">การตั้งค่าภาคเรียน</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>ปีการศึกษา (หน้าเว็บหลัก)</label>
+              <select id="setting-academic-year" class="form-control">
+                <!-- Dynamically populated -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label>ภาคเรียนที่</label>
+              <select id="setting-current-semester" class="form-control">
+                <option value="1">ภาคเรียนที่ 1</option>
+                <option value="2">ภาคเรียนที่ 2</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Logic Hint -->
+        <div class="admin-card" style="background: rgba(16, 185, 129, 0.05); border-left: 4px solid #10b981;">
+          <h3 class="mb-1" style="color: #065f46;">💡 ตรรกะการคำนวณฝึกงาน</h3>
+          <p style="font-size: 0.9rem; color: #065f46; line-height: 1.6;">
+            <strong>ภาคเรียนที่ 1:</strong> ระบบจะนับ ปวช.3 และ ปวส.2 เป็นเด็กฝึกงาน<br>
+            <strong>ภาคเรียนที่ 2:</strong> ระบบจะนับ ปวส.1 เป็นเด็กฝึกงาน<br>
+            <small>* ข้อมูลจะอัปเดตและไฮไลท์ในหน้าหลักทันทีหลังบันทึก</small>
+          </p>
+        </div>
+      </div>
+
+      <div class="admin-card mt-2">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3 style="margin: 0;">จำนวนนักเรียนแยกตามแผนก</h3>
+          <div style="display: flex; gap: 0.5rem; align-items: center; background: #f8fafc; padding: 0.5rem; border-radius: 10px; border: 1px solid #e2e8f0;">
+            <span style="font-size: 0.85rem; font-weight: 600; color: #64748b;">ข้อมูลของช่วงเวลา:</span>
+            <div style="display: flex; gap: 4px;">
+              <select id="view-academic-year" class="form-control" style="width: 100px; padding: 0.3rem 0.5rem; font-size: 0.85rem;">
+                <!-- Dynamically populated -->
+              </select>
+              <button id="btn-add-year" class="btn-outline" title="เพิ่มปีการศึกษา" style="min-height: 32px; padding: 0 8px; border-radius: 6px; color: #10b981;">+</button>
+            </div>
+            <select id="view-current-semester" class="form-control" style="width: 100px; padding: 0.3rem 0.5rem; font-size: 0.85rem;">
+              <option value="1">ภาคเรียนที่ 1</option>
+              <option value="2">ภาคเรียนที่ 2</option>
+            </select>
+            <div style="width: 1px; height: 20px; background: #e2e8f0; margin: 0 4px;"></div>
+            <button id="btn-delete-period" class="icon-btn danger" title="ลบข้อมูลช่วงเวลานี้" style="min-height: 32px; width: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Automation Tools Bar -->
+        <div style="background: rgba(112, 66, 248, 0.05); padding: 0.75rem; border-radius: 12px; border: 1px dashed var(--color-accent-primary); margin-bottom: 1.5rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 0.9rem; font-weight: 700; color: var(--color-accent-primary); display: flex; align-items: center; gap: 0.4rem;">
+              <span>⚡</span> เครื่องมือจัดการอัตโนมัติ
+            </span>
+            <button id="btn-toggle-tools" class="icon-btn" style="min-height:unset; padding: 4px 12px; font-size: 0.75rem; width: auto; height: auto; border: 1px solid var(--color-accent-primary); color: var(--color-accent-primary); font-weight: 600;">👁️ แสดง / ซ่อนเครื่องมือ</button>
+          </div>
+          
+          <div id="automation-tools-content" style="display: none; align-items: center; gap: 0.5rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed rgba(112, 66, 248, 0.2);">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-left: auto;">
+              <span style="font-size: 0.8rem; color: #64748b;">จากต้นฉบับ:</span>
+              <select id="tool-source-year" class="form-control" style="width: 90px; height: 32px; font-size: 0.8rem; padding: 0 5px;"></select>
+              <select id="tool-source-semester" class="form-control" style="width: 120px; height: 32px; font-size: 0.8rem; padding: 0 5px;">
+                <option value="1">ภาคเรียนที่ 1</option>
+                <option value="2">ภาคเรียนที่ 2</option>
+              </select>
+              <button id="btn-tool-copy" class="btn-outline" style="min-height: 32px; font-size: 0.8rem; padding: 0 10px;">📋 คัดลอกข้อมูล</button>
+              <button id="btn-tool-promote" class="btn-outline" style="min-height: 32px; font-size: 0.8rem; padding: 0 10px; border-color: #10b981; color: #059669;">📈 เลื่อนขั้นนักเรียน</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>แผนกวิชา</th>
+                <th style="text-align:center;">ปวช. 1</th>
+                <th style="text-align:center;">ปวช. 2</th>
+                <th style="text-align:center;">ปวช. 3</th>
+                <th style="text-align:center;">ปวส. 1</th>
+                <th style="text-align:center;">ปวส. 2</th>
+              </tr>
+            </thead>
+            <tbody id="student-tbody">
+              <!-- Dynamically populated -->
+              <% const slugs = ['automotive', 'electrical', 'electronics', 'accounting', 'digital-business']; %>
+              <% const names = ['ช่างยนต์', 'ช่างไฟฟ้ากำลัง', 'ช่างอิเล็กทรอนิกส์', 'การบัญชี', 'เทคโนโลยีธุรกิจดิจิทัล']; %>
+              <% slugs.forEach((slug, idx) => { %>
+                <tr data-slug="<%= slug %>">
+                  <td style="font-weight: 600; white-space: nowrap;"><%= names[idx] %></td>
+                  <td><input type="number" class="form-control text-center student-input" data-field="pvc1" value="0" style="width: 80px; margin: 0 auto;" /></td>
+                  <td><input type="number" class="form-control text-center student-input" data-field="pvc2" value="0" style="width: 80px; margin: 0 auto;" /></td>
+                  <td><input type="number" class="form-control text-center student-input" data-field="pvc3" value="0" style="width: 80px; margin: 0 auto;" /></td>
+                  <td><input type="number" class="form-control text-center student-input" data-field="pvs1" value="0" style="width: 80px; margin: 0 auto;" /></td>
+                  <td><input type="number" class="form-control text-center student-input" data-field="pvs2" value="0" style="width: 80px; margin: 0 auto;" /></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <div class="form-actions mt-2" style="justify-content: center; padding-top: 1rem; border-top: 1px solid #f1f5f9;">
+          <button class="btn-accent student-save-trigger" style="min-width: 200px;">💾 บันทึกข้อมูลทั้งหมด</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================= FACILITY PANEL ========================= -->
+    <section id="facility-panel" class="admin-panel hide">
+      <div class="panel-header">
+        <div>
+          <h1>บริหารจัดการข้อมูลอาคารและสิ่งก่อสร้าง</h1>
+          <p>จัดการฐานข้อมูลอาคารหลัก สิ่งปลูกสร้าง และหน่วยย่อย พร้อมระบุขีดความสามารถในการรองรับ</p>
+        </div>
+        <button id="fac-add-bldg-btn" class="btn-accent">+ เพิ่มข้อมูลอาคารหลัก</button>
+      </div>
+
+      <div class="admin-card">
+        <div id="fac-tree-container">
+          <!-- Tree renders here -->
+          <div style="text-align: center; padding: 2rem; color: #64748b;">กำลังดำเนินการโหลดข้อมูล...</div>
+        </div>
+      </div>
+
+      <!-- Facility Modal -->
+      <div id="fac-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+          <div class="modal-header">
+            <h3 id="fac-modal-title">บริหารจัดการข้อมูล</h3>
+            <button type="button" class="modal-close-btn" id="fac-modal-close-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="fac-form">
+              <input type="hidden" id="fac-id" />
+              <input type="hidden" id="fac-type" />      <!-- 'BUILDING' or 'ROOM' -->
+              <input type="hidden" id="fac-parent-id" /> <!-- Parent Building ID if Room -->
+
+              <div class="form-grid">
+                <div class="form-group form-full" id="fac-category-group" style="display: none;">
+                  <label for="fac-category">หมวดหมู่อาคาร</label>
+                  <select id="fac-category" name="category" class="form-control">
+                    <option value="ACADEMIC">หมวดอาคารเรียน</option>
+                    <option value="MULTIPURPOSE">อาคารอเนกประสงค์</option>
+                    <option value="ADMINISTRATION">อาคารอำนวยการ</option>
+                    <option value="OTHER">พื้นที่อื่นๆ</option>
+                  </select>
+                </div>
+                <div class="form-group form-full">
+                  <label id="fac-name-label" for="fac-name">ชื่ออาคารหลัก</label>
+                  <input id="fac-name" name="name" type="text" class="form-control" required placeholder="ตัวอย่าง: อาคารทับทิมสยาม, ห้องปฏิบัติการ 101" />
+                </div>
+                <div class="form-group form-full">
+                  <label for="fac-capacity">รองรับ (คน)</label>
+                  <input id="fac-capacity" name="capacity" type="number" class="form-control" value="0" min="0" />
+                  <small class="text-muted" style="display:block; margin-top:4px;">* กรณีเป็นอาคารที่มีหน่วยย่อย สามารถระบุเป็น 0 เพื่อให้ระบบคำนวณผลรวมจากหน่วยย่อยโดยอัตโนมัติ</small>
+                </div>
+              </div>
+
+              <div class="form-actions mt-3">
+                <button type="button" id="fac-cancel-btn" class="btn-outline">ยกเลิก</button>
+                <button type="submit" class="btn-accent">บันทึกข้อมูล</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================= PARTNER PANEL ========================= -->
+    <section id="partner-panel" class="admin-panel hide">
+      <div class="panel-header">
+        <div>
+          <h1>เครือข่ายสถานประกอบการ</h1>
+          <p>จัดการข้อมูลสถานประกอบการ โลโก้ ประเภทธุรกิจ และพิกัดที่ตั้ง</p>
+        </div>
+        <button id="partner-add-btn" class="btn-accent">+ เพิ่มสถานประกอบการ</button>
+      </div>
+
+      <div class="admin-card">
+        <div id="partner-list-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+          <!-- Partner cards render here -->
+          <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #64748b;">กำลังโหลดข้อมูล...</div>
+        </div>
+      </div>
+
+      <!-- Partner Modal -->
+      <div id="partner-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 550px;">
+          <div class="modal-header">
+            <h3 id="partner-modal-title">จัดการข้อมูล</h3>
+            <button type="button" class="modal-close-btn" id="partner-modal-close-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="partner-form">
+              <input type="hidden" id="partner-id" />
+              
+              <div class="form-grid">
+                <!-- Logo Preview & Input -->
+                <div class="form-group form-full" style="text-align: center;">
+                  <div class="image-upload-wrapper" onclick="document.getElementById('partner-logo-input').click()" style="cursor: pointer; border: 2px dashed var(--color-border); border-radius: 12px; padding: 1.5rem; background: #f8fafc; transition: 0.2s;">
+                    <img id="partner-logo-preview" src="" alt="PREVIEW" style="max-width: 200px; max-height: 120px; object-fit: contain; display: none; margin: 0 auto 10px;" />
+                    <div id="partner-logo-placeholder">
+                      <div style="font-size: 2rem; color: #94a3b8; margin-bottom: 0.5rem;">📸</div>
+                      <div style="color: var(--color-text-secondary); font-size: 0.9rem;">คลิกเพื่ออัปโหลดโลโก้</div>
+                    </div>
+                  </div>
+                  <input type="file" id="partner-logo-input" accept="image/*" style="display:none;" />
+                  <input type="hidden" id="partner-logo-hidden" />
+                </div>
+
+                <div class="form-group form-full">
+                  <label for="partner-name">ชื่อสถานประกอบการ <span style="color:red;">*</span></label>
+                  <input id="partner-name" name="name" type="text" class="form-control" required placeholder="บริษัท ตัวอย่าง จำกัด" />
+                </div>
+
+                <div class="form-group form-full">
+                  <label for="partner-tags">ประเภทการทำธุรกิจ (Tags)</label>
+                  <input id="partner-tags" name="tags" type="text" class="form-control" placeholder="เช่น เทคโนโลยี, โลจิสติกส์, การเงิน (คั่นด้วยลูกน้ำ)" />
+                </div>
+
+                <div class="form-group form-full">
+                  <label for="partner-address">ที่อยู่ / ข้อมูลติดต่อ</label>
+                  <textarea id="partner-address" name="address" class="form-control" rows="2" placeholder="เลขที่ ถนน แขวง เขต จังหวัด รหัสไปรษณีย์"></textarea>
+                </div>
+
+                <div class="form-group form-full">
+                  <label for="partner-coords">พิกัด GPS (ละติจูด, ลองจิจูด) <span style="color:#94a3b8; font-size: 0.8rem; font-weight: 400;">(ไม่บังคับ)</span></label>
+                  <input id="partner-coords" name="coords" type="text" class="form-control" placeholder="เช่น 13.7563, 100.5018" />
+                </div>
+              </div>
+
+              <div class="form-actions mt-3">
+                <button type="button" id="partner-cancel-btn" class="btn-outline">ยกเลิก</button>
+                <button type="submit" class="btn-accent">บันทึกข้อมูล</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================= BUDGET PANEL ========================= -->
+    <style>
+      .budget-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid #cbd5e1;
+      }
+      .budget-card.primary { border-left-color: var(--color-accent-primary); }
+      .budget-card.success { border-left-color: #10b981; }
+      .budget-card.info { border-left-color: #0ea5e9; }
+      
+      .stat-mini-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--color-text-secondary);
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .stat-large-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #0f172a;
+      }
+      .status-badge {
+        padding: 0.3rem 0.8rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+      .status-pending { background: #fee2e2; color: #b91c1c; }
+      .status-progress { background: #fef9c3; color: #a16207; }
+      .status-success { background: #dcfce7; color: #15803d; }
+      .status-danger { background: #f1f5f9; color: #475569; }
+      
+      .category-tag {
+        font-size: 0.75rem;
+        background: #f1f5f9;
+        color: #475569;
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+        font-weight: 600;
+      }
+    </style>
+
+    <section id="budget-panel" class="admin-panel hide">
+      <div class="panel-header">
+        <div>
+          <h1>💰 ข้อมูลงบประมาณ</h1>
+          <p>บริหารจัดการงบประมาณและโครงการประจำปีอย่างเป็นระบบ</p>
+        </div>
+        <button class="btn-accent" id="budget-add-btn">
+          <span>+</span> เพิ่มรายการงบประมาณ
+        </button>
+      </div>
+
+      <!-- Redesigned Budget Stats -->
+      <div class="admin-grid mb-3">
+        <div class="admin-card budget-card primary">
+          <div class="stat-mini-label">งบประมาณรวมทั้งหมด</div>
+          <div class="stat-large-value" id="budget-total-amount">฿0.00</div>
+          <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.5rem;">ประจำปีงบประมาณปัจจบัน</div>
+        </div>
+        <div class="admin-card budget-card info">
+          <div class="stat-mini-label">จำนวนโครงการ</div>
+          <div class="stat-large-value"><span id="budget-total-items">0</span> <span style="font-size: 0.9rem; font-weight: 500;">รายการ</span></div>
+          <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.5rem;">แผนงานทั้งหมดในระบบ</div>
+        </div>
+        <div class="admin-card budget-card success">
+          <div class="stat-mini-label">ดำเนินการเสร็จสิ้น</div>
+          <div class="stat-large-value"><span id="budget-completed-items">0</span> <span style="font-size: 0.9rem; font-weight: 500;">รายการ</span></div>
+          <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.5rem;">โครงการที่ปิดงานเรียบร้อย</div>
+        </div>
+      </div>
+
+      <div class="admin-card" style="padding: 0;">
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th style="width: 80px;">ปีงบฯ</th>
+                <th>รายการงบประมาณ / โครงการ</th>
+                <th style="width: 140px;">หมวดหมู่</th>
+                <th style="width: 160px;">จำนวนเงิน</th>
+                <th style="width: 150px;">สถานะ</th>
+                <th style="width: 100px; text-align: center;">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="budget-list-container">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Corrected Budget Modal using modal-overlay -->
+      <div id="budget-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 600px;">
+          <div class="modal-header">
+            <h3 id="budget-modal-title">จัดการข้อมูล</h3>
+            <button type="button" class="modal-close-btn" id="budget-modal-close-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="budget-form">
+              <input type="hidden" id="budget-id" />
+              
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="budget-year">ปีงบประมาณ <span style="color:red;">*</span></label>
+                  <input id="budget-year" type="number" class="form-control" required placeholder="เช่น 2567" />
+                </div>
+
+                <div class="form-group">
+                  <label for="budget-category">หมวดหมู่งบประมาณ</label>
+                  <select id="budget-category" class="form-control" required>
+                    <option value="งบดำเนินงาน">งบดำเนินงาน</option>
+                    <option value="งบลงทุน">งบลงทุน</option>
+                    <option value="งบอุดหนุน">งบอุดหนุน</option>
+                    <option value="งบรายจ่ายอื่น">งบรายจ่ายอื่น</option>
+                  </select>
+                </div>
+
+                <div class="form-group form-full">
+                  <label for="budget-title">ชื่อรายการ/โครงการ <span style="color:red;">*</span></label>
+                  <input id="budget-title" type="text" class="form-control" required placeholder="กรอกชื่อโครงการ" />
+                </div>
+
+                <div class="form-group">
+                  <label for="budget-amount">จำนวนเงิน (บาท) <span style="color:red;">*</span></label>
+                  <input id="budget-amount" type="number" step="0.01" class="form-control" required placeholder="0.00" />
+                </div>
+
+                <div class="form-group">
+                  <label for="budget-status">สถานะการดำเนินงาน</label>
+                  <select id="budget-status" class="form-control" required>
+                    <option value="รอดำเนินการ">รอดำเนินการ</option>
+                    <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
+                    <option value="ดำเนินการเสร็จสิ้น">ดำเนินการเสร็จสิ้น</option>
+                    <option value="ยกเลิก">ยกเลิก</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-actions mt-3">
+                <button type="button" id="budget-cancel-btn" class="btn-outline">ยกเลิก</button>
+                <button type="submit" class="btn-accent">บันทึกข้อมูล</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
 
     <!-- ========================= OTHERS PANEL ========================= -->
     <section id="others-panel" class="admin-panel hide">

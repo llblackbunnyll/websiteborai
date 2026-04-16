@@ -273,7 +273,7 @@ router.get('/personnel/unique-duties', async (req, res) => {
 // POST /api/personnel (protected)
 router.post('/personnel', authenticateToken, upload.single('image'), async (req, res) => {
   try {
-    const { prefix, firstName, lastName, position, academicStanding, positionNumber, department, phone, order } = req.body;
+    const { prefix, firstName, lastName, position, academicStanding, positionNumber, department, phone, email, order } = req.body;
     
     let duties = [];
     if (req.body.duties) {
@@ -297,6 +297,7 @@ router.post('/personnel', authenticateToken, upload.single('image'), async (req,
         department,
         duties: Array.isArray(duties) ? duties : [],
         phone,
+        email,
         imageUrl,
         order: order ? parseInt(order) : 0
       }
@@ -313,7 +314,7 @@ router.post('/personnel', authenticateToken, upload.single('image'), async (req,
 router.put('/personnel/:id', authenticateToken, upload.single('image'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { prefix, firstName, lastName, position, academicStanding, positionNumber, department, phone, order } = req.body;
+    const { prefix, firstName, lastName, position, academicStanding, positionNumber, department, phone, email, order } = req.body;
     
     let duties = [];
     if (req.body.duties) {
@@ -342,6 +343,7 @@ router.put('/personnel/:id', authenticateToken, upload.single('image'), async (r
         department,
         duties: Array.isArray(duties) ? duties : [],
         phone,
+        email,
         imageUrl,
         order: order ? parseInt(order) : existing.order
       }
@@ -443,6 +445,7 @@ router.post('/personnel/import', authenticateToken, upload.single('excel'), asyn
     // Based on diagnostic: Row 0/1 are metadata, Row 2 is typically the first data row
     // Start from Row 0 and use dynamic filtering to avoid skipping the first data row
     const dataRows = rawData; 
+    let emailColIdx = 22; // Default fallback
 
     for (const [idx, row] of dataRows.entries()) {
       // Skip empty or purely metadata rows
@@ -450,7 +453,14 @@ router.post('/personnel/import', authenticateToken, upload.single('excel'), asyn
 
       // Dynamic header skip: If row[2] (First Name column) contains the word 'ชื่อ', it's likely a header
       const checkTitle = String(row[2] || '');
-      if (checkTitle.includes('ชื่อ') || checkTitle.includes('FullName')) continue;
+      if (checkTitle.includes('ชื่อ') || checkTitle.includes('FullName')) {
+        // Search for specific column indices in the header row
+        row.forEach((cell, cellIdx) => {
+          const val = String(cell || '').trim();
+          if (val.includes('เมลล์') || val.includes('Email') || val.includes('อีเมล')) emailColIdx = cellIdx;
+        });
+        continue;
+      }
 
       // บันทึกตำแหน่งคอลัมน์จากไฟล์จริงที่ตรวจสอบล่าสุด:
       // index 2: ชื่อ
@@ -463,11 +473,34 @@ router.post('/personnel/import', authenticateToken, upload.single('excel'), asyn
       
       const rawFullName = String(row[2] || '').trim();
       const rawLastName = String(row[3] || '').trim();
-      const rawPos = String(row[18] || '').trim();
+      let rawPos = String(row[18] || '').trim();
       const rawAcad = String(row[19] || '').trim();
       const rawPosNum = String(row[17] || '').trim();
       const rawPhone = String(row[21] || '').replace(/"/g, '').trim(); 
+      const rawEmail = String(row[emailColIdx] || '').trim();
       const rawDuties = String(row[52] || '').trim();
+
+      // -- Position Normalization & Hidden Position Extraction --
+      // If primary position is empty or generic, check duties or normalize known strings
+      // We prioritize more specific roles and avoid misclassifying 'Staff' who have 'Advisor' duties.
+      let finalPos = rawPos;
+      const searchTarget = (rawPos + " " + rawDuties).toLowerCase();
+
+      // Order of checks is critical: More specific first, 'Staff' before generic 'Teacher'
+      if (searchTarget.includes('พนักงานราชการ(สอน)') || searchTarget.includes('พนักงานราชการ')) {
+        finalPos = 'พนักงานราชการ';
+      } else if (searchTarget.includes('ครูอัตราจ้าง')) {
+        finalPos = 'ครูอัตราจ้าง';
+      } else if (searchTarget.includes('ลูกจ้างอัตราจ้าง')) {
+        finalPos = 'ลูกจ้างอัตราจ้าง';
+      } else if (searchTarget.includes('เจ้าหน้าที่')) {
+        finalPos = 'เจ้าหน้าที่';
+      } else if (searchTarget.includes('ครูประจำ') || searchTarget.includes('หัวหน้าแผนก') || searchTarget.includes('ครู')) {
+        finalPos = 'ครู';
+      }
+
+      // Fallback if still empty but is in a known department
+      if (!finalPos && rawDuties.includes('แผนกวิชา')) finalPos = 'ครู';
 
       // 1. Process Name & Split Prefix
       const fullStringToSplit = `${rawFullName} ${rawLastName}`.trim();
@@ -502,12 +535,13 @@ router.post('/personnel/import', authenticateToken, upload.single('excel'), asyn
         prefix,
         firstName,
         lastName,
-        position: rawPos === 'ไม่มี' ? null : rawPos,
+        position: finalPos || rawPos || '-', 
         academicStanding: rawAcad === 'ไม่มี' ? null : rawAcad,
         positionNumber: rawPosNum || null,
         department: detectedDept,
         duties: dutiesArr,
         phone: rawPhone === '""' ? null : rawPhone,
+        email: rawEmail || '-',
         order: idx + 1
       };
 
@@ -594,6 +628,278 @@ router.delete('/docs/:id', authenticateToken, async (req, res) => {
     res.json({ message: 'Deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Failed to delete document' });
+  }
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+// ITA ASSESSMENT (O1 - O37)
+// ──────────────────────────────────────────────────────────────────────────────
+
+// GET /api/ita — Fetch all ITA items
+router.get('/ita', async (req, res) => {
+  try {
+    const items = await prisma.iTAItem.findMany({
+      orderBy: { code: 'asc' }
+    });
+    // Sort logically (O1, O2, ... O10, O11...)
+    const sorted = items.sort((a, b) => {
+      const numA = parseInt(a.code.substring(1));
+      const numB = parseInt(b.code.substring(1));
+      return numA - numB;
+    });
+    res.json(sorted);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch ITA items' });
+  }
+});
+
+// POST /api/ita/init — Initialize O1-O37 if they don't exist
+router.post('/ita/init', authenticateToken, async (req, res) => {
+  try {
+    const itaList = [
+      { code: 'O1', title: 'โครงสร้างสถานศึกษา', description: 'แผนผังแสดงโครงสร้างการแบ่งส่วนราชการภายในสถานศึกษา หรือคำสั่งแบ่งงาน' },
+      { code: 'O2', title: 'ข้อมูลผู้บริหาร', description: 'รายนามผู้บริหาร รูปถ่าย ตำแหน่ง และช่องทางการติดต่อ' },
+      { code: 'O3', title: 'อำนาจหน้าที่', description: 'หน้าที่และอำนาจตามกฎหมาย หรือคำสั่งมอบหมายงานที่ระบุภารกิจชัดเจน' },
+      { code: 'O4', title: 'แผนพัฒนาสถานศึกษา', description: 'ยุทธศาสตร์ แผนพัฒนา หรือแผนปฏิบัติราชการประจำปี' },
+      { code: 'O5', title: 'ข้อมูลการติดต่อ', description: 'ที่อยู่ เบอร์โทรศัพท์ อีเมล และแผนที่ตั้งสถานศึกษา' },
+      { code: 'O6', title: 'กฎหมายที่เกี่ยวข้อง', description: 'กฎหมาย ระเบียบ หรือข้อบังคับที่เกี่ยวข้องกับการดำเนินงานหลัก' },
+      { code: 'O7', title: 'ข่าวประชาสัมพันธ์', description: 'รวมข่าวภารกิจ กิจกรรม และความเคลื่อนไหวล่าสุดในปีปัจจุบัน' },
+      { code: 'O8', title: 'Q&A (คำถาม-คำตอบ)', description: 'เมนูคำถามที่พบบ่อย หรือช่องทางที่คนภายนอกสามารถสอบถามข้อมูลได้' },
+      { code: 'O9', title: 'Social Network', description: 'ลิงก์สื่อสังคมออนไลน์ เช่น Facebook, YouTube หรือ Line' },
+      { code: 'O10', title: 'แผนการดำเนินงานประจำปี', description: 'แผนปฏิบัติราชการประจำปี (Action Plan) ของปีงบประมาณปัจจุบัน' },
+      { code: 'O11', title: 'รายงานผลการดำเนินงานประจำปี', description: 'รายงานสรุปผลการดำเนินงานของปีงบประมาณที่ผ่านมา' },
+      { code: 'O12', title: 'คู่มือหรือมาตรฐานการปฏิบัติงาน', description: 'คู่มือสำหรับเจ้าหน้าที่ (Internal Workflow) สำหรับงานแต่ละฝ่าย' },
+      { code: 'O13', title: 'คู่มือหรือมาตรฐานการให้บริการ', description: 'คู่มือสำหรับนักเรียนหรือประชาชนที่มาติดต่อรับบริการ' },
+      { code: 'O14', title: 'ข้อมูลเชิงสถิติการให้บริการ', description: 'รายงานจำนวนผู้มาติดต่อรับบริการจำแนกตามรายเดือนหรือรายปี' },
+      { code: 'O15', title: 'รายงานผลความพึงพอใจการให้บริการ', description: 'สรุปผลการประเมินความพึงพอใจจากผู้รับบริการในปีปัจจุบัน' },
+      { code: 'O16', title: 'E-Service (ระบบบริการออนไลน์)', description: 'ลิงก์ไปยังระบบรับสมัครออนไลน์ ระบบลงทะเบียน หรือบริการอื่นๆ' },
+      { code: 'O17', title: 'แผนการใช้จ่ายงบประมาณประจำปี', description: 'รายละเอียดการจัดสรรและแผนใช้จ่ายงบประมาณของสถานศึกษา' },
+      { code: 'O18', title: 'รายงานผลการใช้จ่ายงบประมาณประจำปี', description: 'สรุปผลการใช้จ่ายงบประมาณจริงเทียบกับแผน' },
+      { code: 'O19', title: 'แผนการจัดซื้อจัดจ้างหรือการจัดหาพัสดุ', description: 'แผนการจัดซื้อจัดจ้างประจำปีงบประมาณล่าสุด' },
+      { code: 'O20', title: 'ประกาศตารางการจัดซื้อจัดจ้าง', description: 'รวมประกาศเชิญชวน ประกาศผู้ชนะ และการจัดหาพัสดุต่างๆ' },
+      { code: 'O21', title: 'สรุปผลการจัดซื้อจัดจ้างรายเดือน (สขร.1)', description: 'สรุปผลการจัดหาพัสดุในแต่ละเดือนที่ต้องเผยแพร่' },
+      { code: 'O22', title: 'รายงานผลการจัดซื้อจัดจ้างประจำปี', description: 'สรุปผลการดำเนินงานจัดซื้อจัดจ้างในรอบปีงบประมาณที่ผ่านมา' },
+      { code: 'O23', title: 'กิจกรรมพัฒนาทรัพยากรบุคคล', description: 'กิจกรรมอบรมสัมมนา หรือโครงการพัฒนาบุคลากรในปีปัจจุบัน' },
+      { code: 'O24', title: 'หลักเกณฑ์การบริหารทรัพยากรบุคคล', description: 'ระเบียบการให้คุณให้โทษ การเลื่อนขั้น หรือหลักเกณฑ์ที่เกี่ยวข้อง' },
+      { code: 'O25', title: 'รายงานผลพัฒนาทรัพยากรบุคคลประจำปี', description: 'สรุปผลการพัฒนาและความก้าวหน้าของบุคลากรในรอบปี' },
+      { code: 'O26', title: 'แนวปฏิบัติการจัดการเรื่องร้องเรียนทุจริต', description: 'ขั้นตอนการจัดการและกระบวนการเมื่อได้รับเรื่องร้องเรียนการทุจริต' },
+      { code: 'O27', title: 'ช่องทางการแจ้งเรื่องร้องเรียนทุจริต', description: 'ลิงก์หรือหน้าเพจสำหรับส่งข้อมูลร้องเรียนการทุจริตโดยตรง' },
+      { code: 'O28', title: 'สถิติเรื่องร้องเรียนการทุจริตประจำปี', description: 'สรุปจำนวนเรื่องที่ได้รับการร้องเรียนและการดำเนินการในปีที่ผ่านมา' },
+      { code: 'O29', title: 'การเปิดโอกาสให้เกิดการมีส่วนร่วม', description: 'กิจกรรมที่เปิดให้ชุมชนหรือผู้มีส่วนได้ส่วนเสียเข้ามาร่วมวางแผน/ตรวจสอบ' },
+      { code: 'O30', title: 'เจตจำนงสุจริตของผู้บริหาร (No Gift Policy)', description: 'ประกาศนโยบายไม่รับของขวัญและของกำนัลจากการปฏิบัติหน้าที่' },
+      { code: 'O31', title: 'การมีส่วนร่วมของผู้บริหาร', description: 'กิจกรรมที่ผู้บริหารแสดงออกถึงการต่อต้านการทุจริต' },
+      { code: 'O32', title: 'การประเมินความเสี่ยงการทุจริตประจำปี', description: 'รายงานการประเมินโอกาสที่จะเกิดการทุจริตภายในหน่วยงาน' },
+      { code: 'O33', title: 'การดำเนินการจัดการความเสี่ยงทุจริต', description: 'มาตรการหรือกิจกรรมที่ใช้ลดความเสี่ยงจากการทุจริต' },
+      { code: 'O34', title: 'การเสริมสร้างวัฒนธรรมองค์กร', description: 'กิจกรรมปลูกฝังความซื่อสัตย์สุจริตและจริยธรรมให้แก่คนในวิทยาลัย' },
+      { code: 'O35', title: 'แผนปฏิบัติการป้องกันการทุจริต', description: 'แผนโครงการส่งเสริมความโปร่งใสและป้องกันทุจริตประจำปี' },
+      { code: 'O36', title: 'รายงานผลการป้องกันการทุจริตประจำปี', description: 'สรุปผลการดำเนินงานตามแผนป้องกันทุจริตในปีที่ผ่านมา' },
+      { code: 'O37', title: 'มาตรการส่งเสริมคุณธรรมและความโปร่งใส', description: 'มาตรการหรือกลไกภายในที่ใช้ควบคุมความโปร่งใสและจริยธรรม' }
+    ];
+
+    for (const item of itaList) {
+      await prisma.iTAItem.upsert({
+        where: { code: item.code },
+        update: { 
+          title: item.title,
+          description: item.description 
+        },
+        create: { 
+          code: item.code, 
+          title: item.title, 
+          description: item.description,
+          attachments: [] 
+        }
+      });
+    }
+
+    res.json({ message: 'ITA initialization with descriptions successful' });
+  } catch (error) {
+    console.error('[ITA Init]', error);
+    res.status(500).json({ message: 'Failed to initialize ITA data' });
+  }
+});
+
+// PUT /api/ita/:code — Update ITA item (files + links)
+router.put('/ita/:code', authenticateToken, upload.array('files', 10), async (req, res) => {
+  try {
+    const { code } = req.params;
+    // attachments are sent as a JSON string describing current/remaining docs + links
+    const { existingAttachments } = req.body;
+    
+    let currentData = [];
+    if (existingAttachments) {
+      try { currentData = JSON.parse(existingAttachments); } catch (e) { currentData = []; }
+    }
+
+    // Process new file uploads
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        // Find label in req.body for this specific file if provided, else use filename
+        const fileUrl = saveFile(file, 'ita');
+        currentData.push({ 
+          label: file.originalname.split('.')[0], // fallback label
+          url: fileUrl, 
+          type: 'file' 
+        });
+      }
+    }
+
+    // Explicitly add any new link items if sent in a batch (client logic)
+    if (req.body.newLinks) {
+       let newLinks = [];
+       try { newLinks = JSON.parse(req.body.newLinks); } catch(e) {}
+       if (Array.isArray(newLinks)) {
+          currentData = [...currentData, ...newLinks];
+       }
+    }
+
+    const updated = await prisma.iTAItem.update({
+      where: { code },
+      data: { 
+        attachments: currentData,
+        updatedAt: new Date()
+      }
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error('[ITA Update]', error);
+    res.status(500).json({ message: 'Failed to update ITA item' });
+  }
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+// STUDENT ENROLLMENT & SETTINGS
+// ──────────────────────────────────────────────────────────────────────────────
+
+// GET /api/students (protected)
+router.get('/students', authenticateToken, async (req, res) => {
+  try {
+    const { year, semester } = req.query;
+    
+    // Fetch current settings as defaults
+    const settings = await prisma.siteSettings.findMany({
+      where: { key: { in: ['current_semester', 'academic_year'] } }
+    });
+    
+    const academicYear = year || settings.find(s => s.key === 'academic_year')?.value || '2567';
+    const currentSemester = semester || settings.find(s => s.key === 'current_semester')?.value || '1';
+
+    const enrollments = await prisma.studentEnrollment.findMany({
+      where: { 
+        academicYear: String(academicYear), 
+        semester: String(currentSemester) 
+      }
+    });
+
+    res.json({ 
+      enrollments, 
+      settings: {
+        academic_year: academicYear,
+        current_semester: currentSemester
+      }
+    });
+  } catch (error) {
+    console.error('[Student Fetch Error]', error);
+    res.status(500).json({ message: 'Failed to fetch student data' });
+  }
+});
+
+// POST /api/students (protected)
+router.post('/students', authenticateToken, async (req, res) => {
+  try {
+    const { enrollments, settings, targetYear, targetSemester } = req.body;
+    
+    // Which year/semester are we SAVING the table records to?
+    const saveYear = targetYear || settings?.academic_year;
+    const saveSemester = targetSemester || settings?.current_semester;
+
+    if (!saveYear || !saveSemester) {
+      return res.status(400).json({ message: 'Missing target academic year or semester' });
+    }
+
+    // 1. Update enrollments for the specific target year/semester
+    if (enrollments && Array.isArray(enrollments)) {
+      for (const en of enrollments) {
+        await prisma.studentEnrollment.upsert({
+          where: {
+            departmentSlug_academicYear_semester: {
+              departmentSlug: en.departmentSlug,
+              academicYear: String(saveYear),
+              semester: String(saveSemester)
+            }
+          },
+          update: {
+            pvc1: parseInt(en.pvc1) || 0,
+            pvc2: parseInt(en.pvc2) || 0,
+            pvc3: parseInt(en.pvc3) || 0,
+            pvs1: parseInt(en.pvs1) || 0,
+            pvs2: parseInt(en.pvs2) || 0
+          },
+          create: {
+            departmentSlug: en.departmentSlug,
+            academicYear: String(saveYear),
+            semester: String(saveSemester),
+            pvc1: parseInt(en.pvc1) || 0,
+            pvc2: parseInt(en.pvc2) || 0,
+            pvc3: parseInt(en.pvc3) || 0,
+            pvs1: parseInt(en.pvs1) || 0,
+            pvs2: parseInt(en.pvs2) || 0
+          }
+        });
+      }
+    }
+
+    // Update global settings
+    if (settings && typeof settings === 'object') {
+      for (const [key, value] of Object.entries(settings)) {
+        await prisma.siteSettings.upsert({
+          where: { key },
+          update: { value: String(value) },
+          create: { key, value: String(value) }
+        });
+      }
+    }
+
+    res.json({ message: 'Saved successfully' });
+  } catch (error) {
+    console.error('[Student Update Error]', error);
+    res.status(500).json({ message: 'Failed to save student data' });
+  }
+});
+
+// GET /api/students/years (protected)
+router.get('/students/years', authenticateToken, async (req, res) => {
+  try {
+    const rawYears = await prisma.studentEnrollment.findMany({
+      select: { academicYear: true },
+      distinct: ['academicYear']
+    });
+    // Extract strings and sort descending
+    const years = rawYears.map(y => y.academicYear).sort((a, b) => b.localeCompare(a));
+    res.json(years);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch years' });
+  }
+});
+
+// DELETE /api/students/period (protected)
+router.delete('/students/period', authenticateToken, async (req, res) => {
+  try {
+    const { year, semester } = req.query;
+    if (!year || !semester) return res.status(400).json({ message: 'Missing year or semester' });
+
+    await prisma.studentEnrollment.deleteMany({
+      where: {
+        academicYear: String(year),
+        semester: String(semester)
+      }
+    });
+
+    res.json({ message: 'Period data deleted successfully' });
+  } catch (error) {
+    console.error('[Student Delete Error]', error);
+    res.status(500).json({ message: 'Failed to delete period data' });
   }
 });
 

@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <meta name="description" content="รายชื่อบุคลากร ครู และเจ้าหน้าที่ของวิทยาลัยการอาชีพบ่อไร่ ผู้มุ่งมั่นพัฒนาการศึกษาอาชีวศึกษา" />
+  <link rel="icon" href="/my-logo.webp" type="image/webp" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --p-purple: #7042f8;
+      --p-blue:   #0ea5e9;
+      --p-dark:   #0f172a;
+      --p-muted:  #64748b;
+      --p-light:  #f8fafc;
+      --p-border: #e8ecf0;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Sarabun', sans-serif; background: #f8fafc; color: var(--p-dark); }
+
+    /* ══ HERO ══ */
+    .p-hero {
+      position: relative;
+      min-height: 420px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      overflow: hidden;
+      background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 50%, #f1f5f9 100%);
+      color: var(--p-dark);
+      padding: 100px 24px 120px;
+    }
+    .p-hero-canvas { position: absolute; inset: 0; opacity: 0.25; }
+    .p-hero-glow {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+    }
+    .p-hero-glow-1 { width: 400px; height: 400px; background: rgba(112,66,248,0.15); top: -100px; left: -100px; }
+    .p-hero-glow-2 { width: 300px; height: 300px; background: rgba(14,165,233,0.15); bottom: -80px; right: 10%; }
+    .p-hero-content { position: relative; z-index: 2; }
+    .p-hero-eyebrow {
+      display: inline-block;
+      font-size: 0.7rem; font-weight: 800; letter-spacing: 0.18em;
+      text-transform: uppercase;
+      background: rgba(112,66,248,0.06); border: 1px solid rgba(112,66,248,0.15);
+      padding: 6px 18px; border-radius: 100px;
+      margin-bottom: 22px; color: var(--p-purple);
+    }
+    .p-hero-title {
+      font-size: clamp(2.4rem, 5.5vw, 3.6rem);
+      font-weight: 900; line-height: 1.12; margin-bottom: 18px;
+    }
+    .p-hero-title .accent {
+      background: linear-gradient(90deg, #7042f8, #0ea5e9);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .p-hero-sub {
+      font-size: 1.05rem; color: var(--p-muted);
+      max-width: 500px; margin: 0 auto 36px; line-height: 1.75;
+    }
+    .p-hero-stats {
+      display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+    }
+    .p-hero-stat {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.7); backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,1);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+      padding: 10px 22px; border-radius: 100px;
+      font-size: 0.9rem; font-weight: 700;
+      color: var(--p-dark);
+    }
+    .p-hero-stat-num { font-size: 1.2rem; color: var(--p-purple); }
+
+    /* ══ PAGE ══ */
+    .p-page {
+      max-width: 1240px;
+      margin: -50px auto 100px;
+      padding: 0 24px;
+      position: relative; z-index: 10;
+    }
+
+    /* ══ SECTION HEADER ══ */
+    .p-section-wrap { margin-bottom: 72px; }
+    .p-section-header {
+      display: flex; align-items: center; gap: 18px; margin-bottom: 40px;
+    }
+    .p-section-icon {
+      width: 48px; height: 48px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--p-purple), var(--p-blue));
+      display: flex; align-items: center; justify-content: center;
+      color: white; flex-shrink: 0;
+      box-shadow: 0 8px 20px rgba(112,66,248,0.3);
+    }
+    .p-section-text { flex: 1; }
+    .p-section-badge {
+      font-size: 0.68rem; font-weight: 800; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--p-purple);
+      background: rgba(112,66,248,0.08); border: 1px solid rgba(112,66,248,0.15);
+      padding: 3px 12px; border-radius: 100px;
+      display: inline-block; margin-bottom: 6px;
+    }
+    .p-section-title {
+      font-size: 1.75rem; font-weight: 800; color: var(--p-dark);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .p-header-count {
+      font-size: 0.85rem; font-weight: 600;
+      background: var(--p-light); border: 1px solid var(--p-border);
+      color: var(--p-muted); padding: 2px 10px; border-radius: 100px;
+    }
+    .p-section-divider {
+      flex: 1; height: 1px;
+      background: linear-gradient(to right, rgba(112,66,248,0.15), transparent);
+    }
+
+    /* ══ DIRECTOR ══ */
+    .exec-section {
+      margin-bottom: 60px;
+    }
+    .director-card {
+      background: #fff;
+      border-radius: 32px;
+      border: 1px solid rgba(112,66,248,0.12);
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 20px 60px rgba(112,66,248,0.08);
+      overflow: hidden;
+      position: relative;
+      margin-bottom: 28px;
+    }
+    .director-card-top {
+      height: 6px;
+      background: linear-gradient(90deg, #7042f8, #a855f7, #0ea5e9);
+    }
+    .director-card-inner {
+      position: relative; z-index: 2;
+      padding: 56px 64px;
+      display: flex;
+      align-items: center;
+      gap: 60px;
+    }
+    .director-photo-col { flex-shrink: 0; text-align: center; }
+    .director-photo-frame {
+      width: 210px; height: 210px;
+      border-radius: 32px;
+      overflow: hidden;
+      border: 3px solid rgba(112,66,248,0.1);
+      box-shadow: 0 0 0 10px rgba(112,66,248,0.03), 0 20px 60px rgba(0,0,0,0.08);
+      background: rgba(255,255,255,1);
+      display: block;
+    }
+    .director-photo {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+    }
+    .director-position-pill {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 6px 18px;
+      border-radius: 100px;
+      background: linear-gradient(135deg, var(--p-purple), var(--p-blue));
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .director-info-col { flex: 1; color: var(--p-dark); }
+    .director-eyebrow {
+      font-size: 0.7rem; font-weight: 800; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--p-purple); margin-bottom: 12px;
+    }
+    .director-name {
+      font-size: clamp(2rem, 4vw, 2.8rem);
+      font-weight: 900; line-height: 1.15; margin-bottom: 10px;
+      color: var(--p-dark);
+    }
+    .director-pos {
+      font-size: 1rem; color: var(--p-muted); margin-bottom: 12px;
+    }
+    .director-acad {
+      display: inline-block;
+      font-size: 0.82rem; font-weight: 700;
+      color: var(--p-purple);
+      background: rgba(112,66,248,0.07); border: 1px solid rgba(112,66,248,0.15);
+      padding: 4px 14px; border-radius: 10px; margin-bottom: 24px;
+    }
+    .director-divider {
+      width: 48px; height: 3px;
+      background: linear-gradient(90deg, #7042f8, #0ea5e9);
+      border-radius: 10px; margin-bottom: 20px;
+    }
+    .director-duties { display: flex; flex-direction: column; gap: 9px; margin-bottom: 32px; }
+    .director-duty {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 0.9rem; color: #334155;
+    }
+    .director-duty::before {
+      content: '';
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--p-purple), var(--p-blue));
+    }
+    .director-contacts { display: flex; gap: 12px; flex-wrap: wrap; }
+    .director-contact-link {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 10px 20px; border-radius: 14px;
+      background: var(--p-light); border: 1px solid var(--p-border);
+      color: var(--p-dark); text-decoration: none;
+      font-size: 0.88rem; font-weight: 600;
+      transition: all 0.25s ease;
+    }
+    .director-contact-link:hover {
+      background: rgba(112,66,248,0.07); transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(112,66,248,0.1);
+      border-color: rgba(112,66,248,0.3); color: var(--p-purple);
+    }
+    .director-contact-link svg { color: var(--p-purple); }
+
+    /* ══ DEPUTY CARDS ══ */
+    .deputy-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 24px;
+    }
+    .deputy-card {
+      background: #fff;
+      border-radius: 24px;
+      border: 1px solid var(--p-border);
+      padding: 36px 28px 28px;
+      text-align: center;
+      transition: all 0.35s ease;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+      position: relative; overflow: hidden;
+    }
+    .deputy-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--p-purple), var(--p-blue));
+      transform: scaleX(0); transform-origin: left;
+      transition: transform 0.35s ease;
+    }
+    .deputy-card:hover { transform: translateY(-6px); box-shadow: 0 20px 50px rgba(112,66,248,0.13); border-color: rgba(112,66,248,0.2); }
+    .deputy-card:hover::before { transform: scaleX(1); }
+    .deputy-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--p-purple), var(--p-blue));
+      color: #fff; font-size: 0.75rem; font-weight: 900;
+      margin: 0 auto 20px; display: block; line-height: 36px; text-align: center;
+    }
+    .deputy-photo-wrap {
+      width: 110px; height: 110px;
+      border-radius: 50%; padding: 3px;
+      background: linear-gradient(135deg, rgba(112,66,248,0.5), rgba(14,165,233,0.5));
+      margin: 0 auto 18px;
+      display: block;
+    }
+    .deputy-photo {
+      width: 100%; height: 100%;
+      border-radius: 50%; object-fit: cover;
+      border: 3px solid #fff;
+      background: var(--p-light);
+      display: block;
+    }
+    .deputy-role {
+      font-size: 0.68rem; font-weight: 800; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--p-purple); margin-bottom: 6px;
+    }
+    .deputy-name {
+      font-size: 1.05rem; font-weight: 800; color: var(--p-dark);
+      line-height: 1.3; margin-bottom: 5px;
+    }
+    .deputy-acad {
+      display: inline-block;
+      font-size: 0.75rem; font-weight: 600; color: var(--p-muted);
+      background: var(--p-light); border: 1px solid var(--p-border);
+      padding: 3px 12px; border-radius: 100px; margin-bottom: 16px;
+    }
+    .deputy-duties {
+      display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; text-align: left;
+    }
+    .deputy-duty {
+      display: flex; align-items: flex-start; gap: 8px;
+      font-size: 0.85rem; color: var(--p-muted); line-height: 1.4;
+    }
+    .deputy-duty::before {
+      content: '';
+      width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--p-purple), var(--p-blue));
+      margin-top: 6px;
+    }
+    .deputy-contacts { display: flex; justify-content: center; gap: 8px; }
+    .deputy-contact-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 10px;
+      background: rgba(112,66,248,0.06); border: 1px solid rgba(112,66,248,0.14);
+      color: var(--p-purple); text-decoration: none;
+      transition: all 0.2s;
+    }
+    .deputy-contact-btn:hover { background: var(--p-purple); color: #fff; transform: translateY(-2px); }
+
+    /* ══ STAFF GRID ══ */
+    .staff-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+      gap: 18px;
+    }
+    .staff-card {
+      background: #fff;
+      border-radius: 20px;
+      border: 1px solid var(--p-border);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+      padding: 26px 18px 20px;
+      text-align: center;
+      transition: all 0.3s ease;
+      position: relative; overflow: hidden;
+    }
+    .staff-card::after {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--p-purple), var(--p-blue));
+      transform: scaleX(0); transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+    .staff-card:hover { transform: translateY(-5px); box-shadow: 0 14px 35px rgba(112,66,248,0.12); border-color: rgba(112,66,248,0.18); }
+    .staff-card:hover::after { transform: scaleX(1); }
+    .staff-photo {
+      width: 84px; height: 84px; border-radius: 50%;
+      object-fit: cover; border: 3px solid var(--p-light);
+      background: var(--p-light);
+      margin: 0 auto 14px; display: block;
+      transition: border-color 0.3s;
+    }
+    .staff-card:hover .staff-photo { border-color: rgba(112,66,248,0.25); }
+    .staff-name { font-size: 0.95rem; font-weight: 700; color: var(--p-dark); margin-bottom: 5px; line-height: 1.3; }
+    .staff-pos { font-size: 0.78rem; color: var(--p-muted); margin-bottom: 8px; }
+    .staff-acad {
+      display: inline-block; font-size: 0.67rem; font-weight: 700;
+      background: rgba(112,66,248,0.06); color: var(--p-purple);
+      border: 1px solid rgba(112,66,248,0.12);
+      padding: 2px 10px; border-radius: 6px; margin-bottom: 6px;
+    }
+    .staff-dept {
+      display: inline-block; font-size: 0.7rem;
+      color: #64748b; background: #f1f5f9; border: 1px solid #e2e8ef;
+      padding: 2px 10px; border-radius: 6px; margin-bottom: 10px;
+    }
+    .staff-contacts {
+      display: flex; justify-content: center; gap: 8px; margin-top: 8px;
+    }
+    .staff-contact-btn {
+      width: 30px; height: 30px; border-radius: 8px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(112,66,248,0.06); border: 1px solid rgba(112,66,248,0.12);
+      color: var(--p-purple); text-decoration: none;
+      transition: all 0.2s;
+    }
+    .staff-contact-btn:hover { background: var(--p-purple); color: #fff; }
+
+    /* ══ FILTER TABS ══ */
+    .filter-bar {
+      display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 28px;
+    }
+    .filter-tab {
+      padding: 7px 18px; border-radius: 100px;
+      border: 1px solid var(--p-border); background: #fff;
+      font-size: 0.82rem; font-weight: 600; color: var(--p-muted);
+      cursor: pointer; transition: all 0.2s; font-family: 'Sarabun', sans-serif;
+    }
+    .filter-tab.active, .filter-tab:hover {
+      background: var(--p-purple); color: #fff; border-color: var(--p-purple);
+    }
+
+    /* ══ EMPTY ══ */
+    .p-empty { text-align: center; padding: 60px 20px; color: #94a3b8; }
+    .p-empty p { font-size: 1rem; margin-top: 12px; }
+
+    /* ══ REVEAL ══ */
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.55s ease, transform 0.55s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ══ SUMMARY ══ */
+    .summary-section {
+      max-width: 800px; margin: 0 auto;
+    }
+    .summary-card {
+      background: #fff;
+      border-radius: 20px;
+      border: 1px solid var(--p-border);
+      padding: 0;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.04);
+      overflow: hidden;
+    }
+    .summary-table {
+      width: 100%; border-collapse: collapse;
+      text-align: left;
+    }
+    .summary-table th {
+      background: #f8fafc; padding: 20px 24px;
+      font-size: 0.85rem; font-weight: 800; letter-spacing: 0.05em;
+      text-transform: uppercase; color: var(--p-muted);
+      border-bottom: 2px solid var(--p-border);
+    }
+    .summary-table td {
+      padding: 16px 24px; border-bottom: 1px solid var(--p-border);
+      font-size: 0.95rem; color: var(--p-dark); font-weight: 600;
+    }
+    .summary-table tbody tr { transition: background 0.2s; }
+    .summary-table tbody tr:hover { background: #fdfcff; }
+    .summary-table tbody tr:last-child td { border-bottom: none; }
+    .sum-pos-label { display: flex; align-items: center; gap: 12px; }
+    .sum-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--p-purple), var(--p-blue));
+    }
+    .summary-table tfoot td {
+      background: #f8fafc; padding: 20px 24px;
+      border-top: 2px solid #e2e8f0; border-bottom: none;
+    }
+
+    /* ══ RESPONSIVE ══ */
+    @media (max-width: 860px) {
+      .director-card-inner { flex-direction: column; text-align: center; gap: 28px; padding: 36px 24px; }
+      .director-duties { align-items: center; }
+      .director-contacts { justify-content: center; }
+      .director-divider { margin: 0 auto 20px; }
+      .deputy-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+    }
+    @media (max-width: 600px) {
+      .staff-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <!-- ░░ HERO ░░ -->
+  <header class="p-hero">
+    <div class="p-hero-glow p-hero-glow-1"></div>
+    <div class="p-hero-glow p-hero-glow-2"></div>
+    <canvas id="p-canvas" class="p-hero-canvas"></canvas>
+    <div class="p-hero-content reveal">
+      <span class="p-hero-eyebrow">วิทยาลัยการอาชีพบ่อไร่</span>
+      <h1 class="p-hero-title">ทีม<span class="accent">บุคลากร</span>ของเรา</h1>
+      <p class="p-hero-sub">ผู้บริหาร ครู และเจ้าหน้าที่ผู้มุ่งมั่นพัฒนาคุณภาพการศึกษาอาชีวศึกษาอย่างต่อเนื่อง</p>
+      <div class="p-hero-stats">
+        <div class="p-hero-stat">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>บุคลากรทั้งหมด <span class="p-hero-stat-num"><%= total %></span> ท่าน</span>
+        </div>
+        <% if (teachers) { %>
+        <div class="p-hero-stat">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          <span>คณะครู <span class="p-hero-stat-num"><%= teachers.length %></span> ท่าน</span>
+        </div>
+        <% } %>
+        <% if (supportStaff) { %>
+        <div class="p-hero-stat">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+          <span>สายสนับสนุน <span class="p-hero-stat-num"><%= supportStaff.length %></span> ท่าน</span>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </header>
+
+  <main class="p-page">
+
+    <!-- ░░ EXECUTIVES ░░ -->
+    <div class="p-section-wrap">
+      <div class="p-section-header reveal">
+        <div class="p-section-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </div>
+        <div class="p-section-text">
+          <span class="p-section-badge">Leadership</span>
+          <h2 class="p-section-title">คณะผู้บริหาร <span class="p-header-count"><%= executives.length %> ท่าน</span></h2>
+        </div>
+        <div class="p-section-divider"></div>
+      </div>
+
+      <% if (executives.length > 0) { %>
+        <%
+          let director = executives.find(p => p.isDirector);
+          if (!director) {
+            director = executives.find(p => p.position &&
+              (p.position.includes('ผู้อำนวยการ') || p.position === 'ผู้บริหาร') &&
+              !p.position.includes('รอง')
+            );
+          }
+          const deputies = executives.filter(p => p !== director);
+        %>
+
+        <% if (director) { %>
+          <div class="director-card reveal">
+            <div class="director-card-top"></div>
+            <div class="director-card-inner">
+              <div class="director-photo-col">
+                <div class="director-photo-frame">
+                  <img class="director-photo"
+                    src="<%= director.imageUrl || '/images/default-person.svg' %>"
+                    alt="<%= director.firstName %>"
+                    onerror="this.src='/images/default-person.svg'">
+                </div>
+                <div class="director-position-pill">ผู้อำนวยการ</div>
+              </div>
+              <div class="director-info-col">
+                <div class="director-eyebrow">ผู้บริหารสูงสุดสถานศึกษา</div>
+                <h2 class="director-name"><%= (director.prefix || '') %><%= director.firstName %> <%= director.lastName %></h2>
+                <% if (director.position) { %><div class="director-pos"><%= director.position %></div><% } %>
+                <% if (director.academicStanding) { %><span class="director-acad"><%= director.academicStanding %></span><% } %>
+                <div class="director-divider"></div>
+                <% const dirDuties = Array.isArray(director.duties) ? director.duties : (director.duties ? JSON.parse(director.duties) : []); %>
+                <% if (dirDuties.length > 0) { %>
+                  <div class="director-duties">
+                    <% dirDuties.slice(0,4).forEach(duty => { %><div class="director-duty"><%= duty %></div><% }) %>
+                  </div>
+                <% } %>
+                <div class="director-contacts">
+                  <% if (director.phone && director.phone !== '-') { %>
+                  <a href="tel:<%= director.phone %>" class="director-contact-link">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.14 12 19.79 19.79 0 0 1 1.07 3.4 2 2 0 0 1 3.06 1.22h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.574 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    <%= director.phone %>
+                  </a>
+                  <% } %>
+                  <% if (director.email && director.email !== '-') { %>
+                  <a href="mailto:<%= director.email %>" class="director-contact-link">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                    <%= director.email %>
+                  </a>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% } %>
+
+        <!-- Deputies -->
+        <% if (deputies.length > 0) { %>
+          <div class="deputy-grid">
+            <% deputies.forEach((s, i) => { %>
+              <div class="deputy-card reveal" style="transition-delay: <%= i * 0.08 %>s;">
+                <div class="deputy-num"><%= i + 1 %></div>
+                <div class="deputy-photo-wrap">
+                  <img class="deputy-photo"
+                    src="<%= s.imageUrl || '/images/default-person.svg' %>"
+                    alt="<%= s.firstName %>"
+                    onerror="this.src='/images/default-person.svg'">
+                </div>
+                <div class="deputy-role"><%= s.position || 'รองผู้อำนวยการ' %></div>
+                <div class="deputy-name"><%= (s.prefix || '') %><%= s.firstName %> <%= s.lastName %></div>
+                <% if (s.academicStanding) { %><div class="deputy-acad"><%= s.academicStanding %></div><% } %>
+                <% const depDuties = Array.isArray(s.duties) ? s.duties : (s.duties ? JSON.parse(s.duties) : []); %>
+                <% if (depDuties.length > 0) { %>
+                  <div class="deputy-duties">
+                    <% depDuties.forEach(duty => { %><div class="deputy-duty"><%= duty %></div><% }) %>
+                  </div>
+                <% } %>
+                <div class="deputy-contacts">
+                  <% if (s.phone && s.phone !== '-') { %>
+                  <a href="tel:<%= s.phone %>" class="deputy-contact-btn" title="โทร: <%= s.phone %>">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.14 12 19.79 19.79 0 0 1 1.07 3.4 2 2 0 0 1 3.06 1.22h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.574 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  </a>
+                  <% } %>
+                  <% if (s.email && s.email !== '-') { %>
+                  <a href="mailto:<%= s.email %>" class="deputy-contact-btn" title="อีเมล: <%= s.email %>">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                  </a>
+                  <% } %>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+      <% } else { %>
+        <div class="p-empty"><p>กำลังอัปเดตข้อมูลผู้บริหาร...</p></div>
+      <% } %>
+    </div>
+
+    <!-- ░░ TEACHERS ░░ -->
+    <% if (teachers && teachers.length > 0) { %>
+      <div class="p-section-wrap">
+        <div class="p-section-header reveal">
+          <div class="p-section-icon" style="background: linear-gradient(135deg, #0ea5e9, #06b6d4);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          </div>
+          <div class="p-section-text">
+            <span class="p-section-badge">Teaching Staff</span>
+            <h2 class="p-section-title">คณะครูผู้สอน <span class="p-header-count"><%= teachers.length %> ท่าน</span></h2>
+          </div>
+          <div class="p-section-divider"></div>
+        </div>
+
+        <!-- Dept Filter -->
+        <%
+          const teacherDepts = [...new Set(teachers.map(t => t.department).filter(Boolean))].sort();
+        %>
+        <% if (teacherDepts.length > 1) { %>
+          <div class="filter-bar" id="teacher-filter">
+            <button class="filter-tab active" data-dept="all">ทุกแผนก</button>
+            <% teacherDepts.forEach(dept => { %>
+              <button class="filter-tab" data-dept="<%= dept %>"><%= dept %></button>
+            <% }) %>
+          </div>
+        <% } %>
+
+        <div class="staff-grid" id="teacher-grid">
+          <% teachers.forEach((t, i) => { %>
+            <div class="staff-card reveal" style="transition-delay: <%= (i % 12) * 0.04 %>s;" data-dept="<%= t.department || '' %>">
+              <img class="staff-photo"
+                src="<%= t.imageUrl || '/images/default-person.svg' %>"
+                alt="<%= t.firstName %>"
+                onerror="this.src='/images/default-person.svg'">
+              <div class="staff-name"><%= (t.prefix || '') %><%= t.firstName %> <%= t.lastName %></div>
+              <% if (t.academicStanding) { %><span class="staff-acad"><%= t.academicStanding %></span><% } %>
+              <% if (t.position) { %><div class="staff-pos"><%= t.position %></div><% } %>
+              <% if (t.department) { %><div class="staff-dept"><%= t.department %></div><% } %>
+              <div class="staff-contacts">
+                <% if (t.phone && t.phone !== '-') { %>
+                <a href="tel:<%= t.phone %>" class="staff-contact-btn" title="โทร: <%= t.phone %>">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.14 12 19.79 19.79 0 0 1 1.07 3.4 2 2 0 0 1 3.06 1.22h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.574 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                </a>
+                <% } %>
+                <% if (t.email && t.email !== '-') { %>
+                <a href="mailto:<%= t.email %>" class="staff-contact-btn" title="อีเมล: <%= t.email %>">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                </a>
+                <% } %>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+
+    <!-- ░░ SUPPORT STAFF ░░ -->
+    <% if (supportStaff && supportStaff.length > 0) { %>
+      <div class="p-section-wrap">
+        <div class="p-section-header reveal">
+          <div class="p-section-icon" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+          </div>
+          <div class="p-section-text">
+            <span class="p-section-badge">Support Staff</span>
+            <h2 class="p-section-title">บุคลากรสายสนับสนุน <span class="p-header-count"><%= supportStaff.length %> ท่าน</span></h2>
+          </div>
+          <div class="p-section-divider"></div>
+        </div>
+        <div class="staff-grid">
+          <% supportStaff.forEach((s, i) => { %>
+            <div class="staff-card reveal" style="transition-delay: <%= (i % 10) * 0.05 %>s;">
+              <img class="staff-photo"
+                src="<%= s.imageUrl || '/images/default-person.svg' %>"
+                alt="<%= s.firstName %>"
+                onerror="this.src='/images/default-person.svg'">
+              <div class="staff-name"><%= (s.prefix || '') %><%= s.firstName %> <%= s.lastName %></div>
+              <% if (s.position) { %><div class="staff-pos"><%= s.position %></div><% } %>
+              <% if (s.department) { %><div class="staff-dept"><%= s.department %></div><% } %>
+              <div class="staff-contacts">
+                <% if (s.phone && s.phone !== '-') { %>
+                <a href="tel:<%= s.phone %>" class="staff-contact-btn" title="โทร: <%= s.phone %>">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.14 12 19.79 19.79 0 0 1 1.07 3.4 2 2 0 0 1 3.06 1.22h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.574 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                </a>
+                <% } %>
+                <% if (s.email && s.email !== '-') { %>
+                <a href="mailto:<%= s.email %>" class="staff-contact-btn" title="อีเมล: <%= s.email %>">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                </a>
+                <% } %>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+
+    <!-- ░░ SUMMARY TABLE ░░ -->
+    <% const localAllPersonnel = [...(executives || []), ...(teachers || []), ...(supportStaff || [])]; %>
+    <% if (localAllPersonnel && localAllPersonnel.length > 0) { %>
+      <div class="p-section-wrap summary-section" style="margin-top: 80px;">
+        <div class="p-section-header reveal">
+          <div class="p-section-icon" style="background: linear-gradient(135deg, #10b981, #3b82f6);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14h6"/><path d="M9 18h6"/><path d="M9 10h6"/></svg>
+          </div>
+          <div class="p-section-text">
+            <span class="p-section-badge">Summary Report</span>
+            <h2 class="p-section-title">สรุปจำนวนบุคลากรทั้งหมด <span class="p-header-count"><%= localAllPersonnel.length %> ท่าน</span></h2>
+          </div>
+          <div class="p-section-divider"></div>
+        </div>
+        
+        <% 
+          const summary = {};
+          localAllPersonnel.forEach(p => {
+            let pos = (p.position && p.position.trim() !== '-' && p.position.trim() !== '') ? p.position : 'อื่นๆ';
+            summary[pos] = (summary[pos] || 0) + 1;
+          });
+          const summaryArray = Object.entries(summary).sort((a,b) => b[1] - a[1]);
+        %>
+        <div class="summary-card reveal">
+          <table class="summary-table">
+            <thead>
+              <tr>
+                <th>ตำแหน่ง / สายงาน</th>
+                <th style="text-align: center; width: 120px;">จำนวน (คน)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% summaryArray.forEach(([pos, count]) => { %>
+                <tr>
+                  <td>
+                    <div class="sum-pos-label">
+                      <span class="sum-dot"></span>
+                      <%= pos %>
+                    </div>
+                  </td>
+                  <td style="text-align: center; font-weight: 700; color: var(--p-purple); font-size: 1.05rem;"><%= count %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td style="font-weight: 800; color: var(--p-dark);">รวมเบ็ดเสร็จ</td>
+                <td style="text-align: center; font-weight: 900; font-size: 1.15rem; color: #10b981;"><%= localAllPersonnel.length %></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    <% } %>
+
+  </main>
+
+  <%- include('partials/footer') %>
+
+  <script>
+    // Scroll reveal
+    const revealAll = () => {
+      document.querySelectorAll('.reveal').forEach(el => {
+        if (el.getBoundingClientRect().top < window.innerHeight - 60)
+          el.classList.add('visible');
+      });
+    };
+    window.addEventListener('scroll', revealAll, { passive: true });
+    revealAll();
+
+    // Hero particle animation
+    const canvas = document.getElementById('p-canvas');
+    const ctx = canvas.getContext('2d');
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = canvas.parentElement.offsetHeight; };
+    window.addEventListener('resize', resize); resize();
+    const PARTICLES = Array.from({ length: 70 }, () => ({
+      x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+      r: Math.random() * 2 + 0.5,
+      dx: (Math.random() - 0.5) * 0.4, dy: (Math.random() - 0.5) * 0.4,
+      o: Math.random() * 0.5 + 0.1
+    }));
+    (function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      PARTICLES.forEach(p => {
+        p.x += p.dx; p.y += p.dy;
+        if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(112,66,248,${p.o})`;
+        ctx.fill();
+      });
+      requestAnimationFrame(animate);
+    })();
+
+    // Department filter
+    const filterBar = document.getElementById('teacher-filter');
+    const teacherGrid = document.getElementById('teacher-grid');
+    if (filterBar && teacherGrid) {
+      filterBar.addEventListener('click', e => {
+        const btn = e.target.closest('.filter-tab');
+        if (!btn) return;
+        filterBar.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const dept = btn.dataset.dept;
+        teacherGrid.querySelectorAll('.staff-card').forEach(card => {
+          const match = dept === 'all' || card.dataset.dept === dept;
+          card.style.display = match ? '' : 'none';
+        });
+      });
+    }
+  </script>
+</body>
+</html>

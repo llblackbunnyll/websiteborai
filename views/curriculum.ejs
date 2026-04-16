@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="หลักสูตรที่เปิดสอน - วิทยาลัยการอาชีพบ่อไร่ ประกาศนียบัตรวิชาชีพ (ปวช.) และประกาศนียบัตรวิชาชีพชั้นสูง (ปวส.)" />
+  <title>
+    <%= title %>
+  </title>
+  <link rel="icon" href="/my-logo.webp" type="image/webp" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --curr-purple: #7042f8;
+      --curr-blue: #0ea5e9;
+      --curr-pink: #ec4899;
+      --curr-dark: #0f0c29;
+      --curr-mid: #302b63;
+    }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      scroll-behavior: smooth;
+      background: #f8fafc;
+    }
+
+    /* ═══ HERO — Light Theme ════════════════════════════════════════════ */
+    .curr-hero {
+      width: 100%;
+      min-height: 480px;
+      position: relative;
+      background: linear-gradient(160deg, #f8f5ff 0%, #eef6ff 50%, #f0f9ff 100%);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #0f172a;
+      border-bottom: 1px solid rgba(112, 66, 248, 0.1);
+    }
+
+    /* Decorative rings */
+    .curr-hero-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(112, 66, 248, 0.12);
+      pointer-events: none;
+    }
+
+    .ring-1 {
+      width: 460px;
+      height: 460px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: ringPulse 6s ease-in-out infinite;
+    }
+
+    .ring-2 {
+      width: 700px;
+      height: 700px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: ringPulse 9s ease-in-out infinite 1.5s;
+    }
+
+    .ring-3 {
+      width: 960px;
+      height: 960px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: ringPulse 12s ease-in-out infinite 3s;
+    }
+
+    @keyframes ringPulse {
+
+      0%,
+      100% {
+        opacity: 0.5;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
+
+    /* Soft orbs */
+    .curr-hero-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      pointer-events: none;
+    }
+
+    .orb-1 {
+      width: 400px;
+      height: 400px;
+      background: rgba(112, 66, 248, 0.12);
+      top: -80px;
+      left: -60px;
+      animation: floatOrb 9s ease-in-out infinite;
+    }
+
+    .orb-2 {
+      width: 360px;
+      height: 360px;
+      background: rgba(14, 165, 233, 0.1);
+      bottom: -60px;
+      right: -40px;
+      animation: floatOrb 11s ease-in-out infinite reverse;
+    }
+
+    .orb-3 {
+      width: 260px;
+      height: 260px;
+      background: rgba(236, 72, 153, 0.07);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: floatOrbCenter 13s ease-in-out infinite 2s;
+    }
+
+    @keyframes floatOrb {
+
+      0%,
+      100% {
+        transform: translate(0, 0);
+      }
+
+      50% {
+        transform: translate(30px, -30px);
+      }
+    }
+
+    @keyframes floatOrbCenter {
+
+      0%,
+      100% {
+        transform: translate(-50%, -50%);
+      }
+
+      50% {
+        transform: translate(calc(-50% + 20px), calc(-50% - 20px));
+      }
+    }
+
+    .curr-hero-content {
+      position: relative;
+      z-index: 10;
+      padding: 100px 20px 60px;
+    }
+
+    .curr-hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 18px;
+      background: rgba(112, 66, 248, 0.07);
+      border: 1px solid rgba(112, 66, 248, 0.2);
+      border-radius: 100px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      color: var(--curr-purple);
+    }
+
+    .curr-hero-tag::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--curr-blue);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.4;
+      }
+    }
+
+    .curr-hero-title {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 18px;
+      letter-spacing: -1px;
+      color: #0f172a;
+    }
+
+    .curr-hero-title .highlight {
+      background: linear-gradient(90deg, var(--curr-purple), var(--curr-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .curr-hero-subtitle {
+      font-size: 1.1rem;
+      color: #64748b;
+      max-width: 560px;
+      margin: 0 auto 30px;
+      line-height: 1.7;
+    }
+
+    .curr-hero-breadcrumb {
+      font-size: 0.85rem;
+      color: #94a3b8;
+    }
+
+    .curr-hero-breadcrumb a {
+      color: var(--curr-purple);
+      text-decoration: none;
+    }
+
+    .curr-hero-breadcrumb span {
+      margin: 0 8px;
+    }
+
+    /* ═══ STATS BAR ══════════════════════════════════════════════════════ */
+    .stats-bar {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(112, 66, 248, 0.1);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(31, 38, 135, 0.1);
+      margin: -40px auto 60px;
+      max-width: 900px;
+      padding: 28px 40px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      position: relative;
+      z-index: 20;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 4px;
+    }
+
+    .stat-item:not(:last-child) {
+      border-right: 1px solid rgba(112, 66, 248, 0.1);
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--curr-purple), var(--curr-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.82rem;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    /* ═══ MAIN CONTAINER ═════════════════════════════════════════════════ */
+    .curr-container {
+      max-width: 1240px;
+      margin: 0 auto 100px;
+      padding: 0 24px;
+    }
+
+    /* ═══ LEVEL TABS ═════════════════════════════════════════════════════ */
+    .section-eyebrow {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--curr-purple);
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .section-heading {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.2;
+      margin-bottom: 0;
+    }
+
+    .level-tabs-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 40px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* ═══ LEVEL CARDS (ปวช./ปวส.) ════════════════════════════════════ */
+    .level-overview {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 0 auto 48px;
+      max-width: 960px;
+    }
+
+    .level-card {
+      border-radius: 24px;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: default;
+      background: #fff;
+      border: 1px solid #e8e3ff;
+      box-shadow: 0 4px 20px rgba(112, 66, 248, 0.06);
+    }
+
+    /* Gradient top accent bar */
+    .level-card::before {
+      content: '';
+      display: block;
+      height: 5px;
+      width: 100%;
+    }
+
+    .level-card.pvch::before {
+      background: linear-gradient(90deg, var(--curr-purple), #818cf8);
+    }
+
+    .level-card.pvs::before {
+      background: linear-gradient(90deg, var(--curr-blue), #34d399);
+    }
+
+    .level-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 48px rgba(112, 66, 248, 0.12);
+    }
+
+    .level-card-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 24px 14px;
+    }
+
+    .level-icon-box {
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .level-card.pvch .level-icon-box {
+      background: linear-gradient(135deg, rgba(112, 66, 248, 0.12), rgba(129, 140, 248, 0.1));
+      color: var(--curr-purple);
+    }
+
+    .level-card.pvs .level-icon-box {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(52, 211, 153, 0.1));
+      color: var(--curr-blue);
+    }
+
+    .level-badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 100px;
+      margin-bottom: 6px;
+    }
+
+    .level-card.pvch .level-badge {
+      background: rgba(112, 66, 248, 0.10);
+      color: var(--curr-purple);
+    }
+
+    .level-card.pvs .level-badge {
+      background: rgba(14, 165, 233, 0.10);
+      color: #0369a1;
+    }
+
+    .level-name {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 1px;
+      line-height: 1.2;
+    }
+
+    .level-sub-text {
+      font-size: 0.82rem;
+      color: #64748b;
+    }
+
+    /* Divider */
+    .level-divider {
+      margin: 0 24px;
+      border: none;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    /* Dept list inside card */
+    .dept-list {
+      padding: 18px 60px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .dept-list-label {
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .level-card.pvch .dept-list-label {
+      color: var(--curr-purple);
+    }
+
+    .level-card.pvs .dept-list-label {
+      color: #0369a1;
+    }
+
+    .dept-list-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #334155;
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+      text-decoration: none;
+      transition: all 0.25s ease;
+    }
+
+    .level-card.pvch .dept-list-item:hover {
+      background: rgba(112, 66, 248, 0.06);
+      border-color: rgba(112, 66, 248, 0.2);
+      color: var(--curr-purple);
+    }
+
+    .level-card.pvs .dept-list-item:hover {
+      background: rgba(14, 165, 233, 0.06);
+      border-color: rgba(14, 165, 233, 0.2);
+      color: #0369a1;
+    }
+
+    .dept-list-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .level-card.pvch .dept-list-dot {
+      background: var(--curr-purple);
+    }
+
+    .level-card.pvs .dept-list-dot {
+      background: var(--curr-blue);
+    }
+
+    .dept-list-arrow {
+      margin-left: auto;
+      opacity: 0;
+      transform: translateX(-4px);
+      transition: all 0.25s ease;
+      flex-shrink: 0;
+    }
+
+    .dept-list-item:hover .dept-list-arrow {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+
+    .level-sub {
+      font-size: 0.88rem;
+      color: #475569;
+      line-height: 1.5;
+    }
+
+    .level-name {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .level-sub {
+      font-size: 0.88rem;
+      color: #475569;
+      line-height: 1.5;
+    }
+
+    /* ═══ DEPT BANNERS ═════════════════════════════════════════════════════ */
+    .dept-banners {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .dept-banner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 240px;
+      border-radius: 24px;
+      overflow: hidden;
+      background: #fff;
+      border: 1px solid #e8e3ff;
+      box-shadow: 0 4px 24px rgba(112, 66, 248, 0.05);
+      transition: transform 0.35s ease, box-shadow 0.35s ease;
+      position: relative;
+    }
+
+    .dept-banner:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 48px rgba(112, 66, 248, 0.10);
+    }
+
+    .dept-banner.odd  { direction: ltr; }
+    .dept-banner.even { direction: rtl; }
+    .dept-banner.even > * { direction: ltr; }
+
+    /* Full-bleed background image */
+    .dept-banner-image {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .dept-banner-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.92;
+      transition: transform 0.6s ease, opacity 0.4s ease;
+    }
+
+    .dept-banner:hover .dept-banner-image img {
+      transform: scale(1.04);
+    }
+
+    /* Fade-to-white overlay: direction depends on odd/even */
+    .dept-banner-image-overlay {
+      position: absolute;
+      inset: 0;
+    }
+
+    .dept-banner.odd .dept-banner-image-overlay {
+      background: linear-gradient(to right,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,0.3) 40%,
+        rgba(255,255,255,0.92) 62%,
+        #ffffff 100%
+      );
+    }
+
+    .dept-banner.even .dept-banner-image-overlay {
+      background: linear-gradient(to left,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,0.3) 40%,
+        rgba(255,255,255,0.92) 62%,
+        #ffffff 100%
+      );
+    }
+
+    .dept-banner-num {
+      position: absolute;
+      bottom: 20px;
+      left: 22px;
+      font-size: 5rem;
+      font-weight: 900;
+      color: rgba(255,255,255,0.12);
+      line-height: 1;
+      pointer-events: none;
+      user-select: none;
+      letter-spacing: -2px;
+    }
+
+    .dept-banner-type {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #fff;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 50px;
+    }
+
+    .dept-banner-content {
+      position: relative;
+      z-index: 1;
+      padding: 32px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* Empty first column (image side) — keeps content in the right column */
+    .dept-banner-spacer {
+      display: block;
+    }
+
+    .dept-banner-eyebrow {
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--curr-purple);
+      margin-bottom: 10px;
+    }
+
+    .dept-banner-title {
+      font-size: 1.7rem;
+      font-weight: 900;
+      color: #0f172a;
+      line-height: 1.2;
+      margin-bottom: 14px;
+    }
+
+    .dept-banner-desc {
+      font-size: 0.92rem;
+      color: #475569;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    .dept-banner-skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 28px;
+    }
+
+    .skill-tag {
+      font-size: 0.72rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, rgba(112, 66, 248, 0.07), rgba(14, 165, 233, 0.05));
+      color: var(--curr-purple);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(112, 66, 248, 0.12);
+    }
+
+    .dept-banner-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-banner-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 22px;
+      background: linear-gradient(135deg, var(--curr-purple), var(--curr-blue));
+      color: #fff;
+      font-size: 0.88rem;
+      font-weight: 700;
+      border-radius: 12px;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 14px rgba(112,66,248,0.25);
+    }
+
+    .btn-banner-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(112,66,248,0.35);
+    }
+
+    .btn-banner-primary:hover svg {
+      transform: translateX(3px);
+    }
+
+    .btn-banner-primary svg {
+      transition: transform 0.3s ease;
+    }
+
+    .btn-banner-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 18px;
+      background: #f8fafc;
+      color: #64748b;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border-radius: 12px;
+      text-decoration: none;
+      border: 1px solid #e2e8f0;
+      transition: all 0.3s ease;
+    }
+
+    .btn-banner-secondary:hover {
+      background: #ede9fe;
+      border-color: #c4b5fd;
+      color: var(--curr-purple);
+    }
+
+
+    /* ═══ REVEAL ════════════════════════════════════════════════════════ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ═══ RESPONSIVE ════════════════════════════════════════════════════ */
+    @media (max-width: 860px) {
+      .stats-bar {
+        grid-template-columns: repeat(3, 1fr);
+        padding: 20px;
+      }
+
+      .level-overview {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .dept-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-bar {
+        grid-template-columns: 1fr;
+      }
+
+      .stat-item:not(:last-child) {
+        border-right: none;
+        border-bottom: 1px solid rgba(112, 66, 248, 0.1);
+        padding-bottom: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <%- include('partials/navbar') %>
+
+    <!-- ═══ HERO ═══════════════════════════════════════════════════════════ -->
+    <section class="curr-hero">
+      <div class="curr-hero-ring ring-1"></div>
+      <div class="curr-hero-ring ring-2"></div>
+      <div class="curr-hero-ring ring-3"></div>
+      <div class="curr-hero-orb orb-1"></div>
+      <div class="curr-hero-orb orb-2"></div>
+      <div class="curr-hero-orb orb-3"></div>
+
+      <div class="curr-hero-content reveal">
+        <span class="curr-hero-tag">Education Programs</span>
+        <h1 class="curr-hero-title">
+          หลักสูตรและ<span class="highlight">สาขาวิชา</span>
+        </h1>
+        <p class="curr-hero-subtitle">ผลิตและพัฒนากำลังคนอาชีวศึกษาที่มีคุณภาพ สู่มาตรฐานสากลและตลาดแรงงานสมัยใหม่</p>
+        <div class="curr-hero-breadcrumb">
+          <a href="/">หน้าแรก</a> <span>/</span> <span>หลักสูตรสถานศึกษา</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ STATS BAR ═══════════════════════════════════════════════════════ -->
+    <div class="curr-container" style="padding-top: 0;">
+      <div class="stats-bar reveal">
+        <div class="stat-item">
+          <span class="stat-value">5</span>
+          <span class="stat-label">สาขาวิชาที่เปิดสอน</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">2</span>
+          <span class="stat-label">ระดับการศึกษา (ปวช./ปวส.)</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">100%</span>
+          <span class="stat-label">ตามหลักสูตรแกนกลาง สอศ.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ DEPARTMENTS ════════════════════════════════════════════════════ -->
+    <div class="curr-container">
+
+      <!-- Section Header + Tabs -->
+      <div class="level-tabs-header reveal">
+        <div>
+          <span class="section-eyebrow">Departments</span>
+          <h2 class="section-heading">สาขาวิชาที่เปิดสอน</h2>
+        </div>
+        <!-- optional tab filter — can be wired up later -->
+      </div>
+
+      <!-- Level Overview Cards -->
+      <% const pvchDepts=Object.values(departments).filter(d=> d.curriculum && d.curriculum.pvc);
+        const pvsDepts = Object.values(departments).filter(d => d.curriculum && d.curriculum.hvc);
+        %>
+        <div class="level-overview reveal">
+
+          <!-- ปวช. Card -->
+          <div class="level-card pvch">
+            <div class="level-card-header">
+              <div class="level-icon-box">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                  <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                </svg>
+              </div>
+              <div>
+                <span class="level-badge">ปวช.</span>
+                <div class="level-name">ประกาศนียบัตรวิชาชีพ</div>
+                <div class="level-sub-text">3 ปี — รับสมัครผู้จบ ม.3 หรือเทียบเท่า</div>
+              </div>
+            </div>
+            <hr class="level-divider">
+            <div class="dept-list">
+              <div class="dept-list-label">สาขาวิชาที่เปิดสอน (<%= pvchDepts.length %> สาขา)</div>
+              <% pvchDepts.forEach(d=> { %>
+                <a href="/curriculum/<%= d.slug %>" class="dept-list-item">
+                  <span class="dept-list-dot"></span>
+                  สาขาวิชา<%= d.pvcName || d.name %>
+                    <svg class="dept-list-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                      <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                </a>
+                <% }) %>
+            </div>
+          </div>
+
+          <!-- ปวส. Card -->
+          <div class="level-card pvs">
+            <div class="level-card-header">
+              <div class="level-icon-box">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                </svg>
+              </div>
+              <div>
+                <span class="level-badge">ปวส.</span>
+                <div class="level-name">ประกาศนียบัตรวิชาชีพชั้นสูง</div>
+                <div class="level-sub-text">2 ปี — รับสมัครผู้จบ ปวช. หรือ ม.6/เทียบเท่า</div>
+              </div>
+            </div>
+            <hr class="level-divider">
+            <div class="dept-list">
+              <div class="dept-list-label">สาขาวิชาที่เปิดสอน (<%= pvsDepts.length %> สาขา)</div>
+              <% pvsDepts.forEach(d=> { %>
+                <a href="/curriculum/<%= d.slug %>" class="dept-list-item">
+                  <span class="dept-list-dot"></span>
+                  สาขาวิชา<%= d.hvcName || d.name %>
+                    <svg class="dept-list-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                      <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                </a>
+                <% }) %>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Dept Banners -->
+        <div class="dept-banners">
+          <% Object.values(departments).forEach((dept, i) => { %>
+            <div class="dept-banner <%= i % 2 === 0 ? 'odd' : 'even' %> reveal" style="transition-delay: <%= i * 0.1 %>s;">
+
+              <!-- Full-bleed background image (absolute) -->
+              <div class="dept-banner-image">
+                <img src="<%= dept.imageUrl %>" alt="<%= dept.name %>" loading="lazy"
+                  onerror="this.src='/images/college-about.png'">
+                <div class="dept-banner-image-overlay"></div>
+              </div>
+
+              <!-- Spacer: takes the image-side column, keeping content in the opposite column -->
+              <div class="dept-banner-spacer"></div>
+
+              <!-- Content Panel -->
+              <div class="dept-banner-content">
+                <div class="dept-banner-eyebrow">สาขาวิชา</div>
+                <h3 class="dept-banner-title"><%= dept.name %></h3>
+                <p class="dept-banner-desc"><%= dept.description %></p>
+
+                <div class="dept-banner-skills">
+                  <% (dept.skills || []).forEach(skill => { %>
+                    <span class="skill-tag"><%= skill %></span>
+                  <% }) %>
+                </div>
+
+                <div class="dept-banner-actions">
+                  <a href="/curriculum/<%= dept.slug %>" class="btn-banner-primary">
+                    ดูรายละเอียดสาขา
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                  </a>
+
+                </div>
+              </div>
+
+            </div>
+          <% }) %>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+
+      <script src="/js/webgl-bg.js"></script>
+      <script src="/js/particles.js"></script>
+      <script>
+        // Reveal on scroll
+        const revealAll = () => {
+          document.querySelectorAll('.reveal').forEach(el => {
+            if (el.getBoundingClientRect().top < window.innerHeight - 80)
+              el.classList.add('visible');
+          });
+        };
+        window.addEventListener('scroll', revealAll, { passive: true });
+        revealAll();
+      </script>
+</body>
+
+</html>

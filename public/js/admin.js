@@ -324,7 +324,6 @@ function getAuthHeaders() {
   // 4. PERSONNEL PANEL LOGIC
   const pnTbody = document.getElementById('personnel-tbody');
   const pnAddBtn = document.getElementById('personnel-add-btn');
-  const pnFormContainer = document.getElementById('personnel-form-container');
   const pnCancelBtn = document.getElementById('personnel-cancel-btn');
   const pnForm = document.getElementById('personnel-form');
   
@@ -334,6 +333,8 @@ function getAuthHeaders() {
   const pnImportForm = document.getElementById('personnel-import-form');
   const pnBulkDeleteBtn = document.getElementById('personnel-bulk-delete-btn');
   const pnSelectAll = document.getElementById('personnel-select-all');
+  const pnModal = document.getElementById('personnel-modal');
+  const pnModalCloseIcon = document.getElementById('modal-close-icon');
   
   const dutyTagContainer = document.getElementById('duty-tag-container');
   const newDutyInput = document.getElementById('new-duty-input');
@@ -348,18 +349,25 @@ function getAuthHeaders() {
   pnAddBtn?.addEventListener('click', () => {
     pnForm.reset();
     document.getElementById('personnel-id').value = '';
+    document.getElementById('personnel-form-title').textContent = 'เพิ่มบุคลากรใหม่';
     currentDuties = [];
     renderDutyTags();
-    pnFormContainer.classList.remove('hide');
+    pnModal.classList.add('active');
     pnImportContainer.classList.add('hide');
   });
 
-  pnCancelBtn?.addEventListener('click', () => pnFormContainer.classList.add('hide'));
+  pnCancelBtn?.addEventListener('click', () => pnModal.classList.remove('active'));
+  pnModalCloseIcon?.addEventListener('click', () => pnModal.classList.remove('active'));
+  
+  // Close modal when clicking outside form
+  pnModal?.addEventListener('click', (e) => {
+    if (e.target === pnModal) pnModal.classList.remove('active');
+  });
 
   pnImportBtn?.addEventListener('click', () => {
     pnImportForm.reset();
     pnImportContainer.classList.remove('hide');
-    pnFormContainer.classList.add('hide');
+    pnModal.classList.remove('active');
   });
   
   pnImportCancelBtn?.addEventListener('click', () => pnImportContainer.classList.add('hide'));
@@ -370,7 +378,43 @@ function getAuthHeaders() {
       updateBulkDeleteUI();
       if (pnSelectAll) pnSelectAll.checked = false;
       const res = await fetch(`${API_BASE}/personnel`, { headers: getAuthHeaders() });
-      allPersonnel = await res.json();
+      const data = await res.json();
+      
+      // Sort data to match personnel page logic
+      data.sort((a, b) => {
+        const getRank = (p) => {
+          const pos = (p.position || '').toLowerCase();
+          const acad = (p.academicStanding || '').toLowerCase();
+          const text = pos + acad;
+          
+          // 1. Executives
+          if (p.isDirector || pos.includes('ผู้อำนวยการ')) return 0;
+          if (pos.includes('รองผู้อำนวยการ') || pos.includes('ผู้บริหาร')) return 1;
+          
+          // 2. Teachers by rank
+          if (text.includes('เชี่ยวชาญพิเศษ')) return 10;
+          if (text.includes('เชี่ยวชาญ')) return 11;
+          if (text.includes('ชำนาญการพิเศษ')) return 12;
+          if (text.includes('ชำนาญการ')) return 13;
+          if (text.includes('ครูผู้ช่วย')) return 15;
+          if (text.includes('ครู')) return 14;
+          if (text.includes('พนักงานราชการ')) return 16;
+          if (text.includes('ครูอัตราจ้าง') || text.includes('อัตราจ้าง')) return 17;
+          
+          // 3. Support Staff
+          if (text.includes('เจ้าหน้าที่')) return 20;
+          if (text.includes('ลูกจ้างอัตราจ้าง')) return 21;
+          
+          return 99;
+        };
+        
+        const rankA = getRank(a);
+        const rankB = getRank(b);
+        if (rankA !== rankB) return rankA - rankB;
+        return (a.order || 0) - (b.order || 0) || (a.firstName || '').localeCompare(b.firstName || '', 'th');
+      });
+
+      allPersonnel = data;
       renderPersonnel(allPersonnel);
     } catch (e) {
       if (pnTbody) pnTbody.innerHTML = '<tr><td colspan="5" class="table-empty">Error loading personnel</td></tr>';
@@ -470,6 +514,7 @@ function getAuthHeaders() {
             <div>
               <div style="font-weight:600;">${escapeHtml(item.prefix || '')} ${escapeHtml(item.firstName)} ${escapeHtml(item.lastName)}</div>
               ${item.phone ? `<div style="font-size:0.8rem;color:var(--color-text-secondary)">📞 ${escapeHtml(item.phone)}</div>` : ''}
+              ${item.email ? `<div style="font-size:0.8rem;color:var(--color-text-secondary)">📧 ${escapeHtml(item.email)}</div>` : ''}
             </div>
           </div>
         </td>
@@ -511,6 +556,7 @@ function getAuthHeaders() {
     document.getElementById('personnel-positionNumber').value = item.positionNumber || '';
     document.getElementById('personnel-department').value = item.department || '';
     document.getElementById('personnel-phone').value = item.phone || '';
+    document.getElementById('personnel-email').value = item.email || '';
     document.getElementById('personnel-order').value = item.order || 0;
     
     try {
@@ -531,16 +577,26 @@ function getAuthHeaders() {
     
     const imgInput = document.getElementById('personnel-image');
     if (imgInput) imgInput.value = '';
-    document.getElementById('personnel-form-title').textContent = 'แก้ไขบุคลากร';
+    document.getElementById('personnel-form-title').textContent = 'แก้ไขข้อมูลบุคลากร';
     
-    pnFormContainer.classList.remove('hide');
+    pnModal.classList.add('active');
     pnImportContainer.classList.add('hide');
-    pnFormContainer.scrollIntoView({ behavior: 'smooth' });
   };
 
   pnForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = pnForm.querySelector('button[type="submit"]');
+    
+    // Custom Email Validation: Allow '-' or empty, but check format if filled
+    const emailVal = document.getElementById('personnel-email').value.trim();
+    if (emailVal && emailVal !== '-') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailVal)) {
+        alert('กรุณากรอกรูปแบบอีเมลที่ถูกต้อง (หรือใส่ - หากไม่มี)');
+        return;
+      }
+    }
+
     btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
     try {
       const formData = new FormData(pnForm);
@@ -551,13 +607,17 @@ function getAuthHeaders() {
       if (res.ok) {
         await loadPersonnel();
         fetchUniqueDuties();
-        pnCancelBtn.click();
+        pnModal.classList.remove('active');
         currentDuties = [];
       } else {
-        alert('บันทึกบุคลากรไม่สำเร็จ');
+        const errData = await res.json().catch(() => ({}));
+        alert(`บันทึกบุคลากรไม่สำเร็จ: ${errData.message || 'Unknown error'}${errData.error ? '\n' + errData.error : ''}`);
       }
-    } catch { alert('Error saving personnel'); }
-    finally { btn.disabled = false; btn.textContent = 'บันทึกข้อมูล'; }
+    } catch (err) {
+      alert('Error saving personnel: ' + err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'บันทึกข้อมูล';
+    }
   });
 
   window.deletePersonnel = async (id) => {
@@ -689,12 +749,949 @@ function getAuthHeaders() {
     });
   });
 
-  // Init loads
+  // 5. ITA PANEL LOGIC
+  const itaTbody = document.getElementById('ita-tbody');
+  const itaModal = document.getElementById('ita-modal');
+  const itaForm = document.getElementById('ita-form');
+  const itaInitBtn = document.getElementById('ita-init-btn');
+  const itaAttachmentsList = document.getElementById('ita-attachments-list');
+  const itaAddLinkBtn = document.getElementById('ita-add-link-btn');
+  const itaCancelBtn = document.getElementById('ita-cancel-btn');
+  const itaModalCloseIcon = document.getElementById('ita-modal-close-icon');
+
+  let allITA = [];
+  let currentItaAttachments = []; // Local state for the modal
+  let itaNewLinksToAdd = []; // Separate buffer for new links
+
+  async function loadITA() {
+    try {
+      const res = await fetch(`${API_BASE}/ita`, { headers: getAuthHeaders() });
+      allITA = await res.json();
+      renderITA(allITA);
+    } catch (e) {
+      if (itaTbody) itaTbody.innerHTML = '<tr><td colspan="4" class="table-empty">Error loading ITA data</td></tr>';
+    }
+  }
+
+  function renderITA(items) {
+    if (!itaTbody) return;
+    if (items.length === 0) {
+      itaTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;">ยังไม่เปิดใช้งานระบบ ITA <br><small>กรุณากดปุ่มรีเซ็ต/เริ่มระบบเพื่อเริ่มต้น</small></td></tr>';
+      return;
+    }
+    itaTbody.innerHTML = items.map(item => {
+      const count = (item.attachments || []).length;
+      const statusHtml = count > 0 
+        ? `<span class="badge badge-green">✅ เรียบร้อย (${count} รายการ)</span>` 
+        : `<span class="badge" style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;">⏳ ยังไม่มีข้อมูล</span>`;
+      
+      return `
+        <tr>
+          <td style="font-weight:700;color:var(--color-accent-primary);text-align:center;">${item.code}</td>
+          <td>
+            <div style="font-weight:600;">${escapeHtml(item.title)}</div>
+            <div style="font-size:0.8rem;color:var(--color-text-secondary);margin-top:2px;">${escapeHtml(item.description || '-')}</div>
+            <div style="font-size:0.75rem;color:var(--color-text-secondary);margin-top:4px;opacity:0.7">อัปเดตล่าสุด: ${item.updatedAt ? new Date(item.updatedAt).toLocaleDateString('th-TH') : '-'}</div>
+          </td>
+          <td>${statusHtml}</td>
+          <td style="text-align:right;">
+            <button class="icon-btn" onclick="editITA('${item.code}')" title="จัดการข้อมูล">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  window.editITA = (code) => {
+    const item = allITA.find(i => i.code === code);
+    if (!item) return;
+
+    document.getElementById('ita-code').value = item.code;
+    document.getElementById('ita-display-title').textContent = `${item.code}: ${item.title}`;
+    document.getElementById('ita-display-desc').textContent = item.description || 'ไม่มีคำอธิบายเพิ่มเติม';
+    
+    currentItaAttachments = Array.isArray(item.attachments) ? [...item.attachments] : [];
+    itaNewLinksToAdd = [];
+    
+    renderItaAttachments();
+    itaModal.classList.add('active');
+  };
+
+  function renderItaAttachments() {
+    if (!itaAttachmentsList) return;
+    
+    const allItems = [...currentItaAttachments, ...itaNewLinksToAdd];
+    
+    if (allItems.length === 0) {
+      itaAttachmentsList.innerHTML = '<div style="color:var(--color-text-secondary);font-size:0.9rem;padding:0.5rem;border:1px dashed #ddd;border-radius:8px;text-align:center;">ยังไม่มีการแนบไฟล์หรือลิงก์</div>';
+      return;
+    }
+
+    itaAttachmentsList.innerHTML = allItems.map((att, idx) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0.6rem 1rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <span style="font-size:1.2rem;">${att.type === 'file' ? '📄' : '🔗'}</span>
+          <div>
+            <div style="font-weight:600;font-size:0.9rem;">${escapeHtml(att.label)}</div>
+            <a href="${att.url}" target="_blank" style="font-size:0.75rem;color:var(--color-accent-primary);text-decoration:none;">ดูข้อมูล/ลิงก์</a>
+          </div>
+        </div>
+        <button type="button" class="icon-btn danger" onclick="removeItaAttachment(${idx})" style="padding:4px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+    `).join('');
+  }
+
+  window.removeItaAttachment = (idx) => {
+    if (idx < currentItaAttachments.length) {
+      currentItaAttachments.splice(idx, 1);
+    } else {
+      itaNewLinksToAdd.splice(idx - currentItaAttachments.length, 1);
+    }
+    renderItaAttachments();
+  };
+
+  itaAddLinkBtn?.addEventListener('click', () => {
+    const label = document.getElementById('ita-new-link-label').value.trim();
+    const url = document.getElementById('ita-new-link-url').value.trim();
+    if (!url) return alert('กรุณาใส่ URL');
+    
+    itaNewLinksToAdd.push({ label: label || 'ลิงก์ภายนอก', url, type: 'link' });
+    document.getElementById('ita-new-link-label').value = '';
+    document.getElementById('ita-new-link-url').value = '';
+    renderItaAttachments();
+  });
+
+  itaForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = itaForm.querySelector('button[type="submit"]');
+    const code = document.getElementById('ita-code').value;
+    
+    btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+    
+    try {
+      const formData = new FormData();
+      formData.append('existingAttachments', JSON.stringify(currentItaAttachments));
+      formData.append('newLinks', JSON.stringify(itaNewLinksToAdd));
+      
+      const fileInput = document.getElementById('ita-new-files');
+      if (fileInput.files.length > 0) {
+        for (let i = 0; i < fileInput.files.length; i++) {
+          formData.append('files', fileInput.files[i]);
+        }
+      }
+
+      const res = await fetch(`${API_BASE}/ita/${code}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: formData
+      });
+
+      if (res.ok) {
+        await loadITA();
+        itaModal.classList.remove('active');
+        fileInput.value = '';
+      } else {
+        alert('ไม่สามารถบันทึกข้อมูล ITA ได้');
+      }
+    } catch (err) {
+      alert('Error saving ITA item');
+    } finally {
+      btn.disabled = false; btn.textContent = 'บันทึกข้อมูลทั้งหมด';
+    }
+  });
+
+  itaInitBtn?.addEventListener('click', async () => {
+    if (!confirm('ยืนยันการตั้งค่าเริ่มต้นระบบ ITA? หัวข้อเดิมจะถูกรีเซ็ตชื่อเป็นค่าเริ่มต้น (แต่ไฟล์จะไม่หาย)')) return;
+    try {
+      const res = await fetch(`${API_BASE}/ita/init`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+      if (res.ok) {
+        await loadITA();
+        alert('ตั้งค่าระบบ ITA สำเร็จ (O1-O37)');
+      }
+    } catch (err) { alert('Init failed'); }
+  });
+
+  itaCancelBtn?.addEventListener('click', () => itaModal.classList.remove('active'));
+  itaModalCloseIcon?.addEventListener('click', () => itaModal.classList.remove('active'));
+
+  // 6. STUDENT PANEL LOGIC
+  const studentSaveButtons = document.querySelectorAll('.student-save-trigger');
+  const academicYearGlobal = document.getElementById('setting-academic-year');
+  const semesterGlobal = document.getElementById('setting-current-semester');
+  const academicYearView = document.getElementById('view-academic-year');
+  const semesterView = document.getElementById('view-current-semester');
+  const btnAddYear = document.getElementById('btn-add-year');
+  const btnDeletePeriod = document.getElementById('btn-delete-period');
+
+  const toolSourceYear = document.getElementById('tool-source-year');
+  const toolSourceSemester = document.getElementById('tool-source-semester');
+  const btnToolCopy = document.getElementById('btn-tool-copy');
+  const btnToolPromote = document.getElementById('btn-tool-promote');
+
+  async function fetchAvailableYears() {
+    try {
+      const res = await fetch(`${API_BASE}/students/years`, { headers: getAuthHeaders() });
+      if (!res.ok) return;
+      let years = await res.json();
+      
+      // Ensure current site year is at least an option if nothing in DB
+      const siteYear = academicYearGlobal?.value || '2567';
+      if (years.length === 0) {
+        years = [siteYear];
+      } else if (!years.includes(siteYear)) {
+        years.push(siteYear);
+        years.sort((a, b) => b.localeCompare(a));
+      }
+
+      const yearsHtml = years.map(y => `<option value="${y}">${y}</option>`).join('');
+      if (academicYearView) academicYearView.innerHTML = yearsHtml;
+      if (toolSourceYear) toolSourceYear.innerHTML = yearsHtml;
+      if (academicYearGlobal) academicYearGlobal.innerHTML = yearsHtml;
+      
+      const currentVal = academicYearView.value;
+      if (currentVal && years.includes(currentVal)) {
+        academicYearView.value = currentVal;
+      }
+      
+      const globalVal = academicYearGlobal?.getAttribute('data-initial');
+      if (globalVal && years.includes(globalVal)) {
+        academicYearGlobal.value = globalVal;
+      }
+    } catch (err) { console.error('Error fetching years:', err); }
+  }
+
+  async function loadStudentData(year = '', semester = '') {
+    try {
+      const query = (year && semester) ? `?year=${year}&semester=${semester}` : '';
+      const res = await fetch(`${API_BASE}/students${query}`, { headers: getAuthHeaders() });
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+           alert('Session หมดอายุ กรุณา Login ใหม่');
+           window.location.href = '/admin/login';
+        }
+        return;
+      }
+      const { enrollments, settings } = await res.json();
+
+      if (!year && !semester) {
+        // Set initial data attributes for selects to pick up
+        if (academicYearGlobal) {
+          academicYearGlobal.setAttribute('data-initial', settings.academic_year);
+        }
+        if (semesterGlobal) semesterGlobal.value = settings.current_semester;
+        
+        await fetchAvailableYears();
+        
+        if (academicYearView) academicYearView.value = settings.academic_year;
+        if (semesterView) semesterView.value = settings.current_semester;
+      } else {
+        if (academicYearView) academicYearView.value = settings.academic_year;
+        if (semesterView) semesterView.value = settings.current_semester;
+      }
+
+      document.querySelectorAll('.student-input').forEach(input => input.value = 0);
+
+      enrollments.forEach(en => {
+        const row = document.querySelector(`#student-tbody tr[data-slug="${en.departmentSlug}"]`);
+        if (row) {
+          row.querySelector('[data-field="pvc1"]').value = en.pvc1;
+          row.querySelector('[data-field="pvc2"]').value = en.pvc2;
+          row.querySelector('[data-field="pvc3"]').value = en.pvc3;
+          row.querySelector('[data-field="pvs1"]').value = en.pvs1;
+          row.querySelector('[data-field="pvs2"]').value = en.pvs2;
+        }
+      });
+    } catch (err) {
+      console.error('Error loading student data:', err);
+    }
+  }
+
+  const handleStudentSave = async () => {
+    const btn = document.querySelector('.student-save-trigger'); 
+    studentSaveButtons.forEach(b => {
+      b.disabled = true;
+      b.textContent = 'กำลังบันทึก...';
+    });
+
+    const siteSettings = {
+      current_semester: semesterGlobal.value,
+      academic_year: academicYearGlobal.value
+    };
+
+    const targetPeriod = {
+      academic_year: academicYearView.value,
+      current_semester: semesterView.value
+    };
+
+    const enrollments = [];
+    const rows = document.querySelectorAll('#student-tbody tr[data-slug]');
+    rows.forEach(row => {
+      enrollments.push({
+        departmentSlug: row.getAttribute('data-slug'),
+        pvc1: row.querySelector('[data-field="pvc1"]').value || 0,
+        pvc2: row.querySelector('[data-field="pvc2"]').value || 0,
+        pvc3: row.querySelector('[data-field="pvc3"]').value || 0,
+        pvs1: row.querySelector('[data-field="pvs1"]').value || 0,
+        pvs2: row.querySelector('[data-field="pvs2"]').value || 0
+      });
+    });
+
+    try {
+      const res = await fetch(`${API_BASE}/students`, {
+        method: 'POST',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          enrollments, 
+          settings: siteSettings,
+          targetYear: targetPeriod.academic_year,
+          targetSemester: targetPeriod.current_semester
+        })
+      });
+      if (res.ok) {
+        alert('บันทึกข้อมูลเรียบร้อยแล้ว');
+        await fetchAvailableYears();
+        await loadStudentData(targetPeriod.academic_year, targetPeriod.current_semester);
+      } else {
+        const data = await res.json();
+        alert('ไม่สามารถบันทึกข้อมูลได้: ' + (data.message || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Error saving data');
+    } finally {
+      studentSaveButtons.forEach(btn => {
+        btn.disabled = false;
+        btn.textContent = '💾 บันทึกข้อมูลทั้งหมด';
+      });
+    }
+  };
+
+  studentSaveButtons.forEach(btn => btn.addEventListener('click', handleStudentSave));
+  
+  academicYearView?.addEventListener('change', () => loadStudentData(academicYearView.value, semesterView.value));
+  semesterView?.addEventListener('change', () => loadStudentData(academicYearView.value, semesterView.value));
+
+  btnAddYear?.addEventListener('click', async () => {
+    const newYear = prompt('กรุณาระบุปีการศึกษาใหม่ (เช่น 2568):');
+    if (!newYear || isNaN(newYear)) return;
+    
+    const exists = Array.from(academicYearView.options).some(opt => opt.value === String(newYear));
+    if (!exists) {
+      const opt = document.createElement('option');
+      opt.value = newYear;
+      opt.textContent = newYear;
+      academicYearView.insertBefore(opt, academicYearView.firstChild);
+      
+      const toolOpt = document.createElement('option');
+      toolOpt.value = newYear;
+      toolOpt.textContent = newYear;
+      toolSourceYear.insertBefore(toolOpt, toolSourceYear.firstChild);
+    }
+    academicYearView.value = newYear;
+    loadStudentData(newYear, semesterView.value);
+  });
+
+  btnDeletePeriod?.addEventListener('click', async () => {
+    const year = academicYearView.value;
+    const sem = semesterView.value;
+    if (!year) return alert('กรุณาเลือกช่วงเวลาที่ต้องการลบ');
+    if (!confirm(`ยืนยันการลบข้อมูลของช่วงเวลา ${sem}/${year}? (ข้อมูลจะหายถาวร)`)) return;
+    
+    try {
+      const res = await fetch(`${API_BASE}/students/period?year=${year}&semester=${sem}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      if (res.ok) {
+        alert('ลบข้อมูลเรียบร้อยแล้ว');
+        await fetchAvailableYears();
+        await loadStudentData();
+      } else {
+        alert('ไม่สามารถลบข้อมูลได้');
+      }
+    } catch (err) { alert('Delete failed'); }
+  });
+
+  btnToolCopy?.addEventListener('click', async () => {
+    const year = toolSourceYear.value;
+    const sem = toolSourceSemester.value;
+    if (!year) return alert('กรุณาเลือกปีการศึกษาต้นฉบับ');
+    
+    try {
+      const res = await fetch(`${API_BASE}/students?year=${year}&semester=${sem}`, { headers: getAuthHeaders() });
+      if (!res.ok) return alert('ไม่สามารถดึงข้อมูลต้นฉบับได้');
+      const { enrollments } = await res.json();
+      
+      if (enrollments.length === 0) {
+        return alert(`ไม่พบข้อมูลในช่วงเวลา ${sem}/${year} สำหรับคัดลอก`);
+      }
+
+      if (!confirm(`ยืนยันการคัดลอกข้อมูลจาก ${sem}/${year}? (ข้อมูลปัจจุบันในตารางจะถูกเขียนทับ)`)) return;
+      
+      document.querySelectorAll('.student-input').forEach(input => input.value = 0);
+
+      enrollments.forEach(en => {
+        const row = document.querySelector(`#student-tbody tr[data-slug="${en.departmentSlug}"]`);
+        if (row) {
+          row.querySelector('[data-field="pvc1"]').value = en.pvc1;
+          row.querySelector('[data-field="pvc2"]').value = en.pvc2;
+          row.querySelector('[data-field="pvc3"]').value = en.pvc3;
+          row.querySelector('[data-field="pvs1"]').value = en.pvs1;
+          row.querySelector('[data-field="pvs2"]').value = en.pvs2;
+        }
+      });
+      alert('คัดลอกข้อมูลสำเร็จ (อย่าลืมกดบันทึก)');
+    } catch (err) { alert('Copy failed'); }
+  });
+
+  btnToolPromote?.addEventListener('click', async () => {
+    const year = toolSourceYear.value;
+    const sem = toolSourceSemester.value;
+    if (!year) return alert('กรุณาเลือกปีการศึกษาต้นฉบับ');
+    
+    try {
+      const res = await fetch(`${API_BASE}/students?year=${year}&semester=${sem}`, { headers: getAuthHeaders() });
+      if (!res.ok) return alert('ไม่สามารถดึงข้อมูลต้นฉบับได้');
+      const { enrollments } = await res.json();
+      
+      if (enrollments.length === 0) {
+        return alert(`ไม่พบข้อมูลในช่วงเวลา ${sem}/${year} สำหรับใช้เลื่อนขั้น`);
+      }
+
+      if (!confirm(`ยืนยันการเลื่อนขั้นนักเรียนจาก ${sem}/${year}? \n(ปวช.1->2, ปวช.2->3 และ ปวส.1->2)`)) return;
+      
+      document.querySelectorAll('.student-input').forEach(input => input.value = 0);
+
+      enrollments.forEach(en => {
+        const row = document.querySelector(`#student-tbody tr[data-slug="${en.departmentSlug}"]`);
+        if (row) {
+          row.querySelector('[data-field="pvc1"]').value = 0;
+          row.querySelector('[data-field="pvc2"]').value = en.pvc1;
+          row.querySelector('[data-field="pvc3"]').value = en.pvc2;
+          row.querySelector('[data-field="pvs1"]').value = 0;
+          row.querySelector('[data-field="pvs2"]').value = en.pvs1;
+        }
+      });
+      alert('ประมวลผลเลื่อนขั้นข้อมูลสำเร็จ (อย่าลืมกดบันทึก)');
+    } catch (err) { alert('Promotion failed'); }
+  });
+
+  // Toggle automation tools
+  const btnToggleTools = document.getElementById('btn-toggle-tools');
+  const toolsContent = document.getElementById('automation-tools-content');
+  
+  btnToggleTools?.addEventListener('click', () => {
+    if (toolsContent.style.display === 'none') {
+      toolsContent.style.display = 'flex';
+      btnToggleTools.innerHTML = '🙈 ซ่อนเครื่องมือ';
+    } else {
+      toolsContent.style.display = 'none';
+      btnToggleTools.innerHTML = '👁️ แสดงเครื่องมือ';
+    }
+  });
+
+  // 7. FACILITY PANEL LOGIC
+  const facTreeContainer = document.getElementById('fac-tree-container');
+  const facAddBldgBtn = document.getElementById('fac-add-bldg-btn');
+  const facModal = document.getElementById('fac-modal');
+  const facModalCloseIcon = document.getElementById('fac-modal-close-icon');
+  const facCancelBtn = document.getElementById('fac-cancel-btn');
+  const facForm = document.getElementById('fac-form');
+  const facModalTitle = document.getElementById('fac-modal-title');
+  const facNameLabel = document.getElementById('fac-name-label');
+
+  let allFacilities = [];
+
+  // MOCK LocalStorage Sync temporarily
+  function loadFacilities() {
+    try {
+      const stored = localStorage.getItem('mockFacilities');
+      if (stored) {
+        allFacilities = JSON.parse(stored);
+      } else {
+        // Initial Mock Data
+        allFacilities = [
+          { id: 'b1', type: 'BUILDING', name: 'อาคารทับทิมสยาม', category: 'ACADEMIC', capacity: 0, 
+            children: [{ id: 'r1', type: 'ROOM', name: 'ห้อง 101', capacity: 40 }] },
+          { id: 'b2', type: 'BUILDING', name: 'อาคารอเนกประสงค์', category: 'MULTIPURPOSE', capacity: 500, children: [] }
+        ];
+        saveFacilities();
+      }
+      renderFacilityTree();
+    } catch {
+      if(facTreeContainer) facTreeContainer.innerHTML = 'Error loading facilities';
+    }
+  }
+
+  function saveFacilities() {
+    localStorage.setItem('mockFacilities', JSON.stringify(allFacilities));
+  }
+
+  function getFacility(id) {
+    for (let b of allFacilities) {
+      if (b.id === id) return b;
+      const child = b.children?.find(r => r.id === id);
+      if (child) return child;
+    }
+    return null;
+  }
+
+  function renderFacilityTree() {
+    if (!facTreeContainer) return;
+    if (allFacilities.length === 0) {
+      facTreeContainer.innerHTML = '<div style="text-align: center; padding: 2rem; color: #64748b;">ไม่มีข้อมูลอาคาร/สถานที่</div>';
+      return;
+    }
+
+    let html = '';
+    allFacilities.forEach(b => {
+      let bCapacity = b.capacity;
+      // If it has rooms, we can automatically calculate total capacity or just display its capacity
+      const childrenCapacity = (b.children || []).reduce((sum, r) => sum + (Number(r.capacity) || 0), 0);
+      const displayCap = bCapacity > 0 ? bCapacity : childrenCapacity;
+
+      const catNames = { ACADEMIC: 'อาคารเรียน', MULTIPURPOSE: 'อาคารอเนกประสงค์', ADMINISTRATION: 'อาคารอำนวยการ', OTHER: 'พื้นที่อื่นๆ' };
+      const bCapLabel = catNames[b.category] || 'พื้นที่อื่นๆ';
+
+      html += `
+        <div class="fac-tree-node">
+          <div class="fac-tree-header" onclick="this.parentElement.classList.toggle('expanded')">
+            <div class="fac-tree-title">
+              <span class="fac-chevron"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+              <span style="font-size:1.2rem;">🏢</span> 
+              <span>${escapeHtml(b.name)} <span style="font-size: 0.75rem; background: #e2e8f0; color: #475569; padding: 2px 6px; border-radius: 4px; margin-left: 6px;">หมวด: ${bCapLabel}</span></span>
+              ${displayCap > 0 ? `<span class="fac-tree-cap">รองรับรวม: ${displayCap} คน</span>` : ''}
+            </div>
+            <div class="fac-tree-actions" onclick="event.stopPropagation()">
+              <button class="btn-outline" style="padding: 0.2rem 0.6rem; font-size: 0.8rem; min-height: unset; border-radius: 6px; box-shadow: none;" onclick="openFacModal('ROOM', null, '${b.id}')">+ เพิ่มหน่วยย่อย</button>
+              <button class="icon-btn" onclick="openFacModal('BUILDING', '${b.id}')" title="บริหารจัดการข้อมูล">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="icon-btn danger" onclick="deleteFacility('${b.id}', 'BUILDING')" title="ลบข้อมูลอาคารหลัก">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="fac-tree-children">
+            ${(b.children || []).length === 0 ? '<div style="color:var(--color-text-secondary); font-size:0.85rem;">(ยังไม่มีการระบุหน่วยย่อยภายในอาคารนี้)</div>' : b.children.map(r => `
+              <div class="fac-tree-child">
+                <div>
+                  <span style="font-weight: 600; font-size: 0.95rem;">${escapeHtml(r.name)}</span>
+                  ${r.capacity > 0 ? `<span style="font-size: 0.8rem; color: var(--color-text-secondary); margin-left: 0.5rem;">(รองรับ ${r.capacity} คน)</span>` : ''}
+                </div>
+                <div class="fac-tree-actions">
+                  <button class="icon-btn" onclick="openFacModal('ROOM', '${r.id}', '${b.id}')" title="แก้ไขข้อมูล">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button class="icon-btn danger" onclick="deleteFacility('${r.id}', 'ROOM', '${b.id}')" title="ลบข้อมูลหน่วยย่อย">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    });
+    facTreeContainer.innerHTML = html;
+  }
+
+  window.openFacModal = (type, editId = null, parentId = null, preCategory = null) => {
+    facForm.reset();
+    document.getElementById('fac-id').value = editId || '';
+    document.getElementById('fac-type').value = type;
+    document.getElementById('fac-parent-id').value = parentId || '';
+
+    const catGroup = document.getElementById('fac-category-group');
+    if (preCategory && document.getElementById('fac-category')) {
+      document.getElementById('fac-category').value = preCategory;
+    }
+
+    if (type === 'BUILDING') {
+      facModalTitle.textContent = editId ? 'แก้ไขข้อมูลอาคารหลัก' : 'เพิ่มข้อมูลอาคารหลัก';
+      facNameLabel.textContent = 'ชื่ออาคารหลัก';
+      if (catGroup) catGroup.style.display = 'block';
+    } else {
+      facModalTitle.textContent = editId ? 'แก้ไขข้อมูลหน่วยย่อย/ห้อง' : 'เพิ่มข้อมูลหน่วยย่อย/ห้อง';
+      facNameLabel.textContent = 'ชื่อหน่วยย่อย / ห้องปฏิบัติการ';
+      if (catGroup) catGroup.style.display = 'none';
+    }
+
+    const capLabel = document.querySelector('label[for="fac-capacity"]');
+
+    if (editId) {
+      const item = getFacility(editId);
+      if (item) {
+        document.getElementById('fac-name').value = item.name;
+        document.getElementById('fac-capacity').value = item.capacity || 0;
+        if (type === 'BUILDING' && item.category) {
+          document.getElementById('fac-category').value = item.category;
+        }
+        if (capLabel) {
+          capLabel.innerHTML = `รองรับ (คน) <span style="font-weight:normal; font-size:0.8rem; color:var(--color-accent-primary); margin-left:8px;">(ปัจจุบัน: ${item.capacity || 0})</span>`;
+        }
+      }
+    } else {
+      if (capLabel) capLabel.textContent = 'รองรับ (คน)';
+    }
+
+    facModal.classList.add('active');
+  };
+
+  facAddBldgBtn?.addEventListener('click', () => openFacModal('BUILDING'));
+  facCancelBtn?.addEventListener('click', () => facModal.classList.remove('active'));
+  facModalCloseIcon?.addEventListener('click', () => facModal.classList.remove('active'));
+
+  facForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const id = document.getElementById('fac-id').value;
+    const type = document.getElementById('fac-type').value;
+    const parentId = document.getElementById('fac-parent-id').value;
+    const name = document.getElementById('fac-name').value.trim();
+    const capacity = parseInt(document.getElementById('fac-capacity').value) || 0;
+    const category = document.getElementById('fac-category').value;
+
+    if (id) {
+       // Edit
+       const item = getFacility(id);
+       if (item) {
+         item.name = name;
+         item.capacity = capacity;
+         if (type === 'BUILDING') item.category = category;
+       }
+    } else {
+       // Add
+       const newId = 'fac_' + Date.now();
+       if (type === 'BUILDING') {
+         allFacilities.push({ id: newId, type: 'BUILDING', name, category, capacity, children: [] });
+       } else {
+         const parent = allFacilities.find(b => b.id === parentId);
+         if (parent) {
+           parent.children.push({ id: newId, type: 'ROOM', name, capacity });
+         }
+       }
+    }
+    saveFacilities();
+    renderFacilityTree();
+    facModal.classList.remove('active');
+  });
+
+  window.deleteFacility = (id, type, parentId = null) => {
+    if (!confirm('ยืนยันการลบข้อมูล? (การลบข้อมูลอาคารหลักจะส่งผลให้ข้อมูลหน่วยย่อยภายในถูกลบทั้งหมด)')) return;
+    if (type === 'BUILDING') {
+      allFacilities = allFacilities.filter(b => b.id !== id);
+    } else {
+      const parent = allFacilities.find(b => b.id === parentId);
+      if (parent) {
+        parent.children = parent.children.filter(r => r.id !== id);
+      }
+    }
+    saveFacilities();
+    renderFacilityTree();
+  };
+
+  // Init loads moved to bottom
+  
+  // ─── PARTNER LOGIC (สถานประกอบการ) ──────────────────────────────────────────
+  let allPartners = [];
+  const partnerListContainer = document.getElementById('partner-list-container');
+  const partnerModal = document.getElementById('partner-modal');
+  const partnerForm = document.getElementById('partner-form');
+  const partnerLogoInput = document.getElementById('partner-logo-input');
+  const partnerLogoPreview = document.getElementById('partner-logo-preview');
+  const partnerLogoPlaceholder = document.getElementById('partner-logo-placeholder');
+  const partnerLogoHidden = document.getElementById('partner-logo-hidden');
+
+  function savePartners() {
+    localStorage.setItem('mockPartners', JSON.stringify(allPartners));
+  }
+
+  function loadPartners() {
+    try {
+      const stored = localStorage.getItem('mockPartners');
+      if (stored) {
+        allPartners = JSON.parse(stored);
+      } else {
+        // Initial Mock Data
+        allPartners = [];
+      }
+      renderPartners();
+    } catch {
+      if(partnerListContainer) partnerListContainer.innerHTML = 'Error loading partners';
+    }
+  }
+
+  function renderPartners() {
+    if (!partnerListContainer) return;
+    if (allPartners.length === 0) {
+      partnerListContainer.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #64748b;">ยังไม่มีข้อมูลสถานประกอบการ</div>';
+      return;
+    }
+
+    let html = '';
+    allPartners.forEach(p => {
+      let tagsHtml = '';
+      if (p.tags && p.tags.trim()) {
+        const tags = p.tags.split(',').map(t => t.trim()).filter(t => t);
+        tagsHtml = tags.map(t => `<span style="background: var(--color-accent-primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; margin-right: 4px;">${escapeHtml(t)}</span>`).join('');
+      }
+
+      html += `
+        <div style="border: 1px solid var(--color-border); border-radius: 12px; padding: 1.5rem; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); position: relative;">
+          
+          <div style="position: absolute; top: 1rem; right: 1rem; display: flex; gap: 0.5rem;">
+            <button class="icon-btn" onclick="openPartnerModal('${p.id}')" title="แก้ไขข้อมูล">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="icon-btn danger" onclick="deletePartner('${p.id}')" title="ลบข้อมูล">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            </button>
+          </div>
+
+          <div style="height: 100px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; background: #f8fafc; border-radius: 8px;">
+            ${p.logo ? `<img src="${p.logo}" alt="Logo" style="max-height: 80px; max-width: 80%; object-fit: contain;">` : `<span style="color: #94a3b8; font-size: 2rem;">🏢</span>`}
+          </div>
+          
+          <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">${escapeHtml(p.name)}</h3>
+          
+          ${tagsHtml ? `<div style="margin-bottom: 0.75rem;">${tagsHtml}</div>` : ''}
+          
+          ${p.address ? `<p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: 0.5rem; line-height: 1.4;"><span style="font-weight: 600;">ที่อยู่:</span> ${escapeHtml(p.address)}</p>` : ''}
+          ${p.coords ? `<p style="font-size: 0.8rem; color: #64748b; font-family: monospace;">📌 ${escapeHtml(p.coords)}</p>` : ''}
+        </div>
+      `;
+    });
+    
+    partnerListContainer.innerHTML = html;
+  }
+
+  window.openPartnerModal = (editId = null) => {
+    partnerForm.reset();
+    document.getElementById('partner-id').value = editId || '';
+    document.getElementById('partner-modal-title').textContent = editId ? 'แก้ไขสถานประกอบการ' : 'เพิ่มสถานประกอบการ';
+    
+    // Reset logo preview
+    partnerLogoPreview.src = '';
+    partnerLogoPreview.style.display = 'none';
+    partnerLogoPlaceholder.style.display = 'block';
+    partnerLogoHidden.value = '';
+
+    if (editId) {
+      const p = allPartners.find(x => x.id === editId);
+      if (p) {
+        document.getElementById('partner-name').value = p.name || '';
+        document.getElementById('partner-tags').value = p.tags || '';
+        document.getElementById('partner-address').value = p.address || '';
+        document.getElementById('partner-coords').value = p.coords || '';
+        
+        if (p.logo) {
+          partnerLogoPreview.src = p.logo;
+          partnerLogoPreview.style.display = 'block';
+          partnerLogoPlaceholder.style.display = 'none';
+          partnerLogoHidden.value = p.logo;
+        }
+      }
+    }
+
+    partnerModal.classList.add('active');
+  };
+
+  window.deletePartner = (id) => {
+    if (!confirm('ยืนยันการลบสถานประกอบการนี้?')) return;
+    allPartners = allPartners.filter(x => x.id !== id);
+    savePartners();
+    renderPartners();
+  };
+
+  // Partner Event Listeners
+  document.getElementById('partner-add-btn')?.addEventListener('click', () => openPartnerModal());
+  document.getElementById('partner-cancel-btn')?.addEventListener('click', () => partnerModal.classList.remove('active'));
+  document.getElementById('partner-modal-close-btn')?.addEventListener('click', () => partnerModal.classList.remove('active'));
+
+  partnerLogoInput?.addEventListener('change', function() {
+    const file = this.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        partnerLogoPreview.src = e.target.result;
+        partnerLogoPreview.style.display = 'block';
+        partnerLogoPlaceholder.style.display = 'none';
+        partnerLogoHidden.value = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  partnerForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const id = document.getElementById('partner-id').value;
+    const itemData = {
+      name: document.getElementById('partner-name').value.trim(),
+      tags: document.getElementById('partner-tags').value.trim(),
+      address: document.getElementById('partner-address').value.trim(),
+      coords: document.getElementById('partner-coords').value.trim(),
+      logo: partnerLogoHidden.value
+    };
+
+    if (id) {
+       // Edit
+       const p = allPartners.find(x => x.id === id);
+       if (p) Object.assign(p, itemData);
+    } else {
+       // Add
+       itemData.id = 'partner_' + Date.now();
+       allPartners.push(itemData);
+    }
+    
+    savePartners();
+    renderPartners();
+    partnerModal.classList.remove('active');
+  });
+
+  // ─── BUDGET MANAGEMENT ──────────────────────────────────────────────
+  let allBudgets = [];
+  const budgetModal = document.getElementById('budget-modal');
+  const budgetForm = document.getElementById('budget-form');
+  const budgetListContainer = document.getElementById('budget-list-container');
+
+  const saveBudgets = () => localStorage.setItem('mockBudgets', JSON.stringify(allBudgets));
+  const loadBudgets = () => {
+    const stored = localStorage.getItem('mockBudgets');
+    if (stored) {
+      allBudgets = JSON.parse(stored);
+    } else {
+      // Sample data
+      allBudgets = [
+        { id: 'b1', year: 2567, title: 'โครงการพัฒนาห้องปฏิบัติการคอมพิวเตอร์', category: 'งบลงทุน', amount: 500000, status: 'ดำเนินการเสร็จสิ้น' },
+        { id: 'b2', year: 2567, title: 'ค่าจ้างครูอัตราจ้างประจำปี', category: 'งบดำเนินงาน', amount: 1200000, status: 'กำลังดำเนินการ' },
+      ];
+      saveBudgets();
+    }
+    renderBudgets();
+  };
+
+  const renderBudgets = () => {
+    if (!budgetListContainer) return;
+
+    let totalAmount = 0;
+    let completedCount = 0;
+
+    budgetListContainer.innerHTML = allBudgets.length > 0 ? allBudgets.map(item => {
+      totalAmount += parseFloat(item.amount || 0);
+      if (item.status === 'ดำเนินการเสร็จสิ้น') completedCount++;
+
+      let statusClass = 'status-pending';
+      if (item.status === 'กำลังดำเนินการ') statusClass = 'status-progress';
+      if (item.status === 'ดำเนินการเสร็จสิ้น') statusClass = 'status-success';
+      if (item.status === 'ยกเลิก') statusClass = 'status-danger';
+
+      return `
+        <tr>
+          <td style="text-align:center; color: var(--color-text-secondary); font-weight: 600;">${item.year}</td>
+          <td>
+            <div style="font-weight: 700; color: #0f172a;">${escapeHtml(item.title)}</div>
+          </td>
+          <td><span class="category-tag">${item.category}</span></td>
+          <td>
+            <div style="font-weight: 800; color: var(--color-accent-primary); font-family: 'Inter', sans-serif;">
+              ฿${parseFloat(item.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            </div>
+          </td>
+          <td><span class="status-badge ${statusClass}">${item.status}</span></td>
+          <td>
+            <div style="display: flex; gap: 0.5rem; justify-content: center;">
+              <button class="icon-btn" onclick="openBudgetModal('${item.id}')" title="แก้ไข">✏️</button>
+              <button class="icon-btn danger" onclick="deleteBudget('${item.id}')" title="ลบ">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('') : `<tr><td colspan="6" style="text-align:center; padding: 3rem; color: #94a3b8;">ยังไม่มีข้อมูลรายการงบประมาณ</td></tr>`;
+
+    // Update Stats
+    if (document.getElementById('budget-total-amount')) {
+      document.getElementById('budget-total-amount').textContent = '฿' + totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 });
+    }
+    if (document.getElementById('budget-total-items')) {
+      document.getElementById('budget-total-items').textContent = allBudgets.length;
+    }
+    if (document.getElementById('budget-completed-items')) {
+      document.getElementById('budget-completed-items').textContent = completedCount;
+    }
+  };
+
+  window.openBudgetModal = (id = null) => {
+    budgetForm.reset();
+    document.getElementById('budget-id').value = '';
+    document.getElementById('budget-modal-title').textContent = 'เพิ่มรายการงบประมาณ';
+
+    if (id) {
+      const item = allBudgets.find(x => x.id === id);
+      if (item) {
+        document.getElementById('budget-modal-title').textContent = 'แก้ไขรายการงบประมาณ';
+        document.getElementById('budget-id').value = item.id;
+        document.getElementById('budget-year').value = item.year;
+        document.getElementById('budget-title').value = item.title;
+        document.getElementById('budget-category').value = item.category;
+        document.getElementById('budget-amount').value = item.amount;
+        document.getElementById('budget-status').value = item.status;
+      }
+    }
+    budgetModal.classList.add('active');
+  };
+
+  window.deleteBudget = (id) => {
+    if (!confirm('ต้องการลบรายการงบประมาณนี้ใช่หรือไม่?')) return;
+    allBudgets = allBudgets.filter(x => x.id !== id);
+    saveBudgets();
+    renderBudgets();
+  };
+
+  document.getElementById('budget-add-btn')?.addEventListener('click', () => openBudgetModal());
+  document.getElementById('budget-cancel-btn')?.addEventListener('click', () => budgetModal.classList.remove('active'));
+  document.getElementById('budget-modal-close-btn')?.addEventListener('click', () => budgetModal.classList.remove('active'));
+
+  budgetForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const id = document.getElementById('budget-id').value;
+    const itemData = {
+      year: document.getElementById('budget-year').value,
+      title: document.getElementById('budget-title').value.trim(),
+      category: document.getElementById('budget-category').value,
+      amount: parseFloat(document.getElementById('budget-amount').value),
+      status: document.getElementById('budget-status').value
+    };
+
+    if (id) {
+      const b = allBudgets.find(x => x.id === id);
+      if (b) Object.assign(b, itemData);
+    } else {
+      itemData.id = 'budget_' + Date.now();
+      allBudgets.push(itemData);
+    }
+
+    saveBudgets();
+    renderBudgets();
+    budgetModal.classList.remove('active');
+  });
+
+  // ─── INITIALIZE ALL COMPONENTS ──────────────────────────────────────────────
   loadPR();
   loadPersonnel();
   loadDocs();
+  loadITA();
+  loadStudentData();
   fetchUniqueDuties();
-  
+  loadFacilities();
+  loadPartners();
+  loadBudgets();
+
   // Logout
   const logoutBtn = document.getElementById('logout-btn');
   logoutBtn?.addEventListener('click', () => {

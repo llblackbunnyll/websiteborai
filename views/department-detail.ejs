@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <link rel="icon" href="/my-logo.webp" type="image/webp" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --accent-color: #6b21a8;
+      --accent-light: #9333ea;
+      --text-main: #1e293b;
+      --text-muted: #475569;
+      --glass-border: rgba(107, 33, 168, 0.1);
+    }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: #fcfcfc;
+    }
+
+    /* Sub Banner */
+    .dept-hero {
+      height: 380px;
+      background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+    }
+
+    .dept-hero-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.4;
+    }
+
+    .dept-hero-content {
+      position: relative;
+      z-index: 10;
+      padding: 0 20px;
+    }
+
+    .dept-hero-label {
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #e9d5ff;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .dept-hero-title {
+      font-size: 3.5rem;
+      font-weight: 800;
+      margin-bottom: 15px;
+    }
+
+    .dept-breadcrumb {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+    .dept-breadcrumb a { color: white; text-decoration: none; }
+    .dept-breadcrumb span { margin: 0 8px; }
+
+    /* Page Layout */
+    .detail-container {
+      max-width: 1200px;
+      margin: -50px auto 100px;
+      padding: 0 20px;
+      position: relative;
+      z-index: 20;
+    }
+
+    .grid-layout {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 30px;
+    }
+
+    .detail-card {
+      background: white;
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 0 10px 30px rgba(107, 33, 168, 0.04);
+      border: 1px solid #f1f5f9;
+      height: fit-content;
+    }
+
+    /* Curriculum Tabs */
+    .tab-nav {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 10px;
+    }
+
+    .tab-btn {
+      padding: 10px 20px;
+      border: none;
+      background: none;
+      font-family: inherit;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #94a3b8;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .tab-btn.active {
+      color: var(--accent-color);
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -12px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--accent-color);
+      border-radius: 10px;
+    }
+
+    .subject-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .subject-item {
+      padding: 15px 20px;
+      background: #f8fafc;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      font-weight: 500;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .subject-item i {
+      color: var(--accent-light);
+    }
+
+    /* Job Section */
+    .sidebar-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin-bottom: 25px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .job-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .job-tag {
+      background: #f5f3ff;
+      color: #7c3aed;
+      padding: 12px 18px;
+      border-radius: 14px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-left: 4px solid #7c3aed;
+    }
+
+    /* Faculty Section */
+    .faculty-section {
+      margin-top: 80px;
+    }
+
+    .faculty-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 30px;
+      margin-top: 40px;
+    }
+
+    .faculty-card {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      text-align: center;
+      border: 1px solid #f1f5f9;
+      transition: 0.3s ease;
+    }
+
+    .faculty-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.05);
+    }
+
+    .faculty-img {
+      width: 120px;
+      height: 120px;
+      border-radius: 100px;
+      object-fit: cover;
+      margin: 0 auto 20px;
+      border: 4px solid #f5f3ff;
+    }
+
+    .faculty-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 5px;
+    }
+
+    .faculty-pos {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .faculty-empty {
+      text-align: center;
+      padding: 60px;
+      background: #f8fafc;
+      border-radius: 20px;
+      color: #94a3b8;
+      grid-column: 1 / -1;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.6s ease-out;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Tabs Content Logic */
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; animation: fadeIn 0.5s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 992px) {
+      .grid-layout { grid-template-columns: 1fr; }
+      .dept-hero-title { font-size: 2.5rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <%- include('partials/navbar') %>
+
+  <!-- Hero Section -->
+  <header class="dept-hero">
+    <canvas id="hero-canvas" class="dept-hero-canvas"></canvas>
+    <div class="dept-hero-content reveal">
+      <span class="dept-hero-label">สาขาวิชาในสถานศึกษา</span>
+      <h1 class="dept-hero-title">สาขาวิชา<%= dept.name %></h1>
+      <div class="dept-breadcrumb">
+        <a href="/">หน้าแรก</a> <span>/</span> <a href="/curriculum">หลักสูตร</a> <span>/</span> <span><%= dept.name %></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="detail-container">
+    <div class="grid-layout">
+      <!-- Main Content: Curriculum Subjects -->
+      <section class="detail-card reveal">
+        <div class="sidebar-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          รายวิชาที่น่าสนใจในหลักสูตร
+        </div>
+        
+        <div class="tab-nav">
+          <button class="tab-btn active" onclick="openTab(event, 'pvc')">ระดับ ปวช.</button>
+          <button class="tab-btn" onclick="openTab(event, 'hvc')">ระดับ ปวส.</button>
+        </div>
+
+        <div id="pvc" class="tab-pane active">
+          <ul class="subject-list">
+            <% dept.curriculum.pvc.forEach(subject => { %>
+              <li class="subject-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <%= subject %>
+              </li>
+            <% }) %>
+          </ul>
+        </div>
+
+        <div id="hvc" class="tab-pane">
+          <ul class="subject-list">
+            <% dept.curriculum.hvc.forEach(subject => { %>
+              <li class="subject-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <%= subject %>
+              </li>
+            <% }) %>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Sidebar: Description & Career Paths -->
+      <aside class="reveal" style="display: flex; flex-direction: column; gap: 30px;">
+        <div class="detail-card" style="padding: 30px;">
+          <div class="sidebar-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            เกี่ยวกับสาขา
+          </div>
+          <p style="color: var(--text-muted); line-height: 1.8; font-size: 1.05rem; margin-bottom: 20px;">
+            <%= dept.description %>
+          </p>
+          <div class="dept-skills" style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <% (dept.skills || []).forEach(skill => { %>
+              <span class="skill-tag" style="font-size: 0.8rem; background: #f8fafc; color: #64748b; padding: 6px 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-weight: 600;"><%= skill %></span>
+            <% }) %>
+          </div>
+        </div>
+
+        <div class="detail-card" style="padding: 30px;">
+          <div class="sidebar-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
+            อาชีพที่รองรับ
+          </div>
+          <div class="job-list">
+            <% dept.jobs.forEach(job => { %>
+              <div class="job-tag"><%= job %></div>
+            <% }) %>
+          </div>
+        </div>
+        <div class="detail-card" style="padding: 30px;">
+          <div class="sidebar-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            เอกสารหลักสูตร
+          </div>
+          <a href="<%= dept.pdfUrl %>" target="_blank" class="job-tag" style="display: flex; align-items: center; justify-content: space-between; text-decoration: none; border-left: 4px solid #7c3aed; background: #f5f3ff;">
+            <span>หลักสูตร ปวช. 2567 (ไฟล์จริง)</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          </a>
+          <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 10px;">* ข้อมูลจากสำนักมาตรฐานการอาชีวศึกษา (อ้างอิงไฟล์ล่าสุด)</p>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Faculty Section -->
+    <section class="faculty-section reveal">
+      <div class="sidebar-title" style="justify-content: center; font-size: 1.8rem; margin-bottom: 10px;">
+        คณะครูผู้สอนประจำสาขา
+      </div>
+      <p style="text-align: center; color: var(--text-muted); margin-bottom: 40px;">ทีมครูผู้เชี่ยวชาญพร้อมถ่ายทอดความรู้และประสบการณ์</p>
+      
+      <div class="faculty-grid">
+        <% if (faculty && faculty.length > 0) { %>
+          <% faculty.forEach(teacher => { %>
+            <div class="faculty-card reveal">
+              <img src="<%= teacher.imageUrl || '/images/default-person.svg' %>" 
+                   alt="<%= teacher.firstName %>" 
+                   class="faculty-img" 
+                   onerror="this.onerror=null; this.src='/images/default-person.svg';"
+                   style="background: #f1f5f9;">
+              <div class="faculty-name">
+                <%= (teacher.prefix || '') %><%= teacher.firstName %> <%= teacher.lastName %>
+              </div>
+              <div class="faculty-pos"><%= teacher.position || 'ครูผู้สอนประจำแผนก' %></div>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <div class="faculty-empty">
+             <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 15px; opacity: 0.5;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+             <p>กำลังอัปเดตรายชื่อครูในแผนก...</p>
+          </div>
+        <% } %>
+      </div>
+    </section>
+  </main>
+
+  <%- include('partials/footer') %>
+
+  <script>
+    function openTab(evt, tabName) {
+      const tabPanes = document.querySelectorAll('.tab-pane');
+      tabPanes.forEach(pane => pane.classList.remove('active'));
+
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      tabBtns.forEach(btn => btn.classList.remove('active'));
+
+      const targetPane = document.getElementById(tabName);
+      if (targetPane) {
+        targetPane.classList.add('active');
+      }
+
+      // If called via event (click)
+      if (evt && evt.currentTarget) {
+        evt.currentTarget.classList.add('active');
+      } else {
+        // Find button by tabName for automatic switching
+        const matchingBtn = document.querySelector(`button[onclick*="'${tabName}'"]`);
+        if (matchingBtn) matchingBtn.classList.add('active');
+      }
+    }
+
+    // Handle initial hash on load
+    window.addEventListener('DOMContentLoaded', () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash === 'pvc' || hash === 'hvc') {
+        openTab(null, hash);
+      }
+    });
+
+    // Scroll Reveal
+    const reveal = () => {
+      const reveals = document.querySelectorAll('.reveal');
+      reveals.forEach(el => {
+        const windowHeight = window.innerHeight;
+        const revealTop = el.getBoundingClientRect().top;
+        if (revealTop < windowHeight - 50) {
+          el.classList.add('visible');
+        }
+      });
+    }
+    window.addEventListener('scroll', reveal);
+    reveal();
+
+    // Hero Canvas
+    const canvas = document.getElementById('hero-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = 380;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+      constructor() { this.reset(); }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2 + 1;
+        this.speedX = Math.random() * 0.4 - 0.2;
+        this.speedY = Math.random() * 0.4 - 0.2;
+        this.opacity = Math.random() * 0.5;
+      }
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+      }
+      draw() {
+        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    for (let i = 0; i < 40; i++) particles.push(new Particle());
+    function animate() {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      particles.forEach(p => { p.update(); p.draw(); });
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+
+</html>

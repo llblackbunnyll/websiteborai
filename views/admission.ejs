@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <meta name="description" content="หน้าต่างการรับสมัครนักเรียนนักศึกษาใหม่ วิทยาลัยการอาชีพบ่อไร่ พร้อมขั้นตอนและรายละเอียดการสมัคร">
+  <link rel="icon" href="/my-logo.webp" type="image/webp">
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #7042f8;
+      --secondary: #0ea5e9;
+      --accent: #ec4899;
+      --dark: #0f172a;
+      --light: #f8fafc;
+      --glass-bg: rgba(255, 255, 255, 0.85);
+      --glass-border: rgba(112, 66, 248, 0.2);
+    }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: var(--light);
+      color: var(--dark);
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Hero Background & Animation */
+    .admission-hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 120px 20px 60px;
+      overflow: hidden;
+      background: radial-gradient(circle at top right, rgba(112, 66, 248, 0.1), transparent 40%),
+                  radial-gradient(circle at bottom left, rgba(14, 165, 233, 0.1), transparent 40%);
+    }
+
+    .bg-shape {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: 0;
+      opacity: 0.6;
+      animation: float 10s ease-in-out infinite alternate;
+    }
+
+    .shape-1 {
+      width: 400px;
+      height: 400px;
+      background: var(--primary);
+      top: -100px;
+      left: -100px;
+    }
+
+    .shape-2 {
+      width: 500px;
+      height: 500px;
+      background: var(--secondary);
+      bottom: -150px;
+      right: -100px;
+      animation-delay: -5s;
+    }
+
+    @keyframes float {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(30px, 50px) scale(1.1); }
+    }
+
+    .content-wrapper {
+      position: relative;
+      z-index: 10;
+      max-width: 1000px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 40px;
+      opacity: 0;
+      transform: translateY(30px);
+      animation: fadeInUp 0.8s forwards;
+    }
+
+    @keyframes fadeInUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .header-section {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 8px 16px;
+      background: rgba(112, 66, 248, 0.1);
+      color: var(--primary);
+      border-radius: 100px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(10px);
+    }
+
+    h1 {
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p.subtitle {
+      font-size: 1.1rem;
+      color: #64748b;
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* Main CTA Button */
+    .cta-container {
+      display: flex;
+      justify-content: center;
+      margin: 40px 0;
+      position: relative;
+    }
+
+    .cta-container::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: calc(100% + 40px);
+      height: calc(100% + 40px);
+      background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+      border-radius: 100px;
+      filter: blur(20px);
+      opacity: 0.3;
+      z-index: -1;
+      animation: pulseGlow 3s infinite alternate;
+    }
+
+    @keyframes pulseGlow {
+      from { opacity: 0.3; transform: translate(-50%, -50%) scale(0.95); }
+      to { opacity: 0.6; transform: translate(-50%, -50%) scale(1.05); }
+    }
+
+    .btn-main {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      text-decoration: none;
+      padding: 18px 40px;
+      border-radius: 100px;
+      font-size: 1.4rem;
+      font-weight: 700;
+      box-shadow: 0 10px 25px rgba(112, 66, 248, 0.3);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      border: 2px solid rgba(255,255,255,0.2);
+    }
+
+    .btn-main:hover {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 15px 35px rgba(112, 66, 248, 0.4);
+      background: linear-gradient(135deg, var(--secondary), var(--primary));
+    }
+
+    .btn-icon {
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Image Upload Section */
+    .image-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 30px;
+      padding: 30px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+      text-align: center;
+    }
+
+    .image-wrapper {
+      position: relative;
+      width: 100%;
+      min-height: 400px;
+      background: #f1f5f9;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 2px dashed rgba(112, 66, 248, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Fallback inner content when no actual image is present */
+    .image-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      color: var(--primary);
+      opacity: 0.7;
+    }
+
+    .image-placeholder svg {
+      width: 64px;
+      height: 64px;
+    }
+
+    .image-wrapper img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 10;
+    }
+
+    /* Note Card */
+    .note-card {
+      margin-top: 20px;
+      background: rgba(255,255,255,0.6);
+      padding: 16px 24px;
+      border-radius: 15px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      border-left: 5px solid var(--secondary);
+      font-size: 0.95rem;
+      color: #334155;
+    }
+
+  </style>
+</head>
+<body>
+  
+  <%- include('partials/navbar') %>
+
+  <main class="admission-hero">
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <div class="content-wrapper">
+      <div class="header-section">
+        <span class="badge">ระบบรับสมัครออนไลน์</span>
+        <h1>สมัครเรียนออนไลน์</h1>
+        <p class="subtitle">วิทยาลัยการอาชีพบ่อไร่ เปิดรับสมัครนักเรียน นิสิต นักศึกษาใหม่ประจำปีการศึกษา เข้าสู่ระบบการรับสมัครของอาชีวศึกษาได้โดยตรงผ่านปุ่มด้านล่าง</p>
+      </div>
+
+      <div class="cta-container">
+        <a href="https://admission.vec.go.th/" target="_blank" rel="noopener noreferrer" class="btn-main">
+          เข้าสู่เว็บไซต์รับสมัคร (admission.vec.go.th)
+          <div class="btn-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </div>
+        </a>
+      </div>
+
+      <div class="image-card">
+        <h2 style="font-size: 1.5rem; margin-bottom: 20px; color: var(--dark);">ขั้นตอนและเอกสารประกอบการรับสมัคร</h2>
+        
+        <div class="image-wrapper">
+          <!-- TODO: Update src later when image is uploaded -->
+          <img src="/images/admission-steps.webp" alt="ขั้นตอนการสมัครเรียนออนไลน์" onerror="this.style.display='none'">
+          
+          <div class="image-placeholder">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <p><strong>รออัปเดตรูปภาพขั้นตอนการสมัคร</strong><br>สามารถนำรูปภาพการรับสมัครมาแทนที่ไฟล์ <code>/public/images/admission-steps.webp</code> ได้ทันที</p>
+          </div>
+        </div>
+
+        <div class="note-card">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          <div>
+            <strong>หมายเหตุคำแนะนำเบื้องต้น:</strong><br>
+            ผู้สมัครควรเตรียมเอกสารสำคัญให้พร้อม เช่น สำเนาบัตรประชาชน, สำเนาทะเบียนบ้าน, รูปถ่ายหน้าตรง และระเบียนแสดงผลการเรียน (ปพ.1) เข้าไปกรอกข้อมูลในเว็บไซต์ <a href="https://admission.vec.go.th/" target="_blank" style="color:var(--primary); text-decoration:none; font-weight:600;">admission.vec.go.th</a> ตามวันและเวลาที่กำหนด
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
+  
+  <script src="/js/main.js"></script>
+</body>
+</html>

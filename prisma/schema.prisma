@@ -50,6 +50,7 @@ model Personnel {
   department       String? // สังกัด
   duties           Json?   // ตำแหน่งหน้าที่รับผิดชอบในสถานศึกษา
   phone            String?
+  email            String?
   imageUrl         String?
   isDirector       Boolean @default(false)
   order            Int     @default(0)
@@ -65,9 +66,32 @@ model SiteSettings {
 model PublicDocument {
   id        String   @id @default(uuid())
   title     String
-  date      String   // e.g., "15 มี.ค. 2569"
-  type      String   // 'bidding' or 'general'
+  date      String // e.g., "15 มี.ค. 2569"
+  type      String // 'bidding' or 'general'
   fileUrl   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model ITAItem {
+  code        String   @id // O1, O2, ...
+  title       String
+  description String?  @db.Text
+  attachments Json? // Array of objects: [{ label: "...", url: "...", type: "file" | "link" }]
+  updatedAt   DateTime @updatedAt
+}
+
+model StudentEnrollment {
+  id             String   @id @default(uuid())
+  departmentSlug String   // e.g., 'automotive', 'accounting'
+  academicYear   String   // e.g., '2567'
+  semester       String   // '1' or '2'
+  pvc1           Int      @default(0)
+  pvc2           Int      @default(0)
+  pvc3           Int      @default(0)
+  pvs1           Int      @default(0)
+  pvs2           Int      @default(0)
+  updatedAt      DateTime @updatedAt
+
+  @@unique([departmentSlug, academicYear, semester])
 }
