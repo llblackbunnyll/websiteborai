@@ -96,12 +96,28 @@ function getAuthHeaders() {
       const targetId = btn.getAttribute('data-target');
       document.getElementById(targetId)?.classList.remove('hide');
       expandGroupOfActiveBtn(btn);
+
+      // Save to localStorage
+      localStorage.setItem('activeAdminTab', targetId);
     });
   });
 
-  // On load: find the currently active button and expand its group
-  const initialActive = document.querySelector('.nav-btn.active');
-  if (initialActive) expandGroupOfActiveBtn(initialActive);
+  // On load: restore saved tab or find the currently active button and expand its group
+  const savedTab = localStorage.getItem('activeAdminTab');
+  if (savedTab) {
+    const targetBtn = document.querySelector(`.nav-btn[data-target="${savedTab}"]`);
+    if (targetBtn) {
+      // Trigger click to activate the panel and expand group
+      targetBtn.click();
+    } else {
+      // Fallback to default
+      const initialActive = document.querySelector('.nav-btn.active');
+      if (initialActive) expandGroupOfActiveBtn(initialActive);
+    }
+  } else {
+    const initialActive = document.querySelector('.nav-btn.active');
+    if (initialActive) expandGroupOfActiveBtn(initialActive);
+  }
 
   // 2. PR PANEL LOGIC
   const prTbody = document.getElementById('pr-tbody');
@@ -1992,6 +2008,232 @@ function getAuthHeaders() {
   });
 
   loadAchievements();
+
+  // ─── DOWNLOAD DOCUMENTS PANEL ────────────────────────────────────────────────
+  const dlPanel = document.getElementById('downloads-panel');
+  const dlTbody = document.getElementById('dl-tbody');
+  const dlAddBtn = document.getElementById('dl-add-btn');
+  const dlFormContainer = document.getElementById('dl-form-container');
+  const dlCancelBtn = document.getElementById('dl-cancel-btn');
+  const dlForm = document.getElementById('dl-form');
+  const subdivisionDataList = document.getElementById('subdivision-list');
+
+  const predefinedSubDivisions = {
+    'ฝ่ายบริหารทรัพยากร': ['งานบริหารทั่วไป', 'งานบุคลากร', 'งานการเงิน', 'งานการบัญชี', 'งานพัสดุ', 'งานอาคารสถานที่', 'งานทะเบียน', 'งานประชาสัมพันธ์'],
+    'ฝ่ายยุทธศาสตร์และแผนงาน': ['งานวางแผนและงบประมาณ', 'งานศูนย์ความร่วมมือและอาชีวศึกษาทวิภาคี', 'งานมาตรฐานและการประกันคุณภาพการศึกษา', 'งานศูนย์ดิจิทัลและสื่อสารองค์กร', 'งานส่งเสริมการวิจัย นวัตกรรม และสิ่งประดิษฐ์', 'งานส่งเสริมธุรกิจและการเป็นผู้ประกอบการ', 'งานติดตามและประเมินผลการอาชีวศึกษา'],
+    'ฝ่ายกิจการนักเรียน นักศึกษา': ['งานกิจกรรมนักเรียน นักศึกษา', 'งานครูที่ปรึกษาและการแนะแนว', 'งานปกครองและความปลอดภัยนักเรียน นักศึกษา', 'งานสวัสดิการนักเรียน นักศึกษา', 'งานโครงการพิเศษและการบริการ'],
+    'ฝ่ายวิชาการ': ['แผนวิชา / ภาควิชา / คณะวิชา', 'งานพัฒนาหลักสูตรและการจัดการเรียนรู้', 'งานวัดผลและประเมินผล', 'งานอาชีวศึกษาระบบทวิภาคีและความร่วมมือ', 'งานวิทยบริการและเทคโนโลยีการศึกษา', 'งานการศึกษาพิเศษและความเสมอภาคทางการศึกษา', 'งานพัฒนาหลักสูตรสายเทคโนโลยีหรือสายปฏิบัติการ']
+  };
+
+  window.updateSubDivisions = (division) => {
+    if (!subdivisionDataList) return;
+    subdivisionDataList.innerHTML = '';
+    if (predefinedSubDivisions[division]) {
+      predefinedSubDivisions[division].forEach(sub => {
+        const option = document.createElement('option');
+        option.value = sub;
+        subdivisionDataList.appendChild(option);
+      });
+    }
+  };
+
+  async function loadDownloads() {
+    if (!dlTbody) return;
+    try {
+      const res = await fetch('/api/downloads', { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error('Failed to fetch');
+      const docs = await res.json();
+      
+      dlTbody.innerHTML = docs.length > 0 ? docs.map(doc => `
+        <tr>
+          <td>
+            <a href="${doc.fileUrl}" target="_blank" style="color:var(--color-accent-primary);font-weight:600;text-decoration:none;">
+              ${escapeHtml(doc.title)}
+            </a>
+            <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">📅 ${new Date(doc.createdAt).toLocaleDateString('th-TH')}</div>
+          </td>
+          <td><span class="category-tag">${escapeHtml(doc.division)}</span></td>
+          <td><span class="category-tag" style="background:rgba(20,184,166,0.1);color:#0d9488;border-color:rgba(20,184,166,0.2);">${escapeHtml(doc.subDivision)}</span></td>
+          <td style="text-align:right;">
+            <button class="icon-btn danger" onclick="deleteDownload('${doc.id}')" title="ลบเอกสาร">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          </td>
+        </tr>
+      `).join('') : `<tr><td colspan="4" style="text-align:center;">ไม่พบเอกสารดาวน์โหลด</td></tr>`;
+    } catch (e) {
+      dlTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:red;">โหลดข้อมูลล้มเหลว</td></tr>`;
+    }
+  }
+
+  window.deleteDownload = async (id) => {
+    if (!confirm('ยืนยันการลบเอกสารนี้? ไฟล์จะถูกลบออกจากระบบถาวร')) return;
+    try {
+      const res = await fetch(`/api/downloads/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      if (res.ok) {
+        alert('ลบเอกสารสำเร็จ');
+        loadDownloads();
+      } else {
+        alert('ลบเอกสารล้มเหลว');
+      }
+    } catch (err) { alert('ลบเอกสารล้มเหลว: ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์'); }
+  };
+
+  dlAddBtn?.addEventListener('click', () => {
+    dlForm.reset();
+    updateSubDivisions('');
+    dlFormContainer.classList.remove('hide');
+    dlFormContainer.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  dlCancelBtn?.addEventListener('click', () => {
+    dlFormContainer.classList.add('hide');
+  });
+
+  dlForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('adminToken');
+    const formData = new FormData(dlForm);
+    
+    try {
+      const res = await fetch('/api/downloads', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+      if (res.ok) {
+        alert('อัปโหลดเอกสารดาวน์โหลดสำเร็จ');
+        dlFormContainer.classList.add('hide');
+        loadDownloads();
+      } else {
+        const error = await res.json();
+        alert('เกิดข้อผิดพลาด: ' + error.message);
+      }
+    } catch (err) { alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'); }
+  });
+
+  if (document.getElementById('downloads-panel')) {
+    loadDownloads();
+  }
+
+  // ─── FAQ PANEL ─────────────────────────────────────────────────────────────
+  const faqPanel = document.getElementById('faq-panel');
+  const faqTbody = document.getElementById('faq-tbody');
+  const faqAddBtn = document.getElementById('faq-add-btn');
+  const faqFormContainer = document.getElementById('faq-form-container');
+  const faqCancelBtn = document.getElementById('faq-cancel-btn');
+  const faqForm = document.getElementById('faq-form');
+
+  async function loadFAQs() {
+    if (!faqTbody) return;
+    try {
+      const res = await fetch('/api/faqs');
+      const faqs = await res.json();
+      faqTbody.innerHTML = faqs.map(item => `
+        <tr>
+          <td><span class="badge" style="background:var(--color-accent-primary);">${item.order}</span></td>
+          <td><span class="badge" style="background:#f1f5f9; color:#64748b;">${escapeHtml(item.category)}</span></td>
+          <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+            <strong>${escapeHtml(item.question)}</strong>
+          </td>
+          <td style="text-align:right;">
+            <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+              <button class="btn-icon" onclick="editFAQ('${item.id}')" title="แก้ไข">✏️</button>
+              <button class="btn-icon" onclick="deleteFAQ('${item.id}')" title="ลบ">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    } catch (err) {
+      console.error(err);
+      faqTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">โหลดข้อมูลไม่สำเร็จ</td></tr>';
+    }
+  }
+
+  faqAddBtn?.addEventListener('click', () => {
+    faqForm.reset();
+    document.getElementById('faq-id').value = '';
+    document.getElementById('faq-form-title').innerText = 'เพิ่มคำถามใหม่';
+    faqFormContainer.classList.remove('hide');
+  });
+
+  faqCancelBtn?.addEventListener('click', () => faqFormContainer.classList.add('hide'));
+
+  faqForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('faq-id').value;
+    const body = {
+      question: document.getElementById('faq-question').value,
+      answer: document.getElementById('faq-answer').value,
+      category: document.getElementById('faq-category').value,
+      order: document.getElementById('faq-order').value
+    };
+
+    try {
+      const url = id ? `/api/faqs/${id}` : '/api/faqs';
+      const method = id ? 'PUT' : 'POST';
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(body)
+      });
+
+      if (res.ok) {
+        alert('บันทึกข้อมูลสำเร็จ');
+        faqFormContainer.classList.add('hide');
+        loadFAQs();
+      } else {
+        const error = await res.json();
+        alert('เกิดข้อผิดพลาด: ' + error.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+    }
+  });
+
+  window.editFAQ = async (id) => {
+    try {
+      const res = await fetch('/api/faqs'); // Optimization: could be separate GET /api/faqs/:id
+      const faqs = await res.json();
+      const item = faqs.find(f => f.id === id);
+      if (!item) return;
+
+      document.getElementById('faq-id').value = item.id;
+      document.getElementById('faq-question').value = item.question;
+      document.getElementById('faq-answer').value = item.answer;
+      document.getElementById('faq-category').value = item.category;
+      document.getElementById('faq-order').value = item.order;
+      document.getElementById('faq-form-title').innerText = 'แก้ไข FAQ';
+      faqFormContainer.classList.remove('hide');
+      faqFormContainer.scrollIntoView({ behavior: 'smooth' });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  window.deleteFAQ = async (id) => {
+    if (!confirm('ยืนยันการลบคำถามนี้?')) return;
+    try {
+      const res = await fetch(`/api/faqs/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        loadFAQs();
+      } else {
+        alert('ลบไม่สำเร็จ');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  if (faqPanel) loadFAQs();
+
 
   // Logout
   const logoutBtn = document.getElementById('logout-btn');

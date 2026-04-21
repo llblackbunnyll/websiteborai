@@ -1,0 +1,79 @@
+<section class="faq-section" id="faq">
+  <div class="container">
+    <div class="section-header" style="text-align: center; margin-bottom: 2rem;">
+      <h2 class="section-title">คำถามที่พบบ่อย (FAQ)</h2>
+      <p class="section-subtitle">รวบรวมข้อมูลที่ถูกสอบถามเข้ามามากที่สุด</p>
+    </div>
+
+    <% if (locals.faqs && faqs.length > 0) { %>
+      <div class="faq-accordion-container" style="max-width: 750px; margin: 0 auto;">
+        <% faqs.forEach((faq, index) => { %>
+          <div class="faq-item glass" style="margin-bottom: 0.75rem; border-radius: 1rem; overflow: hidden; transition: all 0.3s ease;">
+            <button class="faq-question" style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 1.15rem 1.5rem; background: none; border: none; cursor: pointer; text-align: left; font-size: 1.05rem; font-weight: 700; color: var(--color-text-primary);">
+              <span><%= faq.question %></span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.3s ease;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-answer">
+              <div style="padding: 0 1.5rem 1.15rem; color: var(--color-text-secondary); line-height: 1.7; font-size: 0.95rem;">
+                <%= faq.answer %>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<style>
+  .faq-section {
+    padding: 5.5rem 0 1.5rem;
+    position: relative;
+  }
+  
+  .faq-section .faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(255, 255, 255, 0.4);
+  }
+
+  .faq-section .faq-item.active {
+    border: 1px solid rgba(112, 66, 248, 0.2);
+    background: white;
+    box-shadow: 0 10px 25px rgba(112, 66, 248, 0.05);
+  }
+  
+  .faq-section .faq-item.active .faq-answer {
+    max-height: 500px;
+  }
+  
+  .faq-section .faq-item.active svg {
+    transform: rotate(180deg);
+    color: var(--color-accent-primary);
+  }
+
+  .faq-section .faq-item:not(.active):hover {
+    background: rgba(255, 255, 255, 0.85);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  }
+</style>
+
+<script>
+  (function() {
+    const faqItems = document.querySelectorAll('.faq-item');
+
+    // Accordion Toggle
+    faqItems.forEach(item => {
+      const btn = item.querySelector('.faq-question');
+      btn.addEventListener('click', () => {
+        const isActive = item.classList.contains('active');
+        // Close others
+        faqItems.forEach(other => other.classList.remove('active'));
+        // Toggle current
+        if (!isActive) item.classList.add('active');
+      });
+    });
+  })();
+</script>

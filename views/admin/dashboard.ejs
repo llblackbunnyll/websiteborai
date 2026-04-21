@@ -346,6 +346,9 @@
           <button class="nav-btn" data-target="docs-panel">
             <span>📄</span> เอกสารเผยแพร่
           </button>
+          <button class="nav-btn" data-target="downloads-panel">
+            <span>📥</span> ระบบเอกสารดาวน์โหลด
+          </button>
           <button class="nav-btn" data-target="achievements-panel">
             <span>🏆</span> ผลงานเด่น
           </button>
@@ -408,6 +411,9 @@
         <div class="nav-group-items">
           <button class="nav-btn" data-target="ita-panel">
             <span>📊</span> ระบบประเมิน ITA
+          </button>
+          <button class="nav-btn" data-target="faq-panel">
+            <span>❓</span> จัดการ FAQ
           </button>
           <button class="nav-btn" data-target="others-panel">
             <span>📦</span> ระบบอื่นๆ
@@ -702,6 +708,76 @@
               </tr>
             </thead>
             <tbody id="docs-tbody">
+              <tr><td colspan="4" style="text-align:center;">กำลังโหลด...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================= DOWNLOADS PANEL ========================= -->
+    <section id="downloads-panel" class="admin-panel hide">
+      <div class="panel-header">
+        <div>
+          <h1>ระบบเอกสารดาวน์โหลด</h1>
+          <p>จัดการแบบฟอร์มและเอกสารดาวน์โหลด แบ่งตามฝ่ายงานและงานย่อย</p>
+        </div>
+        <button id="dl-add-btn" class="btn-accent">+ เพิ่มเอกสาร</button>
+      </div>
+
+      <!-- Download Form -->
+      <div id="dl-form-container" class="admin-card hide">
+        <form id="dl-form" enctype="multipart/form-data">
+          <div class="form-grid">
+            <div class="form-group form-full">
+              <label for="dl-title">ชื่อเอกสาร / แบบฟอร์ม</label>
+              <input id="dl-title" name="title" type="text" class="form-control" placeholder="เช่น แบบฟอร์มขออนุญาตลาป่วย" required />
+            </div>
+
+            <div class="form-group">
+              <label for="dl-division">ฝ่ายงาน</label>
+              <select id="dl-division" name="division" class="form-control" required onchange="updateSubDivisions(this.value)">
+                <option value="">-- เลือกฝ่ายงาน --</option>
+                <option value="ฝ่ายบริหารทรัพยากร">ฝ่ายบริหารทรัพยากร</option>
+                <option value="ฝ่ายยุทธศาสตร์และแผนงาน">ฝ่ายยุทธศาสตร์และแผนงาน</option>
+                <option value="ฝ่ายกิจการนักเรียน นักศึกษา">ฝ่ายกิจการนักเรียน นักศึกษา</option>
+                <option value="ฝ่ายวิชาการ">ฝ่ายวิชาการ</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="dl-subdivision">งานย่อย (เลือกหรือพิมพ์เพิ่มเอง)</label>
+              <input type="text" id="dl-subdivision" name="subDivision" list="subdivision-list" class="form-control" placeholder="เลือกคลังคำ หรือพิมพ์ใหม่" required autocomplete="off" />
+              <datalist id="subdivision-list">
+                <!-- Populated dynamically via JS -->
+              </datalist>
+            </div>
+
+            <div class="form-group form-full">
+              <label for="dl-file">ไฟล์แนบ (PDF, Word, Excel, ZIP)</label>
+              <input id="dl-file" name="file" type="file" class="form-control file-input" required />
+            </div>
+          </div>
+          <div class="form-actions mt-2">
+            <button type="button" id="dl-cancel-btn" class="btn-outline">ยกเลิก</button>
+            <button type="submit" class="btn-accent">บันทึกข้อมูล</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Downloads Table -->
+      <div class="admin-card mt-2">
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>ชื่อเอกสาร</th>
+                <th>ฝ่ายงาน</th>
+                <th>งานย่อย</th>
+                <th style="text-align:right;">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="dl-tbody">
               <tr><td colspan="4" style="text-align:center;">กำลังโหลด...</td></tr>
             </tbody>
           </table>
@@ -1518,6 +1594,69 @@
             </thead>
             <tbody id="achieve-tbody">
               <tr><td colspan="5" style="text-align:center;">กำลังโหลด...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================= FAQ PANEL ========================= -->
+    <section id="faq-panel" class="admin-panel hide">
+      <div class="panel-header">
+        <div>
+          <h1>จัดการ FAQ (คำถามที่พบบ่อย)</h1>
+          <p>จัดการคำถามและคำตอบที่จะแสดงในหน้าแรกของเว็บไซต์</p>
+        </div>
+        <button id="faq-add-btn" class="btn-accent">+ เพิ่ม FAQ</button>
+      </div>
+
+      <!-- FAQ Form (Modal-like card) -->
+      <div id="faq-form-container" class="admin-card hide">
+        <h3 id="faq-form-title" class="mb-2">เพิ่มคำถามใหม่</h3>
+        <form id="faq-form">
+          <input type="hidden" id="faq-id" />
+          <div class="form-grid">
+            <div class="form-group form-full">
+              <label for="faq-question">คำถาม *</label>
+              <input id="faq-question" name="question" type="text" class="form-control" required />
+            </div>
+
+            <div class="form-group form-full">
+              <label for="faq-answer">คำตอบ *</label>
+              <textarea id="faq-answer" name="answer" class="form-control" rows="3" required></textarea>
+            </div>
+
+            <div class="form-group" style="display:none;">
+              <label for="faq-category">หมวดหมู่</label>
+              <input id="faq-category" name="category" type="text" class="form-control" value="ทั่วไป" />
+            </div>
+
+            <div class="form-group">
+              <label for="faq-order">ลำดับการแสดงผล</label>
+              <input id="faq-order" name="order" type="number" class="form-control" value="0" />
+            </div>
+          </div>
+          <div class="form-actions mt-2">
+            <button type="button" id="faq-cancel-btn" class="btn-outline">ยกเลิก</button>
+            <button type="submit" class="btn-accent">บันทึกข้อมูล</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- FAQ List -->
+      <div class="admin-card">
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th style="width: 80px;">ลำดับ</th>
+                <th style="width: 150px;">หมวดหมู่</th>
+                <th>คำถาม</th>
+                <th style="text-align:right;">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="faq-tbody">
+              <tr><td colspan="4" style="text-align:center;">กำลังโหลด...</td></tr>
             </tbody>
           </table>
         </div>

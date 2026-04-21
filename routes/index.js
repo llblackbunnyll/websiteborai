@@ -17,6 +17,52 @@ router.use(async (req, res, next) => {
   next();
 });
 
+// Global Middleware for Visitor Tracking
+router.use(async (req, res, next) => {
+  try {
+    // Get YYYY-MM-DD in local time if possible, or UTC fallback
+    const now = new Date();
+    const today = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+
+    const userAgent = req.headers['user-agent'] || '';
+    const isBot = /bot|googlebot|crawler|spider|robot|crawling/i.test(userAgent);
+
+    let todayStat = await prisma.visitorStat.findUnique({ where: { date: today } });
+    if (!todayStat) {
+      todayStat = await prisma.visitorStat.create({ data: { date: today, count: 0 } });
+    }
+
+    let totalSetting = await prisma.siteSettings.findUnique({ where: { key: 'total_visitors' } });
+    if (!totalSetting) {
+      totalSetting = await prisma.siteSettings.create({ data: { key: 'total_visitors', value: '0' } });
+    }
+
+    if (!isBot && !req.path.startsWith('/admin') && !req.path.startsWith('/api') && req.session.visitedDate !== today) {
+      req.session.visitedDate = today;
+
+      todayStat = await prisma.visitorStat.update({
+        where: { date: today },
+        data: { count: { increment: 1 } }
+      });
+
+      const newTotal = parseInt(totalSetting.value, 10) + 1;
+      totalSetting = await prisma.siteSettings.update({
+        where: { key: 'total_visitors' },
+        data: { value: newTotal.toString() }
+      });
+    }
+
+    // Format numbers with commas safely
+    res.locals.visitorDaily = todayStat.count.toLocaleString();
+    res.locals.visitorTotal = parseInt(totalSetting.value, 10).toLocaleString();
+  } catch (err) {
+    console.error('[Visitor Tracking Error]', err);
+    res.locals.visitorDaily = 0;
+    res.locals.visitorTotal = 0;
+  }
+  next();
+});
+
 // GET / — Homepage
 router.get('/', async (req, res) => {
   try {
@@ -91,6 +137,11 @@ router.get('/', async (req, res) => {
       orderBy: { order: 'asc' }
     });
 
+    // 8. Load FAQs for the homepage
+    const faqs = await prisma.fAQ.findMany({
+      orderBy: { order: 'asc' }
+    });
+
     res.render('index', {
       title: 'วิทยาลัยการอาชีพบ่อไร่ | BICEC',
       newsItems,
@@ -100,7 +151,13 @@ router.get('/', async (req, res) => {
       departments: await getDepartments(),
       heroImage: heroImages.length > 0 ? heroImages[0] : '/bannerImage.webp',
       subBannerImages: subBannerImages.length > 0 ? subBannerImages : ['/subbannerImage.png'],
-      achievements
+      achievements,
+      faqs: faqs.length > 0 ? faqs : [
+        { id: '1', question: 'วิทยาลัยการอาชีพบ่อไร่ตั้งอยู่ที่ไหน?', answer: 'ตั้งอยู่ที่เลขที่ 25 หมู่ 3 ต.บ่อพลอย อ.บ่อไร่ จ.ตราด ท่านสามารถติดต่อสอบถามข้อมูลเพิ่มเติมได้ที่เบอร์โทรศัพท์ 039-591-104 หรือตามแผนที่ Google Maps ด้านล่างเว็บไซต์ครับ' },
+        { id: '2', question: 'เปิดรับสมัครนักศึกษาใหม่ช่วงเวลาใดบ้าง?', answer: 'โดยปกติจะเปิดรับสมัครในช่วงเดือนมกราคม - เมษายน ของทุกปี ทั้งในระดับประกาศนียบัตรวิชาชีพ (ปวช.) และประกาศนียบัตรวิชาชีพชั้นสูง (ปวส.) ครับ' },
+        { id: '3', question: 'เรียนที่นี่มีทุนการศึกษาหรือไม่?', answer: 'มีครับ วิทยาลัยมีทุน กยศ. และทุนสนับสนุนจากสถานประกอบการสำหรับนักเรียนที่มีความประพฤติดีแต่ขาดแคลนทุนทรัพย์ รวมถึงทุนการศึกษาจากผู้มีจิตศรัทธาที่บริจาคมาอย่างต่อเนื่องครับ' },
+        { id: '4', question: 'การเรียนแบบ "ทวิภาคี" คืออะไร?', answer: 'คือการจัดการเรียนการสอนที่เน้นการเรียนรู้ผ่านการปฏิบัติงานจริงในสถานประกอบการ หรือบริษัทคู่พัฒนา โดยนักศึกษาจะได้รับประสบการณ์ตรง โอกาสในการจ้างงานสูง และมีเบี้ยเลี้ยงระหว่างฝึกงานด้วยครับ' }
+      ]
     });
   } catch (error) {
     console.error(error);
@@ -183,6 +240,27 @@ router.get('/documents', async (req, res) => {
       title: 'เอกสารและประกวดราคา | BICEC',
       docs,
       activeType: type || 'all'
+    });
+  } catch (error) {
+    console.error(error);
+    res.redirect('/');
+  }
+});
+
+// GET /downloads — Dedicated Download Center for Divisions
+router.get('/downloads', async (req, res) => {
+  try {
+    const docs = await prisma.downloadDocument.findMany({
+      orderBy: [
+        { division: 'asc' },
+        { subDivision: 'asc' },
+        { createdAt: 'desc' },
+      ],
+    });
+
+    res.render('downloads', {
+      title: 'ดาวน์โหลดเอกสาร | BICEC',
+      docs
     });
   } catch (error) {
     console.error(error);

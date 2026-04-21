@@ -1,7 +1,84 @@
-<footer class="footer">
-  <div class="container footer-inner">
-    <div class="footer-brand">วิทยาลัยการอาชีพบ่อไร่</div>
-    <p>Borai Industrial and Community Education College</p>
-    <p style="margin-top:0.25rem;">&copy; <%= new Date().getFullYear() %> BICEC. สงวนลิขสิทธิ์.</p>
+<footer class="footer" style="padding: 4rem 0 3rem; border-top: 1px solid rgba(255,255,255,0.05);">
+  <div class="container" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 3rem; text-align: left;">
+    <div class="footer-left" style="flex: 1; min-width: 250px;">
+      <div class="footer-brand" style="margin-bottom: 0.25rem; font-size: 1.25rem; font-weight: 700; color: #fff;">วิทยาลัยการอาชีพบ่อไร่</div>
+      <p style="margin-bottom: 0.5rem; color: #94a3b8; font-size: 0.9rem;">Borai Industrial and Community Education College</p>
+      <p style="font-size: 0.8rem; color: #475569;">&copy; <%= new Date().getFullYear() %> BICEC. สงวนลิขสิทธิ์.</p>
+      
+      <!-- Social Links -->
+      <div style="display: flex; gap: 14px; margin-top: 1.5rem;">
+        <a href="https://www.facebook.com/borai.tart" target="_blank" rel="noopener noreferrer" style="color: #64748b; transition: all 0.3s ease; display: block;" onmouseover="this.style.color='#3b5998'; this.style.transform='translateY(-2px)'" onmouseout="this.style.color='#64748b'; this.style.transform='translateY(0)'" title="Facebook">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/>
+          </svg>
+        </a>
+        <a href="https://www.youtube.com/@PR_borai" target="_blank" rel="noopener noreferrer" style="color: #64748b; transition: all 0.3s ease; display: block;" onmouseover="this.style.color='#ff0000'; this.style.transform='translateY(-2px)'" onmouseout="this.style.color='#64748b'; this.style.transform='translateY(0)'" title="YouTube">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Related Links (Center) -->
+    <div class="footer-links" style="display: flex; flex-direction: column; gap: 10px; font-size: 0.85rem; color: #94a3b8; flex: 1; min-width: 250px;">
+      <div style="font-size: 0.95rem; font-weight: 800; color: #cbd5e1; margin-bottom: 6px; letter-spacing: 0.5px;">เว็บไซต์ที่เกี่ยวข้อง</div>
+      <a href="https://vec.go.th/" target="_blank" rel="noopener noreferrer" style="color: #64748b; text-decoration: none; transition: color 0.3s ease; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#64748b'">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        สำนักงานคณะกรรมการการอาชีวศึกษา
+      </a>
+      <a href="https://bsq.vec.go.th/" target="_blank" rel="noopener noreferrer" style="color: #64748b; text-decoration: none; transition: color 0.3s ease; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#64748b'">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        สำนักมาตรฐานการอาชีวศึกษาและวิชาชีพ
+      </a>
+      <a href="https://www.trattc.ac.th/" target="_blank" rel="noopener noreferrer" style="color: #64748b; text-decoration: none; transition: color 0.3s ease; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#64748b'">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        วิทยาลัยเทคนิคตราด
+      </a>
+      <a href="https://www.tratpt.ac.th/" target="_blank" rel="noopener noreferrer" style="color: #64748b; text-decoration: none; transition: color 0.3s ease; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#64748b'">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        วิทยาลัยสารพัดช่างตราด
+      </a>
+    </div>
+
+    <!-- Related Systems -->
+    <div class="footer-systems" style="display: flex; flex-direction: column; gap: 10px; font-size: 0.85rem; color: #94a3b8; flex: 1; min-width: 250px;">
+      <div style="font-size: 0.95rem; font-weight: 800; color: #cbd5e1; margin-bottom: 6px; letter-spacing: 0.5px;">ระบบสารสนเทศและบริการ</div>
+      <a href="https://std2018.vec.go.th/" target="_blank" rel="noopener noreferrer" style="color: #64748b; text-decoration: none; transition: color 0.3s ease; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#64748b'">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        ระบบบริหารสถานศึกษา (ศธ.02)
+      </a>
+      <a href="http://rms.borai.ac.th/" target="_blank" rel="noopener noreferrer" style="color: #64748b; text-decoration: none; transition: color 0.3s ease; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#64748b'">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        ระบบบริหารจัดการสถานศึกษา (RMS)
+      </a>
+      <a href="https://discipline.borai.ac.th/" target="_blank" rel="noopener noreferrer" style="color: #64748b; text-decoration: none; transition: color 0.3s ease; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#64748b'">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        ระบบสารสนเทศงานวินัยนักเรียน
+      </a>
+      <a href="/downloads" style="color: #64748b; text-decoration: none; transition: color 0.3s ease; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#64748b'">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        ดาวน์โหลดแบบฟอร์ม/เอกสาร
+      </a>
+    </div>
+
+    <!-- Visitor Stats (Right aligned) -->
+    <div class="footer-stats" style="display: flex; flex-direction: column; gap: 6px; font-size: 0.78rem; color: #94a3b8; min-width: 200px;">
+      <div style="display: flex; align-items: center; gap: 6px; color: #cbd5e1; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+        สถิติการเข้าใช้งาน
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); padding: 6px 12px; border-radius: 8px;">
+        <span>วันนี้</span>
+        <span style="font-weight: 800; color: #fff;"><%= typeof visitorDaily !== 'undefined' ? visitorDaily : '0' %></span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); padding: 6px 12px; border-radius: 8px;">
+        <span>รวมทั้งหมด</span>
+        <span style="font-weight: 800; color: #38bdf8;"><%= typeof visitorTotal !== 'undefined' ? visitorTotal : '0' %></span>
+      </div>
+    </div>
   </div>
 </footer>

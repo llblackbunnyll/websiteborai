@@ -123,3 +123,30 @@ model Achievement {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model VisitorStat {
+  id        Int      @id @default(autoincrement())
+  date      String   @unique // YYYY-MM-DD
+  count     Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+model DownloadDocument {
+  id          String   @id @default(uuid())
+  title       String
+  division    String   // ฝ่ายงาน (e.g., ฝ่ายบริหารทรัพยากร)
+  subDivision String   // งานย่อย (e.g., งานธุรการ)
+  fileUrl     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model FAQ {
+  id        String   @id @default(uuid())
+  question  String   @db.Text
+  answer    String   @db.Text
+  category  String   @default("ทั่วไป")
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

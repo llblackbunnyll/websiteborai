@@ -28,7 +28,7 @@
       </li>
       <li class="nav-dropdown">
         <a href="/curriculum" class="nav-dropdown-toggle">
-          หลักสูตร
+          หลักสูตร/สาขาวิชา
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 12 15 18 9"></polyline>
@@ -38,12 +38,33 @@
           <li><a href="/curriculum" style="font-weight: 700;">ภาพรวมหลักสูตร</a></li>
           <% if (locals.globalNavDepartments && locals.globalNavDepartments.length > 0) { %>
             <% locals.globalNavDepartments.forEach(dept => { %>
-              <li><a href="/curriculum/<%= dept.slug %>">- สาขาวิชา<%= dept.name %></a></li>
+              <li><a href="/curriculum/<%= dept.slug %>"> สาขาวิชา<%= dept.name %></a></li>
             <% }) %>
           <% } %>
         </ul>
       </li>
       <li><a href="/news">ข่าวสาร</a></li>
+      <li><a href="/admission" style="font-weight: 700; color: var(--color-accent-primary);">สมัครเรียน</a></li>
+      <li class="nav-dropdown">
+        <a href="#" class="nav-dropdown-toggle" title="เอกสารและระบบสารสนเทศ" aria-label="เอกสารและระบบสารสนเทศ">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 2px; opacity: 0.6;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </a>
+        <ul class="nav-dropdown-menu" style="min-width: 220px;">
+          <li class="dropdown-header" style="padding: 8px 15px; font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">เอกสาร / ดาวน์โหลด</li>
+          <li><a href="/downloads">ศูนย์ดาวน์โหลดเอกสารต่างๆ</a></li>
+          <li><a href="/documents">เอกสารและข่าวประกวดราคา</a></li>
+          <li style="border-top: 1px solid #f1f5f9; margin: 5px 0;"></li>
+          <li class="dropdown-header" style="padding: 8px 15px; font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">ระบบสารสนเทศ</li>
+          <li><a href="https://std2018.vec.go.th/" target="_blank">ระบบบริหารสถานศึกษา (ศธ.02)</a></li>
+          <li><a href="http://rms.borai.ac.th/" target="_blank">ระบบบริหารจัดการ (RMS)</a></li>
+          <li><a href="https://discipline.borai.ac.th/" target="_blank">ระบบงานปกครอง</a></li>
+          <li style="border-top: 1px solid #f1f5f9; margin: 5px 0;"></li>
+          <li><a href="/#faq">คำถามที่พบบ่อย (FAQ)</a></li>
+          <li style="border-top: 1px solid #f1f5f9; margin: 5px 0;"></li>
+          <li><a href="/#contact" style="font-weight: 700; color: var(--color-accent-primary);">ติดต่อเรา</a></li>
+        </ul>
+      </li>
     </ul>
 
     <!-- Hamburger -->
@@ -53,15 +74,27 @@
   </div>
 
   <!-- Mobile Menu -->
-  <ul id="nav-mobile-menu" class="nav-mobile-menu glass">
+  <ul id="nav-mobile-menu" class="nav-mobile-menu">
     <li><a href="/">หน้าแรก</a></li>
-    <li><a href="/about">ข้อมูลวิทยาลัย</a></li>
-    <li><a href="/personnel">บุคลากร</a></li>
-    <li><a href="/org-chart">ผังการบริหาร</a></li>
+    
+    <!-- College Info Group -->
     <li class="nav-mobile-dropdown">
       <div class="nav-mobile-dropdown-toggle">
-        <a href="/curriculum" style="color: inherit; text-decoration: none;">หลักสูตร</a>
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        ข้อมูลวิทยาลัย
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </div>
+      <ul class="nav-mobile-dropdown-menu">
+        <li><a href="/about">ข้อมูลวิทยาลัย</a></li>
+        <li><a href="/personnel">บุคลากร</a></li>
+        <li><a href="/org-chart">ผังการบริหาร</a></li>
+      </ul>
+    </li>
+
+    <!-- Curriculum Group -->
+    <li class="nav-mobile-dropdown">
+      <div class="nav-mobile-dropdown-toggle">
+        หลักสูตร
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
       </div>
       <ul class="nav-mobile-dropdown-menu">
         <li><a href="/curriculum" style="font-weight: 700;">ภาพรวมหลักสูตร</a></li>
@@ -72,6 +105,70 @@
         <% } %>
       </ul>
     </li>
+
     <li><a href="/news">ข่าวสาร</a></li>
+    <li><a href="/admission" style="font-weight: 700; color: var(--color-accent-primary);">สมัครเรียน</a></li>
+
+    <!-- Docs & Systems Group -->
+    <li class="nav-mobile-dropdown">
+      <div class="nav-mobile-dropdown-toggle">
+        เครื่องมือ / ระบบฯ
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </div>
+      <ul class="nav-mobile-dropdown-menu">
+        <li style="padding: 8px 20px 0; font-size: 0.7rem; color: #94a3b8; font-weight: 800; text-transform: uppercase;">เอกสาร / ดาวน์โหลด</li>
+        <li><a href="/downloads">ศูนย์ดาวน์โหลดเอกสาร</a></li>
+        <li><a href="/documents">เอกสารประกวดราคา</a></li>
+        <li style="padding: 8px 20px 0; font-size: 0.7rem; color: #94a3b8; font-weight: 800; text-transform: uppercase; border-top: 1px solid rgba(0,0,0,0.05); margin-top: 8px;">ระบบสารสนเทศ</li>
+        <li><a href="https://std2018.vec.go.th/" target="_blank">- ระบบ ศธ.02</a></li>
+        <li><a href="http://rms.borai.ac.th/" target="_blank">- ระบบ RMS</a></li>
+        <li><a href="https://discipline.borai.ac.th/" target="_blank">- ระบบงานปกครอง</a></li>
+        <li style="border-top: 1px solid rgba(0,0,0,0.05); margin-top: 8px;"></li>
+        <li><a href="/#faq" style="font-weight: 600;">คำถามที่พบบ่อย (FAQ)</a></li>
+        <li style="border-top: 1px solid rgba(0,0,0,0.05); margin-top: 8px;"></li>
+        <li><a href="/#contact" style="font-weight: 700; color: var(--color-accent-primary);">ติดต่อเรา</a></li>
+      </ul>
+    </li>
   </ul>
+
+  <!-- Universal Navbar Script (Handles Toggle & Accordion) -->
+  <script>
+    (function() {
+      const hamburger = document.getElementById('nav-hamburger');
+      const mobileMenu = document.getElementById('nav-mobile-menu');
+      if (!hamburger || !mobileMenu) return;
+
+      // Toggle Mobile Drawer
+      hamburger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        mobileMenu.classList.toggle('open');
+        const isOpen = mobileMenu.classList.contains('open');
+        hamburger.innerHTML = isOpen 
+          ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`
+          : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`;
+      });
+
+      // Handle Mobile Accordions
+      const dropdowns = mobileMenu.querySelectorAll('.nav-mobile-dropdown');
+      dropdowns.forEach(dd => {
+        const toggle = dd.querySelector('.nav-mobile-dropdown-toggle');
+        toggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isActive = dd.classList.contains('active');
+          // Close others
+          dropdowns.forEach(other => other.classList.remove('active'));
+          // Toggle current
+          if (!isActive) dd.classList.add('active');
+        });
+      });
+
+      // Close menu when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!mobileMenu.contains(e.target) && !hamburger.contains(e.target)) {
+          mobileMenu.classList.remove('open');
+          hamburger.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`;
+        }
+      });
+    })();
+  </script>
 </nav>

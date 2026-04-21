@@ -794,6 +794,61 @@ router.delete('/docs/:id', authenticateToken, async (req, res) => {
 });
 
 // ──────────────────────────────────────────────────────────────────────────────
+// DOWNLOAD CENTER (Division Documents)
+// ──────────────────────────────────────────────────────────────────────────────
+
+// GET /api/downloads
+router.get('/downloads', async (req, res) => {
+  try {
+    const docs = await prisma.downloadDocument.findMany({
+      orderBy: [
+        { division: 'asc' },
+        { subDivision: 'asc' },
+        { createdAt: 'desc' }
+      ]
+    });
+    res.json(docs);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch download documents' });
+  }
+});
+
+// POST /api/downloads (protected)
+router.post('/downloads', authenticateToken, upload.single('file'), async (req, res) => {
+  try {
+    const { title, division, subDivision } = req.body;
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+
+    // Use saveFile function to write buffer to disk
+    const fileUrl = saveFile(req.file, 'dl');
+    
+    const newDoc = await prisma.downloadDocument.create({
+      data: { title, division, subDivision, fileUrl }
+    });
+
+    res.status(201).json(newDoc);
+  } catch (error) {
+    console.error('[Download Create Error]', error);
+    res.status(500).json({ message: 'Failed to create document', error: error.message });
+  }
+});
+
+// DELETE /api/downloads/:id (protected)
+router.delete('/downloads/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const doc = await prisma.downloadDocument.findUnique({ where: { id } });
+    if (!doc) return res.status(404).json({ message: 'Document not found' });
+
+    if (doc.fileUrl) deleteFile(doc.fileUrl);
+    await prisma.downloadDocument.delete({ where: { id } });
+    res.json({ message: 'Deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to delete document' });
+  }
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
 // ITA ASSESSMENT (O1 - O37)
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -1274,6 +1329,82 @@ router.delete('/achievements/:id', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('[Achievements DELETE]', error);
     res.status(500).json({ message: 'Failed to delete achievement' });
+  }
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+// FAQ
+// ──────────────────────────────────────────────────────────────────────────────
+
+// GET /api/faqs
+router.get('/faqs', async (req, res) => {
+  try {
+    const items = await prisma.fAQ.findMany({ orderBy: { order: 'asc' } });
+    
+    // If empty, return initial dummy data as a fallback or to help seeding
+    if (items.length === 0) {
+      return res.json([
+        { id: '1', category: 'การรับสมัคร', question: 'เปิดรับสมัครนักศึกษาใหม่ช่วงไหน?', answer: 'ปกติจะเปิดรับสมัครในช่วงเดือนมกราคม - เมษายน ของทุกปี ผ่านระบบออนไลน์และที่วิทยาลัย' },
+        { id: '2', category: 'หลักสูตรและการเรียน', question: 'ระบบทวิภาคีคืออะไร?', answer: 'เป็นการเรียนที่ร่วมมือกับสถานประกอบการ นักศึกษาจะได้เข้าฝึกประสบการณ์การทำงานจริงในบริษัท และได้รับเบี้ยเลี้ยงระหว่างเรียน' },
+        { id: '3', category: 'ทุนการศึกษา', question: 'มีทุนการศึกษาสำหรับนักเรียนที่ขาดแคลนหรือไม่?', answer: 'มีทุน กยศ. และทุนจากเครือข่ายความร่วมมือจากภาคเอกชนสนับสนุนนักเรียนที่มีความประพฤติดี' }
+      ]);
+    }
+    
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch FAQs' });
+  }
+});
+
+// POST /api/faqs (protected)
+router.post('/faqs', authenticateToken, async (req, res) => {
+  try {
+    const { question, answer, category, order } = req.body;
+    const newItem = await prisma.fAQ.create({
+      data: {
+        question,
+        answer,
+        category: category || 'ทั่วไป',
+        order: parseInt(order) || 0
+      }
+    });
+    res.status(201).json(newItem);
+  } catch (error) {
+    console.error('[FAQ Create Error]', error);
+    res.status(500).json({ message: 'Failed to create FAQ' });
+  }
+});
+
+// PUT /api/faqs/:id (protected)
+router.put('/faqs/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { question, answer, category, order } = req.body;
+    const updated = await prisma.fAQ.update({
+      where: { id },
+      data: {
+        question,
+        answer,
+        category,
+        order: parseInt(order) || 0
+      }
+    });
+    res.json(updated);
+  } catch (error) {
+    console.error('[FAQ Update Error]', error);
+    res.status(500).json({ message: 'Failed to update FAQ' });
+  }
+});
+
+// DELETE /api/faqs/:id (protected)
+router.delete('/faqs/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.fAQ.delete({ where: { id } });
+    res.json({ message: 'FAQ deleted' });
+  } catch (error) {
+    console.error('[FAQ Delete Error]', error);
+    res.status(500).json({ message: 'Failed to delete FAQ' });
   }
 });
 
