@@ -10,25 +10,38 @@ if (!fs.existsSync(UPLOADS_DIR)) {
 
 /**
  * Handle saving an uploaded file (generic)
- * @param {object} file - The file object from multer (using disk or memory)
- * @param {string} prefix - Filename prefix (e.g., 'doc', 'bidding')
+ * @param {object} file - The file object from multer
+ * @param {string} prefix - Filename prefix (e.g., 'doc', 'dl')
+ * @param {string} nameHint - Optional title to make filename descriptive
  * @returns {string} The public URL path to the saved file
  */
-function saveFile(file, prefix = 'doc') {
+function saveFile(file, prefix = 'doc', nameHint = null) {
   if (!file) return null;
   
-  // If using memory storage, we need to write the buffer
   const extension = path.extname(file.originalname).toLowerCase();
-  const filename = `${prefix}-${Date.now()}${extension}`;
+  let namePart = `${prefix}-${Date.now()}`;
+  
+  if (nameHint) {
+    // Sanitize: Keep Thai, English, Numbers, replace others with hyphen
+    const sanitized = nameHint
+      .replace(/[^\u0E00-\u0E7Fa-zA-Z0-9]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+    
+    if (sanitized) {
+      namePart = `${prefix}-${sanitized.slice(0, 50)}-${Date.now()}`;
+    }
+  }
+
+  const filename = `${namePart}${extension}`;
   const filepath = path.join(UPLOADS_DIR, filename);
 
   if (file.buffer) {
     fs.writeFileSync(filepath, file.buffer);
   } else if (file.path) {
-    // If using disk storage, move/rename it
     fs.renameSync(file.path, filepath);
   } else {
-    throw new Error('Unsupported file storage type (no buffer or path found)');
+    throw new Error('Unsupported file storage type');
   }
 
   return `/uploads/docs/${filename}`;

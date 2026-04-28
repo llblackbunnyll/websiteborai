@@ -194,7 +194,7 @@
           const day = dateParts[0] || '';
           const month = dateParts[1] || '';
       %>
-        <a href="<%= item.fileUrl %>" target="_blank" class="doc-item-card glass reveal">
+        <a href="<%= item.fileUrl %>" download="<%= item.title %>" target="_blank" class="doc-item-card glass reveal">
           <div class="sub-item-date-box" style="width: 45px; height: 45px; border-radius: 10px;">
             <span class="date-day" style="font-size: 1.1rem;"><%= day %></span>
             <span class="date-month" style="font-size: 0.6rem;"><%= month %></span>

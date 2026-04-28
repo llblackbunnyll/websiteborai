@@ -762,7 +762,7 @@ router.post('/docs', authenticateToken, upload.single('file'), async (req, res) 
     const { title, date, type } = req.body;
     if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
 
-    const fileUrl = saveFile(req.file, type === 'bidding' ? 'bid' : 'doc');
+    const fileUrl = saveFile(req.file, type === 'bidding' ? 'bid' : 'doc', title);
     
     const newDoc = await prisma.publicDocument.create({
       data: { title, date, type, fileUrl }
@@ -792,7 +792,7 @@ router.put('/docs/:id', authenticateToken, upload.single('file'), async (req, re
     // If a new file is uploaded, replace old one
     if (req.file) {
       if (existing.fileUrl) deleteFile(existing.fileUrl);
-      fileUrl = saveFile(req.file, type === 'bidding' ? 'bid' : 'doc');
+      fileUrl = saveFile(req.file, type === 'bidding' ? 'bid' : 'doc', title);
     }
 
     const updated = await prisma.publicDocument.update({
@@ -849,7 +849,7 @@ router.post('/downloads', authenticateToken, upload.single('file'), async (req, 
     if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
 
     // Use saveFile function to write buffer to disk
-    const fileUrl = saveFile(req.file, 'dl');
+    const fileUrl = saveFile(req.file, 'dl', title);
     
     const newDoc = await prisma.downloadDocument.create({
       data: { title, division, subDivision, fileUrl }
@@ -859,6 +859,33 @@ router.post('/downloads', authenticateToken, upload.single('file'), async (req, 
   } catch (error) {
     console.error('[Download Create Error]', error);
     res.status(500).json({ message: 'Failed to create document', error: error.message });
+  }
+});
+
+// PUT /api/downloads/:id (protected)
+router.put('/downloads/:id', authenticateToken, upload.single('file'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, division, subDivision } = req.body;
+
+    const existing = await prisma.downloadDocument.findUnique({ where: { id } });
+    if (!existing) return res.status(404).json({ message: 'Document not found' });
+
+    let fileUrl = existing.fileUrl;
+    if (req.file) {
+      if (existing.fileUrl) deleteFile(existing.fileUrl);
+      fileUrl = saveFile(req.file, 'dl', title);
+    }
+
+    const updated = await prisma.downloadDocument.update({
+      where: { id },
+      data: { title, division, subDivision, fileUrl }
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error('[Download Update Error]', error);
+    res.status(500).json({ message: 'Failed to update document', error: error.message });
   }
 });
 

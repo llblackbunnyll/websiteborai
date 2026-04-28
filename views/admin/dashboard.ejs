@@ -730,7 +730,9 @@
 
       <!-- Download Form -->
       <div id="dl-form-container" class="admin-card hide">
+        <h3 id="dl-form-title" class="mb-2">เพิ่มเอกสารดาวน์โหลดใหม่</h3>
         <form id="dl-form" enctype="multipart/form-data">
+          <input type="hidden" id="dl-id" />
           <div class="form-grid">
             <div class="form-group form-full">
               <label for="dl-title">ชื่อเอกสาร / แบบฟอร์ม</label>
@@ -758,7 +760,8 @@
 
             <div class="form-group form-full">
               <label for="dl-file">ไฟล์แนบ (PDF, Word, Excel, ZIP)</label>
-              <input id="dl-file" name="file" type="file" class="form-control file-input" required />
+              <input id="dl-file" name="file" type="file" class="form-control file-input" />
+              <small id="dl-file-hint" class="text-muted" style="display:none;">หากไม่เลือกไฟล์ใหม่ ระบบจะเก็บไฟล์เดิมไว้</small>
             </div>
           </div>
           <div class="form-actions mt-2">

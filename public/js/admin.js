@@ -2088,9 +2088,14 @@ function getAuthHeaders() {
           <td><span class="category-tag">${escapeHtml(doc.division)}</span></td>
           <td><span class="category-tag" style="background:rgba(20,184,166,0.1);color:#0d9488;border-color:rgba(20,184,166,0.2);">${escapeHtml(doc.subDivision)}</span></td>
           <td style="text-align:right;">
-            <button class="icon-btn danger" onclick="deleteDownload('${doc.id}')" title="ลบเอกสาร">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            </button>
+            <div style="display:flex;gap:0.25rem;justify-content:flex-end;">
+              <button class="icon-btn" onclick="editDownload('${doc.id}')" title="แก้ไข">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="icon-btn danger" onclick="deleteDownload('${doc.id}')" title="ลบเอกสาร">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </div>
           </td>
         </tr>
       `).join('') : `<tr><td colspan="4" style="text-align:center;">ไม่พบเอกสารดาวน์โหลด</td></tr>`;
@@ -2098,6 +2103,29 @@ function getAuthHeaders() {
       dlTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:red;">โหลดข้อมูลล้มเหลว</td></tr>`;
     }
   }
+
+  window.editDownload = async (id) => {
+    try {
+      const res = await fetch('/api/downloads', { headers: getAuthHeaders() });
+      const docs = await res.json();
+      const item = docs.find(d => d.id === id);
+      if (!item) return;
+
+      document.getElementById('dl-id').value = item.id;
+      document.getElementById('dl-title').value = item.title;
+      document.getElementById('dl-division').value = item.division;
+      updateSubDivisions(item.division);
+      document.getElementById('dl-subdivision').value = item.subDivision;
+      
+      document.getElementById('dl-file').value = '';
+      document.getElementById('dl-file').required = false;
+      document.getElementById('dl-file-hint').style.display = 'block';
+      document.getElementById('dl-form-title').textContent = 'แก้ไขเอกสารดาวน์โหลด';
+      
+      dlFormContainer.classList.remove('hide');
+      dlFormContainer.scrollIntoView({ behavior: 'smooth' });
+    } catch (e) { console.error(e); }
+  };
 
   window.deleteDownload = async (id) => {
     if (!confirm('ยืนยันการลบเอกสารนี้? ไฟล์จะถูกลบออกจากระบบถาวร')) return;
@@ -2117,6 +2145,10 @@ function getAuthHeaders() {
 
   dlAddBtn?.addEventListener('click', () => {
     dlForm.reset();
+    document.getElementById('dl-id').value = '';
+    document.getElementById('dl-form-title').textContent = 'เพิ่มเอกสารดาวน์โหลดใหม่';
+    document.getElementById('dl-file').required = true;
+    document.getElementById('dl-file-hint').style.display = 'none';
     updateSubDivisions('');
     dlFormContainer.classList.remove('hide');
     dlFormContainer.scrollIntoView({ behavior: 'smooth' });
@@ -2128,17 +2160,24 @@ function getAuthHeaders() {
 
   dlForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('adminToken');
-    const formData = new FormData(dlForm);
+    const btn = dlForm.querySelector('button[type="submit"]');
+    const dlId = document.getElementById('dl-id').value;
+    const isEdit = !!dlId;
+    
+    btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
     
     try {
-      const res = await fetch('/api/downloads', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
+      const formData = new FormData(dlForm);
+      const url = isEdit ? `/api/downloads/${dlId}` : '/api/downloads';
+      const method = isEdit ? 'PUT' : 'POST';
+      
+      const res = await fetch(url, {
+        method,
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` },
         body: formData
       });
       if (res.ok) {
-        alert('อัปโหลดเอกสารดาวน์โหลดสำเร็จ');
+        alert('บันทึกข้อมูลสำเร็จ');
         dlFormContainer.classList.add('hide');
         loadDownloads();
       } else {
@@ -2146,6 +2185,9 @@ function getAuthHeaders() {
         alert('เกิดข้อผิดพลาด: ' + error.message);
       }
     } catch (err) { alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'); }
+    finally {
+      btn.disabled = false; btn.textContent = 'บันทึกข้อมูล';
+    }
   });
 
   if (document.getElementById('downloads-panel')) {
