@@ -778,6 +778,35 @@ router.post('/docs', authenticateToken, upload.single('file'), async (req, res) 
   }
 });
 
+// PUT /api/docs/:id (protected)
+router.put('/docs/:id', authenticateToken, upload.single('file'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, date, type } = req.body;
+
+    const existing = await prisma.publicDocument.findUnique({ where: { id } });
+    if (!existing) return res.status(404).json({ message: 'Document not found' });
+
+    let fileUrl = existing.fileUrl;
+
+    // If a new file is uploaded, replace old one
+    if (req.file) {
+      if (existing.fileUrl) deleteFile(existing.fileUrl);
+      fileUrl = saveFile(req.file, type === 'bidding' ? 'bid' : 'doc');
+    }
+
+    const updated = await prisma.publicDocument.update({
+      where: { id },
+      data: { title, date, type, fileUrl }
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error('[Doc Update Error]', error);
+    res.status(500).json({ message: 'Failed to update document', error: error.message });
+  }
+});
+
 // DELETE /api/docs/:id (protected)
 router.delete('/docs/:id', authenticateToken, async (req, res) => {
   try {

@@ -281,6 +281,10 @@ function getAuthHeaders() {
 
   docAddBtn?.addEventListener('click', () => {
     docForm.reset();
+    document.getElementById('doc-id').value = '';
+    document.getElementById('doc-form-title').textContent = 'เพิ่มเอกสารใหม่';
+    document.getElementById('doc-file').required = true;
+    document.getElementById('doc-file-hint').style.display = 'none';
     docFormContainer.classList.remove('hide');
     docAddBtn.style.display = 'none';
   });
@@ -288,6 +292,10 @@ function getAuthHeaders() {
   docCancelBtn?.addEventListener('click', () => {
     docFormContainer.classList.add('hide');
     docAddBtn.style.display = 'inline-flex';
+    document.getElementById('doc-id').value = '';
+    document.getElementById('doc-file').required = true;
+    document.getElementById('doc-file-hint').style.display = 'none';
+    document.getElementById('doc-form-title').textContent = 'เพิ่มเอกสารใหม่';
   });
 
   async function loadDocs() {
@@ -322,6 +330,9 @@ function getAuthHeaders() {
         <td style="color:var(--color-text-secondary)">${escapeHtml(item.date)}</td>
         <td>
           <div style="display:flex;gap:0.25rem;justify-content:flex-end;">
+            <button class="icon-btn" onclick="editDoc('${item.id}')" title="แก้ไข">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
             <button class="icon-btn danger" onclick="deleteDoc('${item.id}')" title="ลบ">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
             </button>
@@ -331,18 +342,40 @@ function getAuthHeaders() {
     `).join('');
   }
 
+  window.editDoc = (id) => {
+    const item = allDocs.find(d => d.id === id);
+    if (!item) return;
+    document.getElementById('doc-id').value = item.id;
+    document.getElementById('doc-title').value = item.title;
+    document.getElementById('doc-type').value = item.type;
+    document.getElementById('doc-date').value = item.date;
+    // Reset file input (optional for edit)
+    document.getElementById('doc-file').value = '';
+    document.getElementById('doc-file').required = false;
+    document.getElementById('doc-file-hint').style.display = 'block';
+    document.getElementById('doc-form-title').textContent = 'แก้ไขเอกสาร';
+    docFormContainer.classList.remove('hide');
+    docAddBtn.style.display = 'none';
+    docFormContainer.scrollIntoView({ behavior: 'smooth' });
+  };
+
   docForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = docForm.querySelector('button[type="submit"]');
+    const docId = document.getElementById('doc-id').value;
+    const isEdit = !!docId;
     btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
     try {
       const formData = new FormData(docForm);
-      const res = await fetch(`${API_BASE}/docs`, { method: 'POST', headers: getAuthHeaders(), body: formData });
+      const url = isEdit ? `${API_BASE}/docs/${docId}` : `${API_BASE}/docs`;
+      const method = isEdit ? 'PUT' : 'POST';
+      const res = await fetch(url, { method, headers: getAuthHeaders(), body: formData });
       if (res.ok) {
         await loadDocs();
         docCancelBtn.click();
       } else {
-        alert('บันทึกเอกสารไม่สำเร็จ');
+        const errData = await res.json().catch(() => ({}));
+        alert(`บันทึกเอกสารไม่สำเร็จ: ${errData.message || 'Unknown error'}`);
       }
     } catch (err) {
       alert('Error saving document');

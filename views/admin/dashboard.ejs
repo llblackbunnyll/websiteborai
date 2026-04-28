@@ -663,7 +663,9 @@
 
       <!-- Doc Form -->
       <div id="doc-form-container" class="admin-card hide">
+        <h3 id="doc-form-title" class="mb-2">เพิ่มเอกสารใหม่</h3>
         <form id="doc-form" enctype="multipart/form-data">
+          <input type="hidden" id="doc-id" />
           <div class="form-grid">
             <div class="form-group form-full">
               <label for="doc-title">หัวข้อเอกสาร</label>
@@ -685,7 +687,8 @@
 
             <div class="form-group form-full">
               <label for="doc-file">ไฟล์เอกสาร (PDF เท่านั้น)</label>
-              <input id="doc-file" name="file" type="file" accept=".pdf" class="form-control file-input" required />
+              <input id="doc-file" name="file" type="file" accept=".pdf" class="form-control file-input" />
+              <small id="doc-file-hint" class="text-muted" style="display:none;">หากไม่เลือกไฟล์ใหม่ ระบบจะเก็บไฟล์เดิมไว้</small>
             </div>
           </div>
           <div class="form-actions mt-2">
