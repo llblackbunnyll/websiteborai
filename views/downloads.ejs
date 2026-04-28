@@ -358,7 +358,7 @@
                 <h4 class="subdivision-title">${subName}</h4>
                 <div class="doc-grid">
                   ${items.map(doc => `
-                    <a href="${doc.fileUrl}" download="${doc.title}" target="_blank" class="doc-card">
+                    <a href="${doc.fileUrl}" download="${doc.title}.${doc.fileUrl.split('.').pop()}" target="_blank" class="doc-card">
                       <div class="doc-file-icon">${getFileIcon(doc.fileUrl, doc.title)}</div>
                       <div class="doc-info">
                         <div class="doc-name" title="${doc.title}">${doc.title}</div>
