@@ -90,11 +90,15 @@ model PublicDocument {
 }
 
 model ITAItem {
-  code        String   @id // O1, O2, ...
+  code        String   // O1, O2, ...
+  year        String   @default("2569") // e.g., "2569"
   title       String
   description String?  @db.Text
-  attachments Json? // Array of objects: [{ label: "...", url: "...", type: "file" | "link" }]
+  attachments Json?    // Array of objects: [{ label: "...", url: "...", type: "file" | "link", sourceId: "db-id-if-linked" }]
+  isPublic    Boolean  @default(true)
   updatedAt   DateTime @updatedAt
+
+  @@id([code, year])
 }
 
 model StudentEnrollment {
@@ -149,4 +153,32 @@ model FAQ {
   order     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Complaint {
+  id            String   @id @default(uuid())
+  token         String   @unique
+  title         String
+  category      String
+  detail        String   @db.Text
+  isAnonymous   Boolean  @default(true)
+  reporterName  String?
+  reporterPhone String?
+  reporterEmail String?
+  status        String   @default("pending") // pending, investigating, resolved, rejected
+  adminNote     String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Feedback {
+  id            String   @id @default(uuid())
+  title         String
+  category      String   // การบริการ, การจัดการศึกษา, อาคารสถานที่, อื่นๆ
+  detail        String   @db.Text
+  rating        Int      @default(5) // 1-5 stars
+  reporterName  String?
+  reporterEmail String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

@@ -412,6 +412,13 @@
           <button class="nav-btn" data-target="ita-panel">
             <span>📊</span> ระบบประเมิน ITA
           </button>
+          <button class="nav-btn" data-target="complaints-panel">
+            <span>🛡️</span> จัดการเรื่องร้องเรียน
+            <span id="complaints-badge" style="display: none; background: #ef4444; color: white; border-radius: 50%; font-size: 0.75rem; padding: 2px 6px; font-weight: 800; margin-left: auto; line-height: 1;">0</span>
+          </button>
+          <button class="nav-btn" data-target="feedback-panel">
+            <span>💬</span> ข้อคิดเห็น/เสนอแนะ
+          </button>
           <button class="nav-btn" data-target="faq-panel">
             <span>❓</span> จัดการ FAQ
           </button>
@@ -435,6 +442,17 @@
 
   <!-- Main Content Area -->
   <main class="admin-main-content">
+
+    <!-- Global Admin Alert Banner -->
+    <div id="admin-global-alert" class="admin-card" style="background: #fff5f5; border: 1px solid #feb2b2; margin-bottom: 1.5rem; display: none; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; border-radius: 12px;">
+      <div style="display: flex; align-items: center; gap: 10px; color: #9b2c2c; font-weight: 800;">
+        <span style="font-size: 1.25rem;">📢</span>
+        <span id="admin-alert-text">คุณมีเรื่องร้องเรียนใหม่ที่ยังไม่ได้ตรวจสอบ X รายการ</span>
+      </div>
+      <button type="button" onclick="switchToComplaintsPanel()" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 800; font-size: 0.85rem; cursor: pointer; transition: background 0.2s;">
+        จัดการทันที →
+      </button>
+    </div>
     
     <!-- ========================= PR PANEL ========================= -->
     <section id="pr-panel" class="admin-panel active">
@@ -791,87 +809,8 @@
       </div>
     </section>
 
-    <!-- ========================= ITA PANEL ========================= -->
-    <section id="ita-panel" class="admin-panel hide">
-      <div class="panel-header">
-        <div>
-          <h1>ระบบจัดการเกณฑ์ประเมิน ITA (O1 - O37)</h1>
-          <p>จัดการข้อมูลการเปิดเผยข้อมูลสาธารณะ (OIT) ตามเกณฑ์อาชีวศึกษา</p>
-        </div>
-        <button id="ita-init-btn" class="btn-outline">🔄 รีเซ็ต/เริ่มระบบ</button>
-      </div>
 
-      <div class="admin-card">
-        <div class="admin-table-container">
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th style="width: 80px;">รหัส</th>
-                <th>รายการประเมิน</th>
-                <th>สถานะข้อมูล</th>
-                <th style="text-align:right;">จัดการ</th>
-              </tr>
-            </thead>
-            <tbody id="ita-tbody">
-              <tr><td colspan="4" style="text-align:center;">กำลังโหลดรายการ...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      <!-- ITA Edit Modal -->
-      <div id="ita-modal" class="modal-overlay">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3 id="ita-modal-title">จัดการข้อมูล ITA</h3>
-            <button type="button" class="modal-close-btn" id="ita-modal-close-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-          </div>
-          <div class="modal-body">
-            <form id="ita-form">
-              <input type="hidden" id="ita-code" />
-              <div class="form-group form-full mb-2">
-                <label>หัวข้อการประเมิน</label>
-                <div id="ita-display-title" style="font-weight: 600; font-size: 1.1rem; color: var(--color-accent-primary);"></div>
-                <div id="ita-display-desc" style="font-size: 0.9rem; color: var(--color-text-secondary); margin-top: 4px; padding: 0.8rem; background: #f8fafc; border-radius: 8px; border-left: 4px solid var(--color-accent-primary);"></div>
-              </div>
-
-              <!-- Attachments List -->
-              <div class="form-group form-full">
-                <label>รายการเอกสาร/ลิงก์ที่แนบไว้</label>
-                <div id="ita-attachments-list" class="mt-1" style="display: flex; flex-direction: column; gap: 0.5rem;">
-                  <!-- Dynamic Items -->
-                </div>
-              </div>
-
-              <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid #eee;" />
-
-              <div class="form-grid">
-                <div class="form-group form-full">
-                  <label>เพิ่มเอกสารใหม่ (PDF เท่านั้น)</label>
-                  <input type="file" id="ita-new-files" multiple accept=".pdf" class="form-control file-input" />
-                </div>
-                
-                <div class="form-group form-full">
-                  <label>เพิ่มลิงก์ภายนอกใหม่</label>
-                  <div style="display:flex; gap:0.5rem;">
-                    <input type="text" id="ita-new-link-label" placeholder="ชื่อเรียก (เช่น เว็บไซต์ สอศ.)" class="form-control" />
-                    <input type="text" id="ita-new-link-url" placeholder="URL (http://...)" class="form-control" />
-                    <button type="button" id="ita-add-link-btn" class="btn-accent" style="padding: 0 1rem;">เพิ่ม</button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="form-actions mt-3">
-                <button type="button" id="ita-cancel-btn" class="btn-outline">ยกเลิก</button>
-                <button type="submit" class="btn-accent">บันทึกข้อมูลทั้งหมด</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </section>
 
     <!-- ========================= STUDENT PANEL ========================= -->
     <section id="student-panel" class="admin-panel hide">
@@ -1669,6 +1608,157 @@
       </div>
     </section>
 
+    <!-- ========================= ITA PANEL ========================= -->
+    <section id="ita-panel" class="admin-panel hide">
+      <div class="panel-header">
+        <div>
+          <h1>📊 ระบบประเมินคุณธรรมและความโปร่งใส (ITA)</h1>
+          <p>จัดการคำชี้แจง แนบลิงก์ หรืออัปโหลดไฟล์หลักฐานตามตัวชี้วัด (OIT)</p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <select id="ita-admin-year-select" class="form-control" style="width: 140px;">
+            <option value="2569">พ.ศ. 2569</option>
+            <option value="2568">พ.ศ. 2568</option>
+          </select>
+          <button id="ita-admin-init-btn" class="btn-accent" style="white-space: nowrap;">
+            + เริ่มปีงบประมาณใหม่
+          </button>
+        </div>
+      </div>
+
+      <!-- ITA Summary Cards -->
+      <div class="admin-grid mb-3">
+        <div class="admin-card" style="border-left: 4px solid var(--color-accent-primary, #7042f8);">
+          <div class="stat-mini-label">ตัวชี้วัดที่ประเมิน</div>
+          <div class="stat-large-value"><span id="ita-stat-total">0</span> <span style="font-size: 0.9rem; font-weight: 500;">หัวข้อ</span></div>
+        </div>
+        <div class="admin-card" style="border-left: 4px solid #10b981;">
+          <div class="stat-mini-label">เปิดเผยข้อมูลสำเร็จ</div>
+          <div class="stat-large-value"><span id="ita-stat-completed">0</span> <span style="font-size: 0.9rem; font-weight: 500;">หัวข้อ</span></div>
+        </div>
+        <div class="admin-card" style="border-left: 4px solid #f59e0b;">
+          <div class="stat-mini-label">ความคืบหน้าการตอบ</div>
+          <div class="stat-large-value" id="ita-stat-percent">0%</div>
+        </div>
+      </div>
+
+      <!-- ITA Table List -->
+      <div class="admin-card" style="padding: 0;">
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th style="width: 80px;">รหัส</th>
+                <th>หัวข้อตัวชี้วัด OIT</th>
+                <th style="width: 250px;">หลักฐาน / ลิงก์ที่เชื่อมโยง</th>
+                <th style="width: 100px; text-align: center;">สถานะ</th>
+                <th style="width: 100px; text-align: center;">เผยแพร่</th>
+                <th style="width: 100px; text-align: center;">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="ita-tbody">
+              <!-- Rendered dynamically -->
+              <tr><td colspan="6" style="text-align:center;">กำลังโหลด...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ITA Modal Management inside panel -->
+      <div id="ita-edit-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 700px;">
+          <div class="modal-header">
+            <h3>แก้ไขหัวข้อ OIT <span id="ita-modal-code-title" style="color: var(--color-accent-primary);">O1</span></h3>
+            <button type="button" class="modal-close-btn" id="ita-modal-close-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="ita-edit-form">
+              <input type="hidden" id="ita-edit-code" />
+              <input type="hidden" id="ita-edit-year" />
+
+              <div class="form-grid">
+                <div class="form-group form-full">
+                  <label for="ita-edit-title">ชื่อหัวข้อ OIT *</label>
+                  <input id="ita-edit-title" type="text" class="form-control" required />
+                </div>
+
+                <div class="form-group form-full">
+                  <label for="ita-edit-description">คำอธิบายเพิ่มเติม / คำชี้แจง (ระบุองค์ประกอบเงื่อนไขข้อมูล ป.ป.ช.)</label>
+                  <textarea id="ita-edit-description" class="form-control" rows="3" placeholder="ชี้แจงรายละเอียดข้อมูล..."></textarea>
+                </div>
+
+                <div class="form-group form-full">
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" id="ita-edit-isPublic" style="width: 18px; height: 18px; cursor: pointer;" checked />
+                    <span>เผยแพร่หัวข้อนี้ต่อสาธารณะ (Public)</span>
+                  </label>
+                </div>
+
+                <!-- Link/File evidence section -->
+                <div class="form-group form-full" style="border-top: 1px solid #f1f5f9; padding-top: 1.5rem; margin-top: 0.5rem;">
+                  <h4 class="mb-1" style="font-size: 1rem; font-weight: 700;">🔗 จัดการเอกสารแนบและลิงก์หลักฐาน</h4>
+                  <p class="text-muted mb-2" style="font-size: 0.8rem;">แนบไฟล์หลักฐานอัปโหลด หรือเชื่อมโยงลิงก์ภายนอกเข้ากับหัวข้อประเมิน</p>
+                  
+                  <!-- Current Attachments list -->
+                  <div id="ita-attachments-list-container" class="mb-2" style="display: flex; flex-direction: column; gap: 8px;">
+                    <!-- List items with remove buttons -->
+                  </div>
+
+                  <!-- Dropdown Smart Link tools -->
+                  <div class="mb-2" style="background: rgba(112,66,248,0.03); border: 1px dashed var(--color-border); border-radius: 12px; padding: 1rem; margin-top: 1rem;">
+                    <span style="font-size: 0.85rem; font-weight: 800; color: var(--color-accent-primary); display: flex; align-items: center; gap: 4px; margin-bottom: 8px;">
+                      ⚡ ดึงลิงก์จากฐานข้อมูลที่มีอยู่แล้ว (Smart Link)
+                    </span>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                      <select id="ita-smart-link-type" class="form-control" style="flex: 1; min-width: 150px;">
+                        <option value="">-- เลือกประเภทข้อมูล --</option>
+                        <option value="prs">ข่าวสารประชาสัมพันธ์ (PR)</option>
+                        <option value="docs">เอกสารเผยแพร่ (จัดซื้อ/ทั่วไป)</option>
+                        <option value="downloads">ระบบเอกสารดาวน์โหลด (ฝ่ายงาน)</option>
+                        <option value="faqs">คำถามพบบ่อย (FAQs)</option>
+                      </select>
+                      <select id="ita-smart-link-item" class="form-control" style="flex: 2; min-width: 200px;" disabled>
+                        <option value="">-- เลือกรายการ --</option>
+                      </select>
+                      <button type="button" id="ita-smart-link-add-btn" class="btn-accent" style="padding: 0 15px;" disabled>เชื่อมโยง</button>
+                    </div>
+                  </div>
+
+                  <!-- Manual Add Section -->
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 1rem;">
+                    <div style="grid-column: 1 / -1; font-weight: 600; font-size: 0.85rem; color: #475569; margin-bottom: 4px;">หรือ เพิ่มหลักฐาน/ลิงก์แบบกำหนดเอง:</div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                      <label style="font-size: 0.8rem;">ชื่อป้ายลิงก์ (Label) เช่น "รายงานผลปี 69"</label>
+                      <input type="text" id="ita-manual-label" class="form-control" placeholder="เช่น รายงานประจำปี" />
+                    </div>
+                    <div class="form-group">
+                      <label style="font-size: 0.8rem;">วาง URL ลิงก์ตรง (External Web URL)</label>
+                      <input type="url" id="ita-manual-url" class="form-control" placeholder="https://..." />
+                    </div>
+                    <div class="form-group">
+                      <label style="font-size: 0.8rem;">หรือ อัปโหลดไฟล์ใหม่ (PDF, Doc, Image)</label>
+                      <input type="file" id="ita-manual-file" class="form-control file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.png" />
+                    </div>
+                    <div style="grid-column: 1 / -1; text-align: right; margin-top: 8px;">
+                      <button type="button" id="ita-manual-add-btn" class="btn-accent" style="padding: 0.5rem 1rem;">+ เพิ่มเอกสารแบบกำหนดเอง</button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="form-actions mt-3" style="border-top: 1px solid #f1f5f9; padding-top: 1.5rem;">
+                <button type="button" id="ita-edit-cancel-btn" class="btn-outline">ยกเลิก</button>
+                <button type="submit" class="btn-accent">บันทึกหัวข้อ OIT</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ========================= OTHERS PANEL ========================= -->
     <section id="others-panel" class="admin-panel hide">
       <div class="panel-header">
@@ -1683,10 +1773,161 @@
       </div>
     </section>
 
+    <!-- ========================= FEEDBACK PANEL ========================= -->
+    <section id="feedback-panel" class="admin-panel hide">
+      <div class="panel-header">
+        <div>
+          <h1>ระบบรับฟังความคิดเห็นและข้อเสนอแนะ (O17)</h1>
+          <p>ตรวจสอบสถิติความพึงพอใจและข้อคิดเห็นของประชาชน/ผู้รับบริการ</p>
+        </div>
+      </div>
+
+      <!-- ANALYTICS CARD -->
+      <div class="admin-card" style="display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 1.5rem; padding: 1.5rem; align-items: center; background: linear-gradient(135deg, #eef2ff 0%, #ffffff 100%); border: 1px solid #c7d2fe; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="background: #e0e7ff; color: #4f46e5; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+            ⭐
+          </div>
+          <div>
+            <div style="font-size: 0.8rem; font-weight: 800; color: #64748b; text-transform: uppercase;">คะแนนความพึงพอใจเฉลี่ย</div>
+            <div style="font-size: 1.8rem; font-weight: 800; color: #1e1b4b;" id="feedback-avg-rating">0.00 / 5.00</div>
+          </div>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 12px; margin-left: 20px;">
+          <div style="background: #e0f2fe; color: #0284c7; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+            💬
+          </div>
+          <div>
+            <div style="font-size: 0.8rem; font-weight: 800; color: #64748b; text-transform: uppercase;">ข้อคิดเห็นทั้งหมด</div>
+            <div style="font-size: 1.8rem; font-weight: 800; color: #0369a1;" id="feedback-total-count">0 เรื่อง</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th style="width: 150px;">หมวดหมู่</th>
+                <th style="width: 120px; text-align: center;">คะแนนพึงพอใจ</th>
+                <th>หัวข้อข้อเสนอแนะ</th>
+                <th style="width: 150px;">ผู้ส่ง</th>
+                <th style="width: 120px;">วันที่ยื่นเรื่อง</th>
+                <th style="width: 70px; text-align: center;">ลบ</th>
+              </tr>
+            </thead>
+            <tbody id="feedback-tbody">
+              <tr><td colspan="6" style="text-align:center;">กำลังโหลดข้อมูลข้อคิดเห็น...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================= COMPLAINTS PANEL ========================= -->
+    <section id="complaints-panel" class="admin-panel hide">
+      <div class="panel-header">
+        <div>
+          <h1>ระบบจัดการเรื่องร้องเรียนการทุจริต (O19, O20)</h1>
+          <p>ตรวจสอบและบริหารจัดการสถานะเรื่องร้องเรียนทุจริตประพฤติมิชอบ</p>
+        </div>
+      </div>
+
+      <!-- TABS TO SEPARATE ACTIVE AND COMPLETED CASES -->
+      <div style="display: flex; gap: 10px; margin-bottom: 1.25rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">
+        <button type="button" id="complaints-tab-active" onclick="filterComplaintsTab('active')" style="background: #0f172a; color: white; border: none; padding: 8px 18px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;">
+          📥 กำลังดำเนินการ (<span id="count-active">0</span>)
+        </button>
+        <button type="button" id="complaints-tab-closed" onclick="filterComplaintsTab('closed')" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 18px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;">
+          ✅ เสร็จสิ้น/ปิดเคสแล้ว (<span id="count-closed">0</span>)
+        </button>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th style="width: 140px;">รหัส (Token)</th>
+                <th style="width: 150px;">หมวดหมู่</th>
+                <th>หัวข้อเรื่องร้องเรียน</th>
+                <th style="width: 150px;">วันที่ยื่นเรื่อง</th>
+                <th style="width: 120px; text-align: center;">สถานะ</th>
+                <th style="width: 80px; text-align: center;">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="complaints-tbody">
+              <tr><td colspan="6" style="text-align:center;">กำลังโหลดรายการข้อร้องเรียน...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Complaint Detail Modal -->
+      <div id="complaint-detail-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 650px;">
+          <div class="modal-header">
+            <h3>รายละเอียดเรื่องร้องเรียน <span id="complaint-modal-token" style="color: var(--color-accent-primary);">COMP-XXXXXX</span></h3>
+            <button type="button" class="modal-close-btn" id="complaint-modal-close-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <div>
+                <span style="font-size:0.8rem; font-weight:700; color:#64748b; text-transform:uppercase;">หมวดหมู่</span>
+                <div id="complaint-modal-category" style="font-weight:700; color:var(--color-accent-primary);"></div>
+              </div>
+              <div>
+                <span style="font-size:0.8rem; font-weight:700; color:#64748b; text-transform:uppercase;">หัวข้อเรื่อง</span>
+                <div id="complaint-modal-title" style="font-weight:700; font-size:1.05rem; color:#1e293b;"></div>
+              </div>
+              <div>
+                <span style="font-size:0.8rem; font-weight:700; color:#64748b; text-transform:uppercase;">รายละเอียดเนื้อความ</span>
+                <div id="complaint-modal-detail" style="font-size:0.92rem; line-height:1.5; color:#334155; padding:10px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0; white-space:pre-line; max-height:150px; overflow-y:auto;"></div>
+              </div>
+              <div id="complaint-modal-reporter-block" style="background:#f1f5f9; padding:10px; border-radius:8px; border:1px solid #cbd5e1;">
+                <span style="font-size:0.8rem; font-weight:800; color:#475569; text-transform:uppercase;">👤 ข้อมูลผู้แจ้งเบาะแส</span>
+                <div id="complaint-modal-reporter" style="font-size:0.9rem; color:#334155; margin-top:4px;"></div>
+              </div>
+
+              <hr style="border:none; border-top:1px solid #e2e8f0; margin:10px 0;" />
+
+              <form id="complaint-update-form">
+                <input type="hidden" id="complaint-modal-id" />
+                <div class="form-grid">
+                  <div class="form-group form-full">
+                    <label for="complaint-modal-status">เปลี่ยนสถานะเรื่องร้องเรียน *</label>
+                    <select id="complaint-modal-status" class="form-control" required>
+                      <option value="pending">⏳ รอการรับเรื่อง (Pending)</option>
+                      <option value="investigating">🔎 อยู่ระหว่างตรวจสอบ (Investigating)</option>
+                      <option value="resolved">✅ ดำเนินการเสร็จสิ้น (Resolved)</option>
+                      <option value="rejected">❌ ไม่เข้าเกณฑ์ตรวจสอบ (Rejected)</option>
+                    </select>
+                  </div>
+                  <div class="form-group form-full">
+                    <label for="complaint-modal-note">บันทึกคำชี้แจงความคืบหน้า (แสดงให้ผู้ร้องเรียนเห็นเมื่อเช็กรหัส Token)</label>
+                    <textarea id="complaint-modal-note" class="form-control" rows="4" placeholder="เขียนรายละเอียดคำชี้แจงในการตรวจสอบ/มาตรการแก้ไข..."></textarea>
+                  </div>
+                </div>
+                <div class="form-actions mt-2">
+                  <button type="button" id="complaint-modal-cancel-btn" class="btn-outline">ยกเลิก</button>
+                  <button type="submit" class="btn-accent">บันทึกสถานะ</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 </div>
 
-<script src="/js/admin.js"></script>
-<script src="/js/curriculum-admin.js"></script>
+
+<script src="/js/admin.js?v=<%= Date.now() %>"></script>
+<script src="/js/curriculum-admin.js?v=<%= Date.now() %>"></script>
 </body>
 </html>

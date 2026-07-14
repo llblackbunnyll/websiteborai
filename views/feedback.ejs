@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ช่องทางการรับฟังความคิดเห็นและเสนอแนะแนวทางพัฒนาวิทยาลัยการอาชีพบ่อไร่" />
+  <title><%= title %></title>
+  <link rel="icon" href="/my-logo.webp" type="image/webp" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --fb-primary: #0d9488; /* Calm Teal/Emerald (สงบ แจ่มใส) */
+      --fb-primary-glow: rgba(13, 148, 136, 0.15);
+      --fb-bg: #f0fdfa; /* Soft mint/teal backdrop (สงบ เบิกบาน) */
+      --fb-card-bg: #ffffff;
+      --fb-border: #ccfbf1; /* Soft mint/teal borders */
+      --fb-text: #0f172a;
+      --fb-muted: #475569;
+      --fb-star: #eab308; /* Optimistic gold stars (แจ่มใส เบิกบาน) */
+    }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: var(--fb-bg);
+      color: var(--fb-text);
+      min-height: 100vh;
+      scroll-behavior: smooth;
+    }
+
+    .hero-banner {
+      background: linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #0f766e 100%);
+      color: #fff;
+      padding: 130px 24px 70px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 4px solid var(--fb-primary);
+    }
+
+    .hero-content {
+      max-width: 800px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 10;
+    }
+
+    .badge-icon {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 16px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #c7d2fe;
+      backdrop-filter: blur(10px);
+      margin-bottom: 20px;
+    }
+
+    .badge-icon span {
+      width: 8px;
+      height: 8px;
+      background: var(--fb-primary);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--fb-primary);
+    }
+
+    .title-h1 {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      line-height: 1.3;
+      margin-bottom: 0.75rem;
+      background: linear-gradient(to right, #ffffff, #c7d2fe);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle-p {
+      font-size: clamp(0.95rem, 2vw, 1.15rem);
+      color: #cbd5e1;
+      font-weight: 400;
+      line-height: 1.6;
+    }
+
+    .main-wrap {
+      max-width: 950px;
+      margin: -40px auto 5rem;
+      padding: 0 24px;
+      position: relative;
+      z-index: 20;
+    }
+
+    /* Overall Review Dashboard */
+    .review-dashboard {
+      background: var(--fb-card-bg);
+      border: 1px solid var(--fb-border);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+      margin-bottom: 2rem;
+      display: grid;
+      grid-template-columns: 1fr 1.5fr;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    @media (max-width: 768px) {
+      .review-dashboard {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        padding: 1.5rem;
+      }
+    }
+
+    .score-box {
+      text-align: center;
+      padding: 1rem;
+      border-right: 1px solid #f1f5f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @media (max-width: 768px) {
+      .score-box {
+        border-right: none;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 1.5rem;
+      }
+    }
+
+    .score-num {
+      font-size: 4.5rem;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1;
+    }
+
+    .score-star {
+      font-size: 1.5rem;
+      color: var(--fb-star);
+      margin: 8px 0;
+    }
+
+    .score-desc {
+      font-size: 0.85rem;
+      color: var(--fb-muted);
+      font-weight: 700;
+    }
+
+    /* Progress bars breakdown */
+    .breakdown-box {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .breakdown-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .star-label {
+      width: 45px;
+      color: #475569;
+      text-align: right;
+    }
+
+    .progress-bar-wrap {
+      flex: 1;
+      height: 8px;
+      background: #f1f5f9;
+      border-radius: 99px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--fb-star);
+      border-radius: 99px;
+    }
+
+    .percent-label {
+      width: 40px;
+      color: #64748b;
+    }
+
+    /* Collapsible Form Card */
+    .form-card {
+      background: var(--fb-card-bg);
+      border: 1px solid var(--fb-border);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.05);
+      margin-bottom: 2rem;
+      display: none; /* Collapsed by default */
+      animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 0.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 0.4rem;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      color: var(--fb-text);
+      transition: all 0.3s ease;
+      background: #fff;
+      box-sizing: border-box;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--fb-primary);
+      box-shadow: 0 0 0 3px var(--fb-primary-glow);
+    }
+
+    /* Rating stars inside form */
+    .rating-container {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 0.75rem 1.25rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .star-rating {
+      display: flex;
+      gap: 8px;
+      font-size: 2rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .star {
+      color: #cbd5e1;
+      transition: color 0.15s ease, transform 0.15s ease;
+    }
+
+    .star:hover {
+      transform: scale(1.15);
+    }
+
+    .star.active {
+      color: var(--fb-star);
+    }
+
+    .btn-action {
+      background: var(--fb-primary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 10px var(--fb-primary-glow);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-action:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-action-outline {
+      background: #fff;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+
+    .btn-action-outline:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+    }
+
+    /* Reviews List Layout */
+    .reviews-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 10px;
+    }
+
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 3rem;
+    }
+
+    .review-card {
+      background: var(--fb-card-bg);
+      border: 1px solid var(--fb-border);
+      border-radius: 1.25rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: transform 0.2s;
+    }
+
+    .review-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .review-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .review-stars {
+      color: var(--fb-star);
+      font-size: 0.95rem;
+      letter-spacing: 2px;
+    }
+
+    .review-tag {
+      font-size: 0.75rem;
+      background: #ccfbf1;
+      color: #0d9488;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-weight: 800;
+    }
+
+    .review-user-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--fb-muted);
+      font-weight: 700;
+    }
+
+    .review-title {
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: #0f172a;
+    }
+
+    .review-body {
+      font-size: 0.88rem;
+      line-height: 1.5;
+      color: #334155;
+      white-space: pre-line;
+      flex-grow: 1;
+    }
+
+    /* Modal success */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: all;
+    }
+
+    .modal-content {
+      background: white;
+      width: 100%;
+      max-width: 450px;
+      border-radius: 20px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      position: relative;
+      transform: scale(0.95) translateY(-20px);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      text-align: center;
+      padding: 2.5rem;
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: scale(1) translateY(0);
+    }
+  </style>
+</head>
+
+<body>
+  <%- include('partials/navbar'); %>
+
+  <!-- HERO BANNER -->
+  <section class="hero-banner">
+    <div class="hero-content">
+      <h1 class="title-h1">ความพึงพอใจในการให้บริการ</h1>
+      <p class="subtitle-p">
+        วิทยาลัยการอาชีพบ่อไร่ มุ่งมั่นพัฒนาการให้บริการอย่างสุจริตและโปร่งใส<br>
+        ทุกเสียงสะท้อนของท่านเป็นข้อมูลสำคัญในการตรวจสอบและยกระดับประสิทธิภาพสถาบัน
+      </p>
+    </div>
+  </section>
+
+  <main class="main-wrap">
+
+    <!-- OVERALL REVIEW DASHBOARD (APP STORE STYLE) -->
+    <div class="review-dashboard">
+      <!-- Left side: Big Score -->
+      <div class="score-box">
+        <div class="score-num"><%= stats.averageRating.toFixed(1) %></div>
+        <div class="score-star">
+          <% const roundedRating = Math.round(stats.averageRating); %>
+          <%= '★'.repeat(roundedRating) %><%= '☆'.repeat(5 - roundedRating) %>
+        </div>
+        <div class="score-desc">คะแนนความพึงพอใจเฉลี่ย</div>
+        <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; margin-top: 4px;">
+          (จากทั้งหมด <%= stats.totalCount %> บทวิจารณ์)
+        </div>
+      </div>
+
+      <!-- Right side: Star Breakdown Bars -->
+      <div class="breakdown-box">
+        <% for(let s = 5; s >= 1; s--) { %>
+          <div class="breakdown-row">
+            <span class="star-label"><%= s %> ดาว</span>
+            <div class="progress-bar-wrap">
+              <div class="progress-fill" style="width: <%= stats.starPercentages[s] %>%"></div>
+            </div>
+            <span class="percent-label"><%= stats.starPercentages[s] %>%</span>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- BUTTON TO TOGGLE FORM -->
+    <div style="display: flex; gap: 15px; margin-bottom: 2rem; justify-content: flex-end; flex-wrap: wrap;">
+      <button type="button" id="toggleFormBtn" class="btn-action" onclick="toggleForm()">
+        ✍️ เขียนรีวิว / ให้ข้อเสนอแนะ
+      </button>
+    </div>
+
+    <!-- COLLAPSIBLE FORM CARD -->
+    <div class="form-card" id="reviewFormContainer">
+      <div class="form-title">
+        <span>✍️ เขียนบทวิจารณ์ของคุณ</span>
+      </div>
+
+      <form id="feedbackForm">
+        <div class="form-group">
+          <label for="category" class="form-label">ด้านที่ต้องการให้ข้อเสนอแนะ *</label>
+          <select id="category" class="form-control" required style="cursor: pointer;">
+            <option value="">-- กรุณาเลือกด้าน --</option>
+            <option value="การบริการ">ด้านการให้บริการ/ความโปร่งใสเจ้าหน้าที่</option>
+            <option value="การจัดการศึกษา">ด้านหลักสูตร/การจัดการเรียนการสอน</option>
+            <option value="อาคารสถานที่">ด้านอาคารสถานที่/สภาพแวดล้อมวิทยาลัย</option>
+            <option value="อื่นๆ">ด้านอื่นๆ (ระบุในรายละเอียดเพิ่มเติม)</option>
+          </select>
+        </div>
+
+        <!-- STAR RATING (Interactive) -->
+        <div class="rating-container">
+          <label class="form-label" style="margin: 0;">คะแนนประเมินของคุณ *</label>
+          <div class="star-rating" id="starRating">
+            <span class="star active" data-value="1">★</span>
+            <span class="star active" data-value="2">★</span>
+            <span class="star active" data-value="3">★</span>
+            <span class="star active" data-value="4">★</span>
+            <span class="star active" data-value="5">★</span>
+          </div>
+          <span id="ratingDesc" style="font-size: 0.85rem; color: #64748b; font-weight: 700;">พึงพอใจมากที่สุด (5 คะแนน)</span>
+          <input type="hidden" id="rating" value="5" required />
+        </div>
+
+        <div class="form-group">
+          <label for="title" class="form-label">หัวข้อสั้นสรุปบทวิจารณ์ *</label>
+          <input type="text" id="title" class="form-control" placeholder="ระบุหัวข้อ เช่น บริการดีมาก, อยากให้ปรับปรุงโต๊ะเก้าอี้..." required />
+        </div>
+
+        <div class="form-group">
+          <label for="detail" class="form-label">รายละเอียดความคิดเห็น / คำอธิบายเพิ่มเติม *</label>
+          <textarea id="detail" class="form-control" rows="5" placeholder="เขียนอธิบายประสบการณ์การรับบริการ หรือคำแนะนำแก่ทางสถานศึกษาเพื่อให้เรานำข้อมูลไปปรับปรุงพัฒนา..." required></textarea>
+        </div>
+
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;">
+          <h4 style="margin: 0 0 0.75rem; color: #334155; font-weight: 800;">👤 ข้อมูลผู้รีวิว (เป็นตัวเลือกเสริม สามารถปกปิดได้)</h4>
+          
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="reporterName" class="form-label" style="font-size:0.85rem;">ชื่อหรือนามแฝง (จะถูกนำไปเผยแพร่สาธารณะ)</label>
+            <input type="text" id="reporterName" class="form-control" placeholder="เช่น ศิษย์เก่า, ผู้ปกครอง, หรือเว้นว่างเพื่อส่งนิรนาม" />
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="reporterEmail" class="form-label" style="font-size:0.85rem;">อีเมลติดต่อกลับ (จะถูกเก็บรักษาเป็นความลับ ไม่แสดงผลหน้าเว็บ)</label>
+            <input type="email" id="reporterEmail" class="form-control" placeholder="เช่น email@example.com (เว้นว่างได้)" />
+          </div>
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn-action" style="width:100%; justify-content:center;">🚀 ส่งบทวิจารณ์ของคุณ</button>
+      </form>
+    </div>
+
+    <!-- PUBLIC REVIEWS LIST (TOP COMMENTS GRID) -->
+    <div class="reviews-section-header">
+      <h2 style="font-weight: 800; font-size: 1.3rem; color: #0f172a; margin: 0;">💬 บทวิจารณ์และข้อเสนอแนะล่าสุด</h2>
+      <span style="font-size: 0.85rem; color: #64748b; font-weight: 700;">แสดงข้อมูลล่าสุด 6 รายการ</span>
+    </div>
+
+    <% if (recentReviews.length === 0) { %>
+      <div style="text-align: center; padding: 4rem 2rem; background: white; border: 1px solid #e2e8f0; border-radius: 1.25rem; color: #64748b;">
+        <span style="font-size: 2.5rem; display: block; margin-bottom: 10px;">🌟</span>
+        <strong>ยังไม่มีบทวิจารณ์ในระบบ</strong>
+        <p style="font-size: 0.85rem; margin-top: 4px; color: #94a3b8;">เป็นคนแรกที่ส่งข้อคิดเห็นประเมินการบริการเพื่อพัฒนาวิทยาลัยด้วยกัน!</p>
+      </div>
+    <% } else { %>
+      <div class="reviews-grid">
+        <% recentReviews.forEach(item => { %>
+          <div class="review-card">
+            <div class="review-header">
+              <div class="review-stars">
+                <%= '★'.repeat(item.rating) %><%= '☆'.repeat(5 - item.rating) %>
+              </div>
+              <span class="review-tag"><%= item.category %></span>
+            </div>
+            
+            <div class="review-title"><%= item.title %></div>
+            <div class="review-body"><%= item.detail %></div>
+            
+            <div class="review-user-row">
+              <span>👤 <%= item.reporterName || 'ผู้รับบริการนิรนาม' %></span>
+              <span>
+                <%= new Date(item.createdAt).toLocaleDateString('th-TH', {
+                  year: '2-digit', month: 'short', day: 'numeric'
+                }) %>
+              </span>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+
+  </main>
+
+  <!-- SUCCESS MODAL -->
+  <div id="successModal" class="modal-overlay">
+    <div class="modal-content">
+      <div style="width: 70px; height: 70px; background: #ccfbf1; color: #0d9488; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      
+      <h3 style="margin: 0 0 0.5rem; color: #0f172a; font-weight: 800; font-size: 1.4rem;">บันทึกบทวิจารณ์สำเร็จ!</h3>
+      <p style="color: #64748b; font-size: 0.9rem; line-height: 1.5; margin-bottom: 2rem;">ขอบพระคุณสำหรับทุกบทสะท้อนและคำประเมินระดับดาวที่เป็นประโยชน์ ระบบจะทำการปรับค่าสถิติโดยรวมแบบเรียลไทม์ในหน้านี้ทันที</p>
+      
+      <button type="button" onclick="reloadPage()" style="width:100%; padding: 12px; background: var(--fb-primary); color: #fff; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; transition: all 0.2s;">
+        🔄 โหลดข้อมูลใหม่
+      </button>
+    </div>
+  </div>
+
+  <%- include('partials/footer'); %>
+
+  <!-- RATING & COLLAPSIBLE FORM SCRIPT -->
+  <script>
+    // Collapsible Logic
+    function toggleForm() {
+      const container = document.getElementById('reviewFormContainer');
+      const btn = document.getElementById('toggleFormBtn');
+      if (container.style.display === 'block') {
+        container.style.display = 'none';
+        btn.innerHTML = '✍️ เขียนรีวิว / ให้ข้อเสนอแนะ';
+        btn.style.background = 'var(--fb-primary)';
+      } else {
+        container.style.display = 'block';
+        btn.innerHTML = '❌ ปิดฟอร์มเขียนบทวิจารณ์';
+        btn.style.background = '#ef4444';
+        container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    // Star Selection Interactive
+    const stars = document.querySelectorAll('#starRating .star');
+    const ratingInput = document.getElementById('rating');
+    const ratingDesc = document.getElementById('ratingDesc');
+
+    const descMap = {
+      1: 'พึงพอใจน้อยที่สุด (1 คะแนน)',
+      2: 'พึงพอใจน้อย (2 คะแนน)',
+      3: 'พึงพอใจปานกลาง (3 คะแนน)',
+      4: 'พึงพอใจมาก (4 คะแนน)',
+      5: 'พึงพอใจมากที่สุด (5 คะแนน)'
+    };
+
+    stars.forEach(star => {
+      star.addEventListener('click', () => {
+        const val = parseInt(star.getAttribute('data-value'), 10);
+        ratingInput.value = val;
+        ratingDesc.innerText = descMap[val];
+        updateStars(val);
+      });
+
+      star.addEventListener('mouseover', () => {
+        const val = parseInt(star.getAttribute('data-value'), 10);
+        updateStars(val);
+      });
+
+      star.addEventListener('mouseleave', () => {
+        const currentVal = parseInt(ratingInput.value, 10);
+        updateStars(currentVal);
+      });
+    });
+
+    function updateStars(val) {
+      stars.forEach((s, idx) => {
+        if (idx < val) {
+          s.classList.add('active');
+        } else {
+          s.classList.remove('active');
+        }
+      });
+    }
+
+    // Form Submit Handler
+    const successModal = document.getElementById('successModal');
+    const feedbackForm = document.getElementById('feedbackForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    feedbackForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'กำลังส่งข้อมูล...';
+
+      const payload = {
+        category: document.getElementById('category').value,
+        title: document.getElementById('title').value.trim(),
+        detail: document.getElementById('detail').value.trim(),
+        rating: parseInt(ratingInput.value, 10),
+        reporterName: document.getElementById('reporterName').value.trim() || null,
+        reporterEmail: document.getElementById('reporterEmail').value.trim() || null
+      };
+
+      try {
+        const res = await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        
+        if (res.ok) {
+          successModal.classList.add('active');
+        } else {
+          alert('ผิดพลาด: ' + (data.message || 'ไม่สามารถส่งรีวิวได้'));
+        }
+      } catch (err) {
+        console.error(err);
+        alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = '🚀 ส่งบทวิจารณ์ของคุณ';
+      }
+    });
+
+    function reloadPage() {
+      window.location.reload();
+    }
+  </script>
+</body>
+
+</html>

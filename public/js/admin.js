@@ -75,6 +75,11 @@ function getAuthHeaders() {
     if (group) group.classList.toggle('collapsed');
   };
 
+  window.switchToComplaintsPanel = function() {
+    const btn = document.querySelector('.nav-btn[data-target="complaints-panel"]');
+    if (btn) btn.click();
+  };
+
   // Auto-expand group that contains the active button, and collapse others
   function expandGroupOfActiveBtn(activeBtn) {
     const parentGroup = activeBtn.closest('.nav-group');
@@ -99,6 +104,13 @@ function getAuthHeaders() {
 
       // Save to localStorage
       localStorage.setItem('activeAdminTab', targetId);
+
+      // Dynamic load on click
+      if (targetId === 'feedback-panel') {
+        loadFeedbacks();
+      } else if (targetId === 'complaints-panel') {
+        loadComplaints();
+      }
     });
   });
 
@@ -821,177 +833,7 @@ function getAuthHeaders() {
     });
   });
 
-  // 5. ITA PANEL LOGIC
-  const itaTbody = document.getElementById('ita-tbody');
-  const itaModal = document.getElementById('ita-modal');
-  const itaForm = document.getElementById('ita-form');
-  const itaInitBtn = document.getElementById('ita-init-btn');
-  const itaAttachmentsList = document.getElementById('ita-attachments-list');
-  const itaAddLinkBtn = document.getElementById('ita-add-link-btn');
-  const itaCancelBtn = document.getElementById('ita-cancel-btn');
-  const itaModalCloseIcon = document.getElementById('ita-modal-close-icon');
-
-  let allITA = [];
-  let currentItaAttachments = []; // Local state for the modal
-  let itaNewLinksToAdd = []; // Separate buffer for new links
-
-  async function loadITA() {
-    try {
-      const res = await fetch(`${API_BASE}/ita`, { headers: getAuthHeaders() });
-      allITA = await res.json();
-      renderITA(allITA);
-    } catch (e) {
-      if (itaTbody) itaTbody.innerHTML = '<tr><td colspan="4" class="table-empty">Error loading ITA data</td></tr>';
-    }
-  }
-
-  function renderITA(items) {
-    if (!itaTbody) return;
-    if (items.length === 0) {
-      itaTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;">ยังไม่เปิดใช้งานระบบ ITA <br><small>กรุณากดปุ่มรีเซ็ต/เริ่มระบบเพื่อเริ่มต้น</small></td></tr>';
-      return;
-    }
-    itaTbody.innerHTML = items.map(item => {
-      const count = (item.attachments || []).length;
-      const statusHtml = count > 0 
-        ? `<span class="badge badge-green">✅ เรียบร้อย (${count} รายการ)</span>` 
-        : `<span class="badge" style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;">⏳ ยังไม่มีข้อมูล</span>`;
-      
-      return `
-        <tr>
-          <td style="font-weight:700;color:var(--color-accent-primary);text-align:center;">${item.code}</td>
-          <td>
-            <div style="font-weight:600;">${escapeHtml(item.title)}</div>
-            <div style="font-size:0.8rem;color:var(--color-text-secondary);margin-top:2px;">${escapeHtml(item.description || '-')}</div>
-            <div style="font-size:0.75rem;color:var(--color-text-secondary);margin-top:4px;opacity:0.7">อัปเดตล่าสุด: ${item.updatedAt ? new Date(item.updatedAt).toLocaleDateString('th-TH') : '-'}</div>
-          </td>
-          <td>${statusHtml}</td>
-          <td style="text-align:right;">
-            <button class="icon-btn" onclick="editITA('${item.code}')" title="จัดการข้อมูล">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            </button>
-          </td>
-        </tr>
-      `;
-    }).join('');
-  }
-
-  window.editITA = (code) => {
-    const item = allITA.find(i => i.code === code);
-    if (!item) return;
-
-    document.getElementById('ita-code').value = item.code;
-    document.getElementById('ita-display-title').textContent = `${item.code}: ${item.title}`;
-    document.getElementById('ita-display-desc').textContent = item.description || 'ไม่มีคำอธิบายเพิ่มเติม';
-    
-    currentItaAttachments = Array.isArray(item.attachments) ? [...item.attachments] : [];
-    itaNewLinksToAdd = [];
-    
-    renderItaAttachments();
-    itaModal.classList.add('active');
-  };
-
-  function renderItaAttachments() {
-    if (!itaAttachmentsList) return;
-    
-    const allItems = [...currentItaAttachments, ...itaNewLinksToAdd];
-    
-    if (allItems.length === 0) {
-      itaAttachmentsList.innerHTML = '<div style="color:var(--color-text-secondary);font-size:0.9rem;padding:0.5rem;border:1px dashed #ddd;border-radius:8px;text-align:center;">ยังไม่มีการแนบไฟล์หรือลิงก์</div>';
-      return;
-    }
-
-    itaAttachmentsList.innerHTML = allItems.map((att, idx) => `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:0.6rem 1rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
-        <div style="display:flex;align-items:center;gap:0.75rem;">
-          <span style="font-size:1.2rem;">${att.type === 'file' ? '📄' : '🔗'}</span>
-          <div>
-            <div style="font-weight:600;font-size:0.9rem;">${escapeHtml(att.label)}</div>
-            <a href="${att.url}" target="_blank" style="font-size:0.75rem;color:var(--color-accent-primary);text-decoration:none;">ดูข้อมูล/ลิงก์</a>
-          </div>
-        </div>
-        <button type="button" class="icon-btn danger" onclick="removeItaAttachment(${idx})" style="padding:4px;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-      </div>
-    `).join('');
-  }
-
-  window.removeItaAttachment = (idx) => {
-    if (idx < currentItaAttachments.length) {
-      currentItaAttachments.splice(idx, 1);
-    } else {
-      itaNewLinksToAdd.splice(idx - currentItaAttachments.length, 1);
-    }
-    renderItaAttachments();
-  };
-
-  itaAddLinkBtn?.addEventListener('click', () => {
-    const label = document.getElementById('ita-new-link-label').value.trim();
-    const url = document.getElementById('ita-new-link-url').value.trim();
-    if (!url) return alert('กรุณาใส่ URL');
-    
-    itaNewLinksToAdd.push({ label: label || 'ลิงก์ภายนอก', url, type: 'link' });
-    document.getElementById('ita-new-link-label').value = '';
-    document.getElementById('ita-new-link-url').value = '';
-    renderItaAttachments();
-  });
-
-  itaForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = itaForm.querySelector('button[type="submit"]');
-    const code = document.getElementById('ita-code').value;
-    
-    btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
-    
-    try {
-      const formData = new FormData();
-      formData.append('existingAttachments', JSON.stringify(currentItaAttachments));
-      formData.append('newLinks', JSON.stringify(itaNewLinksToAdd));
-      
-      const fileInput = document.getElementById('ita-new-files');
-      if (fileInput.files.length > 0) {
-        for (let i = 0; i < fileInput.files.length; i++) {
-          formData.append('files', fileInput.files[i]);
-        }
-      }
-
-      const res = await fetch(`${API_BASE}/ita/${code}`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: formData
-      });
-
-      if (res.ok) {
-        await loadITA();
-        itaModal.classList.remove('active');
-        fileInput.value = '';
-      } else {
-        alert('ไม่สามารถบันทึกข้อมูล ITA ได้');
-      }
-    } catch (err) {
-      alert('Error saving ITA item');
-    } finally {
-      btn.disabled = false; btn.textContent = 'บันทึกข้อมูลทั้งหมด';
-    }
-  });
-
-  itaInitBtn?.addEventListener('click', async () => {
-    if (!confirm('ยืนยันการตั้งค่าเริ่มต้นระบบ ITA? หัวข้อเดิมจะถูกรีเซ็ตชื่อเป็นค่าเริ่มต้น (แต่ไฟล์จะไม่หาย)')) return;
-    try {
-      const res = await fetch(`${API_BASE}/ita/init`, {
-        method: 'POST',
-        headers: getAuthHeaders()
-      });
-      if (res.ok) {
-        await loadITA();
-        alert('ตั้งค่าระบบ ITA สำเร็จ (O1-O37)');
-      }
-    } catch (err) { alert('Init failed'); }
-  });
-
-  itaCancelBtn?.addEventListener('click', () => itaModal.classList.remove('active'));
-  itaModalCloseIcon?.addEventListener('click', () => itaModal.classList.remove('active'));
+  // 5. ITA PANEL LOGIC (Removed old implementation in favor of year-aware ITA system at the bottom)
 
   // 6. STUDENT PANEL LOGIC
   const studentSaveButtons = document.querySelectorAll('.student-save-trigger');
@@ -1901,13 +1743,13 @@ function getAuthHeaders() {
   loadPR();
   loadPersonnel();
   loadDocs();
-  loadITA();
   loadStudentData();
   fetchUniqueDuties();
   loadFacilities();
   loadPartners();
   loadBudgets();
   loadSiteImages();
+  loadComplaints();
 
   // ─── ACHIEVEMENTS PANEL ───────────────────────────────────────────────────
   const achieveFormContainer = document.getElementById('achieve-form-container');
@@ -2308,6 +2150,661 @@ function getAuthHeaders() {
   };
 
   if (faqPanel) loadFAQs();
+
+
+  // ─── ITA PANEL LOGIC ──────────────────────────────────────────────────────────
+  const itaPanel = document.getElementById('ita-panel');
+  const itaTbody = document.getElementById('ita-tbody');
+  const itaAdminYearSelect = document.getElementById('ita-admin-year-select');
+  const itaAdminInitBtn = document.getElementById('ita-admin-init-btn');
+  const itaEditModal = document.getElementById('ita-edit-modal');
+  const itaEditForm = document.getElementById('ita-edit-form');
+  const itaModalCloseBtn = document.getElementById('ita-modal-close-btn');
+  const itaEditCancelBtn = document.getElementById('ita-edit-cancel-btn');
+  const itaSmartLinkType = document.getElementById('ita-smart-link-type');
+  const itaSmartLinkItem = document.getElementById('ita-smart-link-item');
+  const itaSmartLinkAddBtn = document.getElementById('ita-smart-link-add-btn');
+  const itaManualAddBtn = document.getElementById('ita-manual-add-btn');
+
+
+  let currentITAItems = [];
+  let smartOptionsData = null;
+  let tempAttachments = [];   // attachments shown in modal (mix of existing + pending)
+  let pendingFiles = [];      // files not yet uploaded
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  function itaGetToken() { return getToken(); }
+
+  function showItaNotice(msg, isError = false) {
+    const n = document.createElement('div');
+    n.style.cssText = `position:fixed;top:1.2rem;right:1.2rem;z-index:9999;padding:0.9rem 1.4rem;border-radius:12px;font-weight:600;font-size:0.95rem;box-shadow:0 4px 20px rgba(0,0,0,0.15);background:${isError ? '#fee2e2' : '#dcfce7'};color:${isError ? '#b91c1c' : '#15803d'};`;
+    n.textContent = msg;
+    document.body.appendChild(n);
+    setTimeout(() => n.remove(), 3500);
+  }
+
+  // ── Render attachments list inside modal ─────────────────────────────────────
+  function renderTempAttachments() {
+    const container = document.getElementById('ita-attachments-list-container');
+    if (!container) return;
+
+    if (!tempAttachments.length) {
+      container.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:0.8rem;font-size:0.85rem;border:1px dashed #e2e8f0;border-radius:8px;">ยังไม่มีหลักฐาน / ลิงก์</div>';
+      return;
+    }
+
+    container.innerHTML = tempAttachments.map((att, idx) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:#f8fafc;border:1px solid #e2e8f0;padding:0.5rem 0.75rem;border-radius:8px;">
+        <div style="display:flex;align-items:center;gap:8px;font-size:0.88rem;min-width:0;flex:1;">
+          <span>${att.type === 'file' ? '📄' : '🔗'}</span>
+          <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;">${escapeHtml(att.label)}</span>
+          ${att.isPending
+            ? '<span style="color:#f59e0b;font-size:0.75rem;white-space:nowrap;">(รอนำส่ง)</span>'
+            : `<a href="${att.url}" target="_blank" style="color:var(--color-accent-primary);font-size:0.78rem;text-decoration:none;white-space:nowrap;">(ดูลิงก์)</a>`
+          }
+        </div>
+        <button type="button" onclick="itaRemoveAttachment(${idx})" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:1.1rem;padding:2px 4px;flex-shrink:0;" title="ลบ">🗑️</button>
+      </div>
+    `).join('');
+  }
+
+  window.itaRemoveAttachment = function(idx) {
+    const att = tempAttachments[idx];
+    if (att && att.isPending) {
+      const pIdx = pendingFiles.findIndex(pf => pf.label === att.label);
+      if (pIdx !== -1) pendingFiles.splice(pIdx, 1);
+    }
+    tempAttachments.splice(idx, 1);
+    renderTempAttachments();
+  };
+
+  // ── Open / Close Modal ──────────────────────────────────────────────────────
+  function openItaModal(item) {
+    tempAttachments = Array.isArray(item.attachments) ? JSON.parse(JSON.stringify(item.attachments)) : [];
+    pendingFiles = [];
+
+    document.getElementById('ita-edit-code').value = item.code;
+    document.getElementById('ita-edit-year').value = item.year;
+    document.getElementById('ita-modal-code-title').innerText = item.code;
+    document.getElementById('ita-edit-title').value = item.title || '';
+    document.getElementById('ita-edit-description').value = item.description || '';
+    document.getElementById('ita-edit-isPublic').checked = item.isPublic !== false;
+
+    // Reset smart-link and manual sub-forms
+    if (itaSmartLinkType) itaSmartLinkType.value = '';
+    if (itaSmartLinkItem) { itaSmartLinkItem.innerHTML = '<option value="">-- เลือกรายการ --</option>'; itaSmartLinkItem.disabled = true; }
+    if (itaSmartLinkAddBtn) itaSmartLinkAddBtn.disabled = true;
+    const manualLabel = document.getElementById('ita-manual-label');
+    const manualUrl   = document.getElementById('ita-manual-url');
+    const manualFile  = document.getElementById('ita-manual-file');
+    if (manualLabel) manualLabel.value = '';
+    if (manualUrl)   manualUrl.value = '';
+    if (manualFile)  manualFile.value = '';
+
+    renderTempAttachments();
+    itaEditModal.classList.add('active');
+    itaEditModal.scrollTop = 0;
+  }
+
+  function closeItaModal() {
+    itaEditModal.classList.remove('active');
+    pendingFiles = [];
+  }
+
+  itaModalCloseBtn?.addEventListener('click', closeItaModal);
+  itaEditCancelBtn?.addEventListener('click', closeItaModal);
+  itaEditModal?.addEventListener('click', (e) => { if (e.target === itaEditModal) closeItaModal(); });
+
+  // ── Load ITA table ──────────────────────────────────────────────────────────
+  async function loadITA() {
+    if (!itaTbody) return;
+    const year = itaAdminYearSelect?.value || '2569';
+    itaTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:#94a3b8;">⏳ กำลังโหลดข้อมูล...</td></tr>';
+    try {
+      const res = await fetch(`/api/ita?year=${year}`);
+      if (!res.ok) throw new Error('API error');
+      const items = await res.json();
+      currentITAItems = items;
+      renderITA(items);
+    } catch (err) {
+      console.error('[ITA] loadITA error:', err);
+      itaTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:#ef4444;">โหลดข้อมูลล้มเหลว — ลองรีเฟรชหน้าเว็บ</td></tr>';
+    }
+  }
+
+  function renderITA(items) {
+    const statTotal   = document.getElementById('ita-stat-total');
+    const statDone    = document.getElementById('ita-stat-completed');
+    const statPercent = document.getElementById('ita-stat-percent');
+
+    if (!items.length) {
+      itaTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2.5rem;color:#64748b;">ยังไม่มีข้อมูล — กด <strong>"+ เริ่มปีงบประมาณใหม่"</strong> เพื่อสร้างหัวข้อ O1-O23</td></tr>';
+      if (statTotal) statTotal.innerText = '0';
+      if (statDone) statDone.innerText = '0';
+      if (statPercent) statPercent.innerText = '0%';
+      return;
+    }
+
+    let completed = 0;
+    itaTbody.innerHTML = items.map(item => {
+      const atts = Array.isArray(item.attachments) ? item.attachments : [];
+      const hasContent = atts.length > 0;
+      if (hasContent) completed++;
+
+      const attsHtml = atts.length
+        ? atts.map(a => `<div style="font-size:0.8rem;display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;">
+            <span>${a.type === 'file' ? '📄' : '🔗'}</span>
+            <a href="${a.url}" target="_blank" style="color:#475569;text-decoration:none;font-weight:500;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(a.label)}</a>
+          </div>`).join('')
+        : '<span style="color:#cbd5e1;font-size:0.78rem;">ยังไม่มีหลักฐาน</span>';
+
+      const statusBadge = hasContent
+        ? '<span style="background:#dcfce7;color:#15803d;padding:2px 10px;border-radius:99px;font-size:0.78rem;font-weight:700;">✅ เสร็จ</span>'
+        : '<span style="background:#fee2e2;color:#b91c1c;padding:2px 10px;border-radius:99px;font-size:0.78rem;font-weight:700;">⏳ รอ</span>';
+
+      const pubBadge = item.isPublic !== false
+        ? '<span style="background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:99px;font-size:0.78rem;font-weight:600;">แสดง</span>'
+        : '<span style="background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:99px;font-size:0.78rem;font-weight:600;">ซ่อน</span>';
+
+      return `
+        <tr style="cursor:pointer;" onclick="editITA('${item.code}')" title="คลิกเพื่อแก้ไข ${item.code}">
+          <td><span style="background:var(--color-accent-primary);color:#fff;padding:3px 10px;border-radius:99px;font-weight:700;font-size:0.85rem;">${item.code}</span></td>
+          <td>
+            <div style="font-weight:700;font-size:0.9rem;">${escapeHtml(item.title)}</div>
+            ${item.description ? `<div style="font-size:0.75rem;color:#94a3b8;margin-top:2px;line-height:1.4;">${escapeHtml(item.description.substring(0, 80))}${item.description.length > 80 ? '...' : ''}</div>` : ''}
+          </td>
+          <td><div style="display:flex;flex-direction:column;gap:3px;">${attsHtml}</div></td>
+          <td style="text-align:center;">${statusBadge}</td>
+          <td style="text-align:center;">${pubBadge}</td>
+          <td style="text-align:center;">
+            <button class="icon-btn" onclick="event.stopPropagation();editITA('${item.code}')" title="แก้ไข" style="padding:6px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </td>
+        </tr>`;
+    }).join('');
+
+    const total = items.length;
+    const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+    if (statTotal) statTotal.innerText = total;
+    if (statDone) statDone.innerText = completed;
+    if (statPercent) statPercent.innerText = pct + '%';
+  }
+
+  window.editITA = function(code) {
+    const item = currentITAItems.find(i => i.code === code);
+    if (item) openItaModal(item);
+  };
+
+  itaAdminYearSelect?.addEventListener('change', loadITA);
+
+  // ── Init button ─────────────────────────────────────────────────────────────
+  itaAdminInitBtn?.addEventListener('click', async () => {
+    const year = itaAdminYearSelect?.value || '2569';
+    if (!confirm(`สร้างหัวข้อ ITA O1-O23 เริ่มต้นสำหรับปีงบประมาณ ${year}?\n(ถ้ามีข้อมูลเดิมอยู่แล้วจะไม่ถูกแทนที่)`)) return;
+    itaAdminInitBtn.disabled = true;
+    itaAdminInitBtn.textContent = 'กำลังสร้าง...';
+    try {
+      const res = await fetch('/api/ita/init', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${itaGetToken()}` },
+        body: JSON.stringify({ year })
+      });
+      if (res.ok) {
+        showItaNotice('✅ สร้างหัวข้อ ITA สำเร็จ');
+        loadITA();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        showItaNotice('❌ เกิดข้อผิดพลาด: ' + (err.message || 'ไม่ทราบสาเหตุ'), true);
+      }
+    } catch (e) {
+      showItaNotice('❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', true);
+    } finally {
+      itaAdminInitBtn.disabled = false;
+      itaAdminInitBtn.textContent = '+ เริ่มปีงบประมาณใหม่';
+    }
+  });
+
+  // ── Smart Link dropdown ─────────────────────────────────────────────────────
+  async function loadSmartLinkOptions() {
+    try {
+      const res = await fetch('/api/ita/smart-options', {
+        headers: { 'Authorization': `Bearer ${itaGetToken()}` }
+      });
+      if (res.ok) smartOptionsData = await res.json();
+    } catch (e) {
+      console.warn('[ITA] Failed to load smart link options:', e);
+    }
+  }
+
+  itaSmartLinkType?.addEventListener('change', (e) => {
+    const type = e.target.value;
+    if (!itaSmartLinkItem || !itaSmartLinkAddBtn) return;
+
+    if (!type || !smartOptionsData?.[type]?.length) {
+      itaSmartLinkItem.innerHTML = '<option value="">-- เลือกรายการ --</option>';
+      itaSmartLinkItem.disabled = true;
+      itaSmartLinkAddBtn.disabled = true;
+      return;
+    }
+
+    itaSmartLinkItem.innerHTML = '<option value="">-- เลือกรายการ --</option>' +
+      smartOptionsData[type].map(opt =>
+        `<option value="${escapeHtml(opt.url)}" data-label="${escapeHtml(opt.label)}">${escapeHtml(opt.label)}</option>`
+      ).join('');
+    itaSmartLinkItem.disabled = false;
+    itaSmartLinkAddBtn.disabled = false;
+  });
+
+  itaSmartLinkAddBtn?.addEventListener('click', () => {
+    if (!itaSmartLinkItem) return;
+    const url = itaSmartLinkItem.value;
+    const selectedOpt = itaSmartLinkItem.options[itaSmartLinkItem.selectedIndex];
+    if (!url) { showItaNotice('กรุณาเลือกรายการ', true); return; }
+
+    const rawLabel = selectedOpt?.getAttribute('data-label') || url;
+    const label = rawLabel.replace(/^\[.*?\]\s*/, '');   // trim prefix like "[ข่าวสาร] "
+
+    if (tempAttachments.some(a => a.url === url)) {
+      showItaNotice('ลิงก์นี้มีอยู่แล้ว', true); return;
+    }
+
+    tempAttachments.push({ label, url, type: 'link' });
+    renderTempAttachments();
+
+    // Reset dropdowns
+    itaSmartLinkType.value = '';
+    itaSmartLinkItem.innerHTML = '<option value="">-- เลือกรายการ --</option>';
+    itaSmartLinkItem.disabled = true;
+    itaSmartLinkAddBtn.disabled = true;
+  });
+
+  // ── Manual add attachment ───────────────────────────────────────────────────
+  itaManualAddBtn?.addEventListener('click', () => {
+    const labelEl = document.getElementById('ita-manual-label');
+    const urlEl   = document.getElementById('ita-manual-url');
+    const fileEl  = document.getElementById('ita-manual-file');
+
+    const label = labelEl?.value.trim() || '';
+    const urlVal = urlEl?.value.trim() || '';
+    const hasFile = fileEl?.files?.length > 0;
+
+    if (!label) { showItaNotice('กรุณากรอกชื่อป้ายลิงก์ก่อน', true); return; }
+    if (!urlVal && !hasFile) { showItaNotice('กรุณากรอก URL หรือเลือกไฟล์', true); return; }
+
+    if (urlVal) {
+      if (tempAttachments.some(a => a.url === urlVal)) { showItaNotice('URL นี้มีอยู่แล้ว', true); return; }
+      tempAttachments.push({ label, url: urlVal, type: 'link' });
+      if (labelEl) labelEl.value = '';
+      if (urlEl) urlEl.value = '';
+    } else {
+      const file = fileEl.files[0];
+      pendingFiles.push({ label, file });
+      tempAttachments.push({ label, url: '#pending', type: 'file', isPending: true });
+      if (labelEl) labelEl.value = '';
+      if (fileEl) fileEl.value = '';
+    }
+
+    renderTempAttachments();
+  });
+
+  // ── Submit form ─────────────────────────────────────────────────────────────
+  itaEditForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const code      = document.getElementById('ita-edit-code')?.value;
+    const year      = document.getElementById('ita-edit-year')?.value;
+    const title     = document.getElementById('ita-edit-title')?.value || '';
+    const desc      = document.getElementById('ita-edit-description')?.value || '';
+    const isPublic  = document.getElementById('ita-edit-isPublic')?.checked ?? true;
+
+    if (!code || !year) { showItaNotice('ข้อมูลไม่ครบ (code / year)', true); return; }
+
+    const saveBtn = itaEditForm.querySelector('button[type="submit"]');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'กำลังบันทึก...'; }
+
+    // Separate committed (non-pending) attachments from files to upload
+    const committed = tempAttachments.filter(a => !a.isPending);
+
+    const fd = new FormData();
+    fd.append('title', title);
+    fd.append('description', desc);
+    fd.append('isPublic', String(isPublic));
+    fd.append('existingAttachments', JSON.stringify(committed));
+
+    const fileLabels = [];
+    pendingFiles.forEach(pf => {
+      fd.append('files', pf.file);
+      fileLabels.push(pf.label);
+    });
+    fd.append('fileLabels', JSON.stringify(fileLabels));
+
+    try {
+      const res = await fetch(`/api/ita/${code}/${year}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${itaGetToken()}` },
+        body: fd
+      });
+
+      if (res.ok) {
+        showItaNotice(`✅ บันทึก ${code} สำเร็จ`);
+        closeItaModal();
+        loadITA();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        showItaNotice('❌ ' + (err.message || 'บันทึกไม่สำเร็จ'), true);
+      }
+    } catch (err) {
+      console.error('[ITA] submit error:', err);
+      showItaNotice('❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', true);
+    } finally {
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'บันทึกหัวข้อ OIT'; }
+    }
+  });
+
+  // ─── COMPLAINTS PANEL LOGIC ──────────────────────────────────────────────────
+  const complaintsPanel = document.getElementById('complaints-panel');
+  const complaintsTbody = document.getElementById('complaints-tbody');
+  const complaintDetailModal = document.getElementById('complaint-detail-modal');
+  const complaintModalCloseBtn = document.getElementById('complaint-modal-close-btn');
+  const complaintModalCancelBtn = document.getElementById('complaint-modal-cancel-btn');
+  const complaintUpdateForm = document.getElementById('complaint-update-form');
+
+  let currentComplaints = [];
+  let currentComplaintsTab = 'active'; // 'active' or 'closed'
+
+  async function loadComplaints() {
+    if (!complaintsPanel) return;
+    try {
+      const res = await fetch('/api/admin/complaints', {
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
+      if (!res.ok) throw new Error('API Error');
+      const items = await res.json();
+      currentComplaints = items;
+
+      // Update Tab Counts
+      const activeItems = items.filter(i => i.status === 'pending' || i.status === 'investigating');
+      const closedItems = items.filter(i => i.status === 'resolved' || i.status === 'rejected');
+      
+      const countActiveEl = document.getElementById('count-active');
+      const countClosedEl = document.getElementById('count-closed');
+      if (countActiveEl) countActiveEl.textContent = activeItems.length;
+      if (countClosedEl) countClosedEl.textContent = closedItems.length;
+
+      renderComplaints(items);
+
+      // Update badge count & global banner
+      const pendingCount = items.filter(i => i.status === 'pending').length;
+      
+      const badge = document.getElementById('complaints-badge');
+      if (badge) {
+        if (pendingCount > 0) {
+          badge.textContent = pendingCount;
+          badge.style.display = 'inline-block';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+      
+      const alertBanner = document.getElementById('admin-global-alert');
+      const alertText = document.getElementById('admin-alert-text');
+      if (alertBanner && alertText) {
+        if (pendingCount > 0) {
+          alertText.textContent = `คุณมีเรื่องร้องเรียนการทุจริตใหม่ที่ยังไม่ได้รับเรื่อง ${pendingCount} รายการ`;
+          alertBanner.style.display = 'flex';
+        } else {
+          alertBanner.style.display = 'none';
+        }
+      }
+    } catch (err) {
+      console.error('[Complaints] load error:', err);
+      if (complaintsTbody) {
+        complaintsTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:#ef4444;">โหลดข้อมูลล้มเหลว</td></tr>';
+      }
+    }
+  }
+
+  window.filterComplaintsTab = function(tabName) {
+    currentComplaintsTab = tabName;
+    const activeTabBtn = document.getElementById('complaints-tab-active');
+    const closedTabBtn = document.getElementById('complaints-tab-closed');
+    if (activeTabBtn && closedTabBtn) {
+      if (tabName === 'active') {
+        activeTabBtn.style.background = '#0f172a';
+        activeTabBtn.style.color = 'white';
+        activeTabBtn.style.border = 'none';
+        closedTabBtn.style.background = '#f1f5f9';
+        closedTabBtn.style.color = '#475569';
+        closedTabBtn.style.border = '1px solid #cbd5e1';
+      } else {
+        closedTabBtn.style.background = '#0f172a';
+        closedTabBtn.style.color = 'white';
+        closedTabBtn.style.border = 'none';
+        activeTabBtn.style.background = '#f1f5f9';
+        activeTabBtn.style.color = '#475569';
+        activeTabBtn.style.border = '1px solid #cbd5e1';
+      }
+    }
+    renderComplaints(currentComplaints);
+  };
+
+  function renderComplaints(items) {
+    if (!complaintsTbody) return;
+
+    // Filter items based on current tab selection
+    const filtered = items.filter(item => {
+      if (currentComplaintsTab === 'active') {
+        return item.status === 'pending' || item.status === 'investigating';
+      } else {
+        return item.status === 'resolved' || item.status === 'rejected';
+      }
+    });
+
+    if (filtered.length === 0) {
+      const msg = currentComplaintsTab === 'active' ? 'ไม่มีรายการร้องเรียนที่อยู่ระหว่างดำเนินการ' : 'ไม่มีรายการร้องเรียนที่เสร็จสิ้น/ปิดเคสแล้ว';
+      complaintsTbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2.5rem;color:#64748b;">${msg}</td></tr>`;
+      return;
+    }
+
+    complaintsTbody.innerHTML = filtered.map(item => {
+      let statusText = 'รอรับเรื่อง';
+      let statusClass = 'status-pending';
+      if (item.status === 'investigating') { statusText = 'กำลังตรวจสอบ'; statusClass = 'status-warning'; }
+      else if (item.status === 'resolved') { statusText = 'เสร็จสิ้น'; statusClass = 'status-success'; }
+      else if (item.status === 'rejected') { statusText = 'ไม่เข้าเกณฑ์'; statusClass = 'status-danger'; }
+
+      const dateStr = new Date(item.createdAt).toLocaleDateString('th-TH', {
+        year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+
+      return `
+        <tr style="cursor:pointer;" onclick="viewComplaintDetail('${item.id}')" title="คลิกเพื่อดูรายละเอียด">
+          <td><span style="font-family:monospace;font-weight:700;font-size:0.9rem;background:#f1f5f9;padding:3px 8px;border-radius:4px;">${item.token}</span></td>
+          <td><span style="font-size:0.85rem;background:#fee2e2;color:#ef4444;padding:3px 8px;border-radius:99px;font-weight:700;">${escapeHtml(item.category)}</span></td>
+          <td>
+            <div style="font-weight:700;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;">${escapeHtml(item.title)}</div>
+          </td>
+          <td><span style="font-size:0.85rem;color:#64748b;">${dateStr}</span></td>
+          <td style="text-align:center;"><span class="status-badge ${statusClass}">${statusText}</span></td>
+          <td style="text-align:center;">
+            <button class="icon-btn" onclick="event.stopPropagation();viewComplaintDetail('${item.id}')" title="จัดการ" style="padding:6px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  window.viewComplaintDetail = function(id) {
+    const item = currentComplaints.find(c => c.id === id);
+    if (!item) return;
+
+    document.getElementById('complaint-modal-id').value = item.id;
+    document.getElementById('complaint-modal-token').innerText = item.token;
+    document.getElementById('complaint-modal-category').innerText = item.category;
+    document.getElementById('complaint-modal-title').innerText = item.title;
+    document.getElementById('complaint-modal-detail').innerText = item.detail;
+    document.getElementById('complaint-modal-status').value = item.status;
+    document.getElementById('complaint-modal-note').value = item.adminNote || '';
+
+    const reporterBlock = document.getElementById('complaint-modal-reporter-block');
+    const reporterInfo = document.getElementById('complaint-modal-reporter');
+    if (item.isAnonymous) {
+      reporterBlock.style.display = 'none';
+      reporterInfo.innerText = '';
+    } else {
+      reporterBlock.style.display = 'block';
+      reporterInfo.innerHTML = `
+        <strong>ผู้ส่ง:</strong> ${escapeHtml(item.reporterName || '-')}<br>
+        <strong>เบอร์โทร:</strong> ${escapeHtml(item.reporterPhone || '-')}<br>
+        <strong>อีเมล:</strong> ${escapeHtml(item.reporterEmail || '-')}
+      `;
+    }
+
+    complaintDetailModal.classList.add('active');
+  };
+
+  function closeComplaintModal() {
+    complaintDetailModal.classList.remove('active');
+  }
+
+  complaintModalCloseBtn?.addEventListener('click', closeComplaintModal);
+  complaintModalCancelBtn?.addEventListener('click', closeComplaintModal);
+  complaintDetailModal?.addEventListener('click', (e) => { if (e.target === complaintDetailModal) closeComplaintModal(); });
+
+  complaintUpdateForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('complaint-modal-id').value;
+    const status = document.getElementById('complaint-modal-status').value;
+    const adminNote = document.getElementById('complaint-modal-note').value.trim();
+
+    const saveBtn = complaintUpdateForm.querySelector('button[type="submit"]');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'กำลังบันทึก...'; }
+
+    try {
+      const res = await fetch(`/api/admin/complaints/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({ status, adminNote })
+      });
+
+      if (res.ok) {
+        showItaNotice('✅ บันทึกสถานะเรื่องร้องเรียนสำเร็จ');
+        closeComplaintModal();
+        loadComplaints();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        showItaNotice('❌ ' + (err.message || 'บันทึกไม่สำเร็จ'), true);
+      }
+    } catch (err) {
+      console.error(err);
+      showItaNotice('❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', true);
+    } finally {
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'บันทึกสถานะ'; }
+    }
+  });
+
+  // ─── FEEDBACK MANAGEMENT ─────────────────────────────────────────────────────
+  const feedbackPanel = document.getElementById('feedback-panel');
+  const feedbackTbody = document.getElementById('feedback-tbody');
+
+  async function loadFeedbacks() {
+    if (!feedbackPanel) return;
+    try {
+      const res = await fetch('/api/admin/feedbacks', {
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
+      if (!res.ok) throw new Error('API Error');
+      const data = await res.json();
+      
+      const avgEl = document.getElementById('feedback-avg-rating');
+      const countEl = document.getElementById('feedback-total-count');
+      if (avgEl) avgEl.textContent = `${data.averageRating.toFixed(2)} / 5.00`;
+      if (countEl) countEl.textContent = `${data.totalCount} เรื่อง`;
+
+      renderFeedbacks(data.feedbacks);
+    } catch (err) {
+      console.error('[Feedback] load error:', err);
+      if (feedbackTbody) {
+        feedbackTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:#ef4444;">โหลดข้อมูลล้มเหลว</td></tr>';
+      }
+    }
+  }
+
+  function renderFeedbacks(items) {
+    if (!feedbackTbody) return;
+    if (items.length === 0) {
+      feedbackTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2.5rem;color:#64748b;">ไม่มีข้อมูลข้อคิดเห็น</td></tr>';
+      return;
+    }
+
+    feedbackTbody.innerHTML = items.map(item => {
+      const dateStr = new Date(item.createdAt).toLocaleDateString('th-TH', {
+        year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+
+      return `
+        <tr style="cursor:pointer;" onclick="toggleFeedbackDetail('${item.id}')" title="คลิกเพื่อดูรายละเอียดเพิ่มเติม">
+          <td><span style="font-size:0.85rem;background:#eef2ff;color:#4f46e5;padding:3px 8px;border-radius:99px;font-weight:700;">${escapeHtml(item.category)}</span></td>
+          <td style="text-align:center;"><span style="color:#fbbf24;font-weight:700;">${'★'.repeat(item.rating)}${'☆'.repeat(5 - item.rating)}</span></td>
+          <td><div style="font-weight:700;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;">${escapeHtml(item.title)}</div></td>
+          <td><span style="font-size:0.85rem;color:#475569;">${escapeHtml(item.reporterName || 'ไม่เปิดเผยตัวตน')}</span></td>
+          <td><span style="font-size:0.85rem;color:#64748b;">${dateStr}</span></td>
+          <td style="text-align:center;">
+            <button class="icon-btn" onclick="event.stopPropagation();deleteFeedback('${item.id}')" title="ลบข้อคิดเห็น" style="padding:6px;color:#ef4444;background:transparent;border:none;cursor:pointer;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+            </button>
+          </td>
+        </tr>
+        <tr id="fb-detail-${item.id}" style="display:none; background:#f8fafc;">
+          <td colspan="6" style="padding:15px 20px; border-bottom:1px solid #e2e8f0;">
+            <div style="font-size:0.85rem; font-weight:800; color:#64748b; margin-bottom:4px;">รายละเอียดความคิดเห็น:</div>
+            <div style="font-size:0.92rem; line-height:1.6; color:#334155; white-space:pre-line; background:white; padding:10px; border-radius:6px; border:1px solid #cbd5e1;">${escapeHtml(item.detail)}</div>
+            ${item.reporterEmail ? `<div style="font-size:0.85rem; color:#475569; margin-top:8px;">📧 อีเมลติดต่อกลับ: <a href="mailto:${escapeHtml(item.reporterEmail)}">${escapeHtml(item.reporterEmail)}</a></div>` : ''}
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  window.toggleFeedbackDetail = function(id) {
+    const detailRow = document.getElementById(`fb-detail-${id}`);
+    if (detailRow) {
+      const isHidden = detailRow.style.display === 'none';
+      detailRow.style.display = isHidden ? 'table-row' : 'none';
+    }
+  };
+
+  window.deleteFeedback = async function(id) {
+    if (!confirm('ยืนยันที่จะลบข้อคิดเห็นนี้หรือไม่? ข้อมูลนี้จะถูกลบออกถาวร')) return;
+    try {
+      const res = await fetch(`/api/admin/feedbacks/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
+      if (res.ok) {
+        showItaNotice('✅ ลบข้อคิดเห็นสำเร็จ');
+        loadFeedbacks();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        showItaNotice('❌ ' + (err.message || 'ลบไม่สำเร็จ'), true);
+      }
+    } catch (err) {
+      console.error(err);
+      showItaNotice('❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', true);
+    }
+  };
+
+  // ── Bootstrap ───────────────────────────────────────────────────────────────
+  loadITA();
+  loadSmartLinkOptions();
+  loadComplaints();
+  loadFeedbacks();
 
 
   // Logout

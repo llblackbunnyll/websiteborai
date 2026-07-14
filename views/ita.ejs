@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="การเปิดเผยข้อมูลสาธารณะ OIT ประจำปีงบประมาณ <%= year %> ของวิทยาลัยการอาชีพบ่อไร่ ตามเกณฑ์ ITA" />
+  <title><%= title %></title>
+  <link rel="icon" href="/my-logo.webp" type="image/webp" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ita-primary: #7042f8;
+      --ita-primary-glow: rgba(112, 66, 248, 0.15);
+      --ita-success: #10b981;
+      --ita-success-glow: rgba(16, 185, 129, 0.15);
+      --ita-warning: #f59e0b;
+      --ita-warning-glow: rgba(245, 158, 11, 0.15);
+      --ita-danger: #ef4444;
+      --ita-bg: #f8fafc;
+      --ita-card-bg: #ffffff;
+      --ita-border: #e2e8f0;
+      --ita-text: #0f172a;
+      --ita-muted: #64748b;
+    }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: var(--ita-bg);
+      color: var(--ita-text);
+      min-height: 100vh;
+      scroll-behavior: smooth;
+    }
+
+    /* HERO SECTION */
+    .ita-hero {
+      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      color: #fff;
+      padding: 130px 24px 70px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 4px solid var(--ita-primary);
+    }
+
+    .ita-hero::before {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(112, 66, 248, 0.2) 0%, transparent 70%);
+      top: -150px;
+      left: -150px;
+      pointer-events: none;
+    }
+
+    .ita-hero::after {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 70%);
+      bottom: -100px;
+      right: -100px;
+      pointer-events: none;
+    }
+
+    .ita-hero-content {
+      max-width: 800px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 10;
+    }
+
+    .ita-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 16px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      color: #e2e8f0;
+      backdrop-filter: blur(10px);
+    }
+
+    .ita-badge span {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    .ita-title {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+      line-height: 1.2;
+      background: linear-gradient(to right, #ffffff, #e2e8f0);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .ita-subtitle {
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      color: #cbd5e1;
+      font-weight: 400;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    /* STATS GRID */
+    .ita-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      max-width: 900px;
+      margin: -40px auto 0;
+      padding: 0 24px;
+      position: relative;
+      z-index: 20;
+    }
+
+    @media (max-width: 640px) {
+      .ita-stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin-top: -20px;
+      }
+    }
+
+    .ita-stat-card {
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      backdrop-filter: blur(20px);
+      border-radius: 1.25rem;
+      padding: 1.5rem;
+      text-align: center;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .ita-stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 25px -5px rgba(112, 66, 248, 0.1), 0 10px 10px -5px rgba(112, 66, 248, 0.04);
+    }
+
+    .ita-stat-num {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--ita-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .ita-stat-card.success .ita-stat-num {
+      color: var(--ita-success);
+    }
+
+    .ita-stat-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--ita-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* CONTROLS CONTAINER (Search & Year Selector) */
+    .ita-controls-section {
+      max-width: 1000px;
+      margin: 3rem auto 1.5rem;
+      padding: 0 24px;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .ita-search-wrap {
+      flex: 1;
+      min-width: 280px;
+      position: relative;
+    }
+
+    .ita-search-input {
+      width: 100%;
+      padding: 0.85rem 1rem 0.85rem 2.75rem;
+      border: 1px solid var(--ita-border);
+      background: var(--ita-card-bg);
+      border-radius: 100px;
+      font-size: 1rem;
+      color: var(--ita-text);
+      font-family: inherit;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+      transition: all 0.3s ease;
+    }
+
+    .ita-search-input:focus {
+      outline: none;
+      border-color: var(--ita-primary);
+      box-shadow: 0 0 0 3px var(--ita-primary-glow);
+    }
+
+    .ita-search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--ita-muted);
+      pointer-events: none;
+    }
+
+    .ita-year-select-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--ita-card-bg);
+      border: 1px solid var(--ita-border);
+      padding: 0.4rem 1rem;
+      border-radius: 100px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    }
+
+    .ita-year-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--ita-muted);
+    }
+
+    .ita-year-select {
+      border: none;
+      background: transparent;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--ita-primary);
+      cursor: pointer;
+      outline: none;
+      font-family: inherit;
+      padding-right: 0.5rem;
+    }
+
+    /* CATEGORIES TABS */
+    .ita-tabs-section {
+      max-width: 1000px;
+      margin: 0 auto 2rem;
+      padding: 0 24px;
+      overflow-x: auto;
+      scrollbar-width: none; /* Firefox */
+    }
+
+    .ita-tabs-section::-webkit-scrollbar {
+      display: none; /* Safari & Chrome */
+    }
+
+    .ita-tabs {
+      display: flex;
+      gap: 0.5rem;
+      padding-bottom: 0.5rem;
+      min-width: max-content;
+    }
+
+    .ita-tab {
+      padding: 0.65rem 1.35rem;
+      border-radius: 100px;
+      background: #e2e8f0;
+      border: 1px solid transparent;
+      color: #475569;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+
+    .ita-tab:hover {
+      background: #cbd5e1;
+      color: var(--ita-text);
+    }
+
+    .ita-tab.active {
+      background: var(--ita-primary);
+      color: #fff;
+      box-shadow: 0 4px 12px var(--ita-primary-glow);
+    }
+
+    /* ACCORDION */
+    .ita-container {
+      max-width: 1000px;
+      margin: 0 auto 5rem;
+      padding: 0 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .ita-card {
+      background: var(--ita-card-bg);
+      border: 1px solid var(--ita-border);
+      border-radius: 1rem;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
+      transition: all 0.25s ease;
+    }
+
+    .ita-card:hover {
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+      border-color: #cbd5e1;
+    }
+
+    .ita-card-header {
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+      gap: 1rem;
+    }
+
+    .ita-card-title-group {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex: 1;
+    }
+
+    .ita-code-badge {
+      font-size: 1.1rem;
+      font-weight: 800;
+      background: var(--ita-primary-glow);
+      color: var(--ita-primary);
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      flex-shrink: 0;
+    }
+
+    .ita-card.empty .ita-code-badge {
+      background: rgba(100, 116, 139, 0.1);
+      color: var(--ita-muted);
+    }
+
+    .ita-card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--ita-text);
+      line-height: 1.4;
+    }
+
+    .ita-status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 0.35rem 0.75rem;
+      border-radius: 50px;
+      flex-shrink: 0;
+    }
+
+    .ita-status-active {
+      background: var(--ita-success-glow);
+      color: var(--ita-success);
+    }
+
+    .ita-status-pending {
+      background: var(--ita-warning-glow);
+      color: var(--ita-warning);
+    }
+
+    .ita-chevron {
+      transition: transform 0.25s ease;
+      color: var(--ita-muted);
+      flex-shrink: 0;
+    }
+
+    .ita-card.expanded .ita-chevron {
+      transform: rotate(180deg);
+    }
+
+    .ita-card-body {
+      padding: 0 1.5rem 1.5rem 4.25rem;
+      border-top: 1px solid transparent;
+      display: none;
+      animation: slideDown 0.3s ease-out forwards;
+    }
+
+    @media (max-width: 640px) {
+      .ita-card-body {
+        padding: 0 1.25rem 1.25rem 1.25rem;
+      }
+    }
+
+    .ita-card.expanded .ita-card-body {
+      display: block;
+      border-top-color: var(--ita-border);
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .ita-description {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: #334155;
+      margin-bottom: 1.25rem;
+      margin-top: 1rem;
+      white-space: pre-line;
+    }
+
+    /* ATTACHMENT ITEMS */
+    .ita-attachments-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--ita-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .ita-attachments-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+
+    .ita-attachment-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 1.25rem;
+      background: #f1f5f9;
+      border: 1px solid var(--ita-border);
+      border-radius: 0.75rem;
+      text-decoration: none;
+      color: var(--ita-text);
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+
+    .ita-attachment-link:hover {
+      background: var(--ita-primary-glow);
+      border-color: var(--ita-primary);
+      color: var(--ita-primary);
+      transform: translateX(5px);
+    }
+
+    .ita-attachment-label {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .ita-attachment-icon {
+      color: var(--ita-primary);
+      flex-shrink: 0;
+    }
+
+    .ita-attachment-arrow {
+      color: var(--ita-muted);
+      transition: color 0.2s;
+    }
+
+    .ita-attachment-link:hover .ita-attachment-arrow {
+      color: var(--ita-primary);
+    }
+
+    .ita-empty-attachments {
+      padding: 1.5rem;
+      text-align: center;
+      background: #f8fafc;
+      border: 1px dashed var(--ita-border);
+      border-radius: 0.75rem;
+      color: var(--ita-muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .ita-no-results {
+      padding: 4rem 2rem;
+      text-align: center;
+      background: var(--ita-card-bg);
+      border: 1px solid var(--ita-border);
+      border-radius: 1.25rem;
+      color: var(--ita-muted);
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<body>
+  <%- include('partials/navbar'); %>
+
+  <!-- HERO -->
+  <section class="ita-hero">
+    <div class="ita-hero-content">
+      <div class="ita-badge">
+        <span></span> ITA · ปีงบประมาณ <%= year %>
+      </div>
+      <h1 class="ita-title">การเปิดเผยข้อมูลสาธารณะ (OIT)</h1>
+      <p class="ita-subtitle">
+        การประเมินคุณธรรมและความโปร่งใสในการดำเนินงานของหน่วยงานภาครัฐ<br>
+        วิทยาลัยการอาชีพบ่อไร่ อำเภอบ่อไร่ จังหวัดตราด
+      </p>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="ita-stats-grid">
+    <div class="ita-stat-card">
+      <div class="ita-stat-num"><%= totalCount %></div>
+      <div class="ita-stat-label">หัวข้อการประเมินทั้งหมด</div>
+    </div>
+    <div class="ita-stat-card success">
+      <div class="ita-stat-num" id="stat-completed"><%= completedCount %></div>
+      <div class="ita-stat-label">เปิดเผยข้อมูลแล้ว</div>
+    </div>
+    <div class="ita-stat-card">
+      <div class="ita-stat-num" id="stat-percent"><%= totalCount > 0 ? Math.round((completedCount/totalCount)*100) : 0 %>%</div>
+      <div class="ita-stat-label">ความคืบหน้าการเปิดเผย</div>
+    </div>
+  </section>
+
+  <!-- CONTROLS -->
+  <section class="ita-controls-section">
+    <!-- Search -->
+    <div class="ita-search-wrap">
+      <input type="text" id="ita-search" class="ita-search-input" placeholder="ค้นหาตามรหัสข้อ (เช่น O1) หรือชื่อหัวข้อตัวชี้วัด..." />
+      <span class="ita-search-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
+    </div>
+
+    <!-- Year Dropdown -->
+    <div class="ita-year-select-wrap">
+      <span class="ita-year-label">ปีงบประมาณ:</span>
+      <select id="ita-year-select" class="ita-year-select" onchange="changeYear(this.value)">
+        <% availableYears.forEach(y => { %>
+          <option value="<%= y %>" <%= y === year ? 'selected' : '' %>>พ.ศ. <%= y %></option>
+        <% }) %>
+      </select>
+    </div>
+  </section>
+
+  <!-- CATEGORY TABS -->
+  <section class="ita-tabs-section">
+    <div class="ita-tabs">
+      <button class="ita-tab active" data-category="all">ทั้งหมด</button>
+      <button class="ita-tab" data-category="ข้อมูลพื้นฐาน">ข้อมูลพื้นฐาน (O1-O5)</button>
+      <button class="ita-tab" data-category="การบริหารงาน">การบริหารงานและการดำเนินงาน (O6-O9)</button>
+      <button class="ita-tab" data-category="การจัดซื้อจัดจ้าง">การจัดซื้อจัดจ้าง (O10-O11)</button>
+      <button class="ita-tab" data-category="การปฏิบัติหน้าที่">การปฏิบัติหน้าที่และ E-Service (O12-O15)</button>
+      <button class="ita-tab" data-category="การบริหารทรัพยากรบุคคล">การบริหารทรัพยากรบุคคล (O16-O17)</button>
+      <button class="ita-tab" data-category="การจัดการเรื่องร้องเรียน">การจัดการเรื่องร้องเรียน (O18-O19)</button>
+      <button class="ita-tab" data-category="มาตรการป้องกันการทุจริต">มาตรการป้องกันการทุจริต (O20-O23)</button>
+    </div>
+  </section>
+
+  <!-- ACCORDION CONTAINER -->
+  <main class="ita-container" id="ita-accordion">
+    <% if (items.length === 0) { %>
+      <div class="ita-no-results">ไม่มีข้อมูลการเปิดเผยสำหรับปีงบประมาณ <%= year %></div>
+    <% } else { %>
+      <% items.forEach((item, index) => { 
+        const atts = Array.isArray(item.attachments) ? item.attachments : [];
+        const isCompleted = atts.length > 0 || (item.description && item.description.trim().length > 0);
+        let categoryGroup = '';
+        const num = parseInt(item.code.replace(/\D/g, ''), 10) || 0;
+        if (num >= 1 && num <= 5) categoryGroup = 'ข้อมูลพื้นฐาน';
+        else if (num >= 6 && num <= 9) categoryGroup = 'การบริหารงาน';
+        else if (num >= 10 && num <= 11) categoryGroup = 'การจัดซื้อจัดจ้าง';
+        else if (num >= 12 && num <= 15) categoryGroup = 'การปฏิบัติหน้าที่';
+        else if (num >= 16 && num <= 17) categoryGroup = 'การบริหารทรัพยากรบุคคล';
+        else if (num >= 18 && num <= 19) categoryGroup = 'การจัดการเรื่องร้องเรียน';
+        else if (num >= 20 && num <= 23) categoryGroup = 'มาตรการป้องกันการทุจริต';
+      %>
+        <div class="ita-card <%= !isCompleted ? 'empty' : '' %>" data-code="<%= item.code %>" data-title="<%= item.title.toLowerCase() %>" data-category="<%= categoryGroup %>">
+          <div class="ita-card-header" onclick="toggleCard(this)">
+            <div class="ita-card-title-group">
+              <span class="ita-code-badge"><%= item.code %></span>
+              <span class="ita-card-title"><%= item.title %></span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <% if (isCompleted) { %>
+                <span class="ita-status-indicator ita-status-active">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  เปิดเผยแล้ว
+                </span>
+              <% } else { %>
+                <span class="ita-status-indicator ita-status-pending">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  รอดำเนินการ
+                </span>
+              <% } %>
+              <span class="ita-chevron">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </span>
+            </div>
+          </div>
+          <div class="ita-card-body">
+            <% if (item.description) { %>
+              <div class="ita-description"><%= item.description %></div>
+            <% } %>
+
+            <div class="ita-attachments-title">เอกสาร/ลิงก์เปิดเผยสาธารณะ</div>
+            <div class="ita-attachments-list">
+              <% if (atts.length === 0) { %>
+                <div class="ita-empty-attachments">ยังไม่ได้เชื่อมโยงลิงก์หรืออัปโหลดหลักฐาน</div>
+              <% } else { %>
+                <% atts.forEach(att => { %>
+                  <a href="<%= att.url %>" target="_blank" rel="noopener" class="ita-attachment-link">
+                    <span class="ita-attachment-label">
+                      <span class="ita-attachment-icon">
+                        <% if (att.type === 'file' || att.url.toLowerCase().endsWith('.pdf')) { %>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        <% } else { %>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                        <% } %>
+                      </span>
+                      <span><%= att.label %></span>
+                    </span>
+                    <span class="ita-attachment-arrow">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </span>
+                  </a>
+                <% }) %>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    <% } %>
+  </main>
+
+  <%- include('partials/footer'); %>
+
+  <script src="/js/main.js"></script>
+  <script>
+    function toggleCard(header) {
+      const card = header.closest('.ita-card');
+      card.classList.toggle('expanded');
+    }
+
+    function changeYear(val) {
+      window.location.href = '/ita/' + val;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const searchInput = document.getElementById('ita-search');
+      const tabs = document.querySelectorAll('.ita-tab');
+      const cards = document.querySelectorAll('.ita-card');
+      
+      let activeCategory = 'all';
+      let searchQuery = '';
+
+      function filterItems() {
+        let visibleCount = 0;
+        let completedCount = 0;
+
+        cards.forEach(card => {
+          const cardCategory = card.getAttribute('data-category');
+          const cardCode = card.getAttribute('data-code').toLowerCase();
+          const cardTitle = card.getAttribute('data-title');
+          
+          const matchCategory = activeCategory === 'all' || cardCategory === activeCategory;
+          const matchSearch = cardCode.includes(searchQuery) || cardTitle.includes(searchQuery);
+
+          if (matchCategory && matchSearch) {
+            card.style.display = 'block';
+            visibleCount++;
+            if (!card.classList.contains('empty')) {
+              completedCount++;
+            }
+          } else {
+            card.style.display = 'none';
+          }
+        });
+
+        // Toggle no results notice
+        const container = document.getElementById('ita-accordion');
+        let noResultsEl = document.getElementById('ita-no-results-notice');
+        
+        if (visibleCount === 0) {
+          if (!noResultsEl) {
+            noResultsEl = document.createElement('div');
+            noResultsEl.id = 'ita-no-results-notice';
+            noResultsEl.className = 'ita-no-results';
+            noResultsEl.textContent = 'ไม่พบหัวข้อประเมินที่ตรงกับการค้นหาของคุณ';
+            container.appendChild(noResultsEl);
+          }
+          noResultsEl.style.display = 'block';
+        } else if (noResultsEl) {
+          noResultsEl.style.display = 'none';
+        }
+
+        // Update counts dynamically
+        const statCompleted = document.getElementById('stat-completed');
+        const statPercent = document.getElementById('stat-percent');
+        if (statCompleted && statPercent) {
+          statCompleted.textContent = completedCount;
+          statPercent.textContent = visibleCount > 0 ? Math.round((completedCount / visibleCount) * 100) + '%' : '0%';
+        }
+      }
+
+      // Search Event Listener
+      searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value.trim().toLowerCase();
+        filterItems();
+      });
+
+      // Tabs Event Listener
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          activeCategory = tab.getAttribute('data-category');
+          filterItems();
+        });
+      });
+    });
+  </script>
+</body>
+
+</html>

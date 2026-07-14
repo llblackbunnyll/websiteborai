@@ -10,14 +10,16 @@ async function main() {
   const passwordHash = await bcrypt.hash('admin1234', 10);
   await prisma.admin.upsert({
     where: { username: 'admin' },
-    update: {},
+    update: {
+      passwordHash
+    },
     create: {
       username: 'admin',
       passwordHash,
       role: 'admin',
     },
   });
-  console.log('✅ Admin user created (username: admin, password: admin1234)');
+  console.log('✅ Admin user created/updated (username: admin, password: admin1234)');
 
   // Seed sample PR items
   await prisma.pRItem.createMany({

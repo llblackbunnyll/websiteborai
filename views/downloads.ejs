@@ -26,6 +26,7 @@
       margin-bottom: 1rem;
       background: linear-gradient(135deg, var(--color-accent-primary) 0%, var(--color-accent-secondary) 100%);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
     }
     
@@ -233,6 +234,7 @@
       line-height: 1.4;
       display: -webkit-box;
       -webkit-line-clamp: 2;
+      line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
       transition: color 0.2s;
@@ -297,8 +299,11 @@
   <%- include('partials/footer'); %>
 
   <!-- Data payload from backend -->
+  <script id="docs-data" type="application/json">
+    <%- JSON.stringify(docs || []) %>
+  </script>
   <script>
-    const rawDocs = <%- JSON.stringify(docs || []) %>;
+    const rawDocs = JSON.parse(document.getElementById('docs-data').textContent);
   </script>
 
   <script>

@@ -412,6 +412,17 @@ router.get('/about', async (req, res) => {
       }
     });
 
+    // Fetch ITA O3 (Strategic Plan) for current year 2569
+    const itaO3 = await prisma.iTAItem.findUnique({
+      where: {
+        code_year: {
+          code: 'O3',
+          year: '2569'
+        }
+      }
+    });
+    const strategicPlans = itaO3 && Array.isArray(itaO3.attachments) ? itaO3.attachments : [];
+
     res.render('about', {
       title: 'ข้อมูลวิทยาลัย | วิทยาลัยการอาชีพบ่อไร่',
       departments: await getDepartments(),
@@ -420,7 +431,8 @@ router.get('/about', async (req, res) => {
       currentSemester,
       academicYear,
       budgetInfoStatus,
-      budgetData: null // Set to null to show 'No Data' state as requested
+      budgetData: null, // Set to null to show 'No Data' state as requested
+      strategicPlans
     });
   } catch (error) {
     console.error(error);
@@ -432,7 +444,8 @@ router.get('/about', async (req, res) => {
       currentSemester: '1',
       academicYear: '2567',
       budgetInfoStatus: 'active',
-      budgetData: null
+      budgetData: null,
+      strategicPlans: []
     });
   }
 });
@@ -535,15 +548,20 @@ router.get('/org-chart', async (req, res) => {
       orderBy: [{ order: 'asc' }, { firstName: 'asc' }]
     });
 
-    // Fetch ITA O3 (Administrative Orders/Powers)
-    const itaO3 = await prisma.iTAItem.findUnique({
-      where: { code: 'O3' }
+    // Fetch ITA O1 (Administrative Orders/Powers) for current year 2569
+    const itaO1 = await prisma.iTAItem.findUnique({
+      where: {
+        code_year: {
+          code: 'O1',
+          year: '2569'
+        }
+      }
     });
 
-    // Pass attachments from O3 if found, otherwise empty array
-    const orders = itaO3 && Array.isArray(itaO3.attachments) ? itaO3.attachments : [];
-    const ordersUpdateDate = itaO3 && itaO3.updatedAt 
-      ? new Date(itaO3.updatedAt).toLocaleDateString('th-TH') 
+    // Pass attachments from O1 if found, otherwise empty array
+    const orders = itaO1 && Array.isArray(itaO1.attachments) ? itaO1.attachments : [];
+    const ordersUpdateDate = itaO1 && itaO1.updatedAt 
+      ? new Date(itaO1.updatedAt).toLocaleDateString('th-TH') 
       : null;
 
     res.render('org-chart', {
@@ -553,14 +571,328 @@ router.get('/org-chart', async (req, res) => {
       ordersUpdateDate
     });
   } catch (error) {
-    console.warn('[Database Offline] Rendering org-chart without personnel data.');
+    console.warn('[Database Offline] Rendering org-chart without personnel data.', error);
     res.render('org-chart', {
       title: 'ผังการบริหาร | วิทยาลัยการอาชีพบ่อไร่',
-      allPersonnel: []
+      allPersonnel: [],
+      orders: [],
+      ordersUpdateDate: null
     });
   }
 });
 
+
+// GET /ita — Public ITA OIT Dashboard (Redirect to current year 2569)
+router.get('/ita', async (req, res) => {
+  res.redirect('/ita/2569');
+});
+
+// GET /ita/:year — Public ITA OIT Dashboard for specific year
+router.get('/ita/:year', async (req, res) => {
+  const { year } = req.params;
+  try {
+    const items = await prisma.iTAItem.findMany({
+      where: { year, isPublic: true },
+      orderBy: { code: 'asc' }
+    });
+
+    // Custom sorting helper for O1, O2, ... O10, O11... (natural sorting)
+    items.sort((a, b) => {
+      const getNum = (code) => parseInt(code.replace(/\D/g, ''), 10) || 0;
+      return getNum(a.code) - getNum(b.code);
+    });
+
+    // Smart Auto-binding for O15, O18, O19 items
+    items.forEach(item => {
+      let atts = [];
+      if (item.attachments) {
+        try {
+          atts = typeof item.attachments === 'string' ? JSON.parse(item.attachments) : item.attachments;
+        } catch (e) {
+          atts = [];
+        }
+      }
+      if (!Array.isArray(atts)) {
+        atts = [];
+      }
+
+      if (item.code === 'O1') {
+        const exists = atts.some(a => a.url === '/org-chart');
+        if (!exists) {
+          atts.unshift({
+            label: 'แผนผังโครงสร้างการแบ่งส่วนราชการและผังการบริหาร',
+            url: '/org-chart',
+            type: 'link'
+          });
+        }
+      } else if (item.code === 'O2') {
+        const exists = atts.some(a => a.url === '/personnel');
+        if (!exists) {
+          atts.unshift({
+            label: 'ข้อมูลผู้บริหารสถานศึกษาและบุคลากรวิทยาลัย',
+            url: '/personnel',
+            type: 'link'
+          });
+        }
+      } else if (item.code === 'O3') {
+        const exists = atts.some(a => a.url === '/about#strategic-plan');
+        if (!exists) {
+          atts.unshift({
+            label: 'แผนพัฒนาสถานศึกษาและแผนยุทธศาสตร์ (ระยะยาว)',
+            url: '/about#strategic-plan',
+            type: 'link'
+          });
+        }
+      } else if (item.code === 'O4') {
+        const exists = atts.some(a => a.url === '/#contact');
+        if (!exists) {
+          atts.unshift({
+            label: 'ข้อมูลการติดต่อของสถานศึกษา (ที่อยู่ เบอร์โทรศัพท์ Social Media และแผนที่ที่ตั้ง)',
+            url: '/#contact',
+            type: 'link'
+          });
+        }
+      } else if (item.code === 'O9') {
+        const exists = atts.some(a => a.url === '/news');
+        if (!exists) {
+          atts.unshift({
+            label: 'ข่าวประชาสัมพันธ์ของสถานศึกษา',
+            url: '/news',
+            type: 'link'
+          });
+        }
+      } else if (item.code === 'O10') {
+        const exists = atts.some(a => a.url === '/documents?type=bidding');
+        if (!exists) {
+          atts.unshift({
+            label: 'ประกาศการจัดซื้อจัดจ้างและการจัดหาพัสดุ (ประกวดราคา)',
+            url: '/documents?type=bidding',
+            type: 'link'
+          });
+        }
+      } else if (item.code === 'O12') {
+        const exists = atts.some(a => a.url === '/downloads');
+        if (!exists) {
+          atts.unshift({
+            label: 'คู่มือและขั้นตอนการปฏิบัติงานภายใน (ศูนย์ดาวน์โหลดเอกสาร)',
+            url: '/downloads',
+            type: 'link'
+          });
+        }
+      } else if (item.code === 'O13') {
+        const exists = atts.some(a => a.url === '/downloads');
+        if (!exists) {
+          atts.unshift({
+            label: 'คู่มือหรือมาตรฐานขั้นตอนการให้บริการประชาชน (ศูนย์ดาวน์โหลดเอกสาร)',
+            url: '/downloads',
+            type: 'link'
+          });
+        }
+      } else if (item.code === 'O15') {
+        const exists = atts.some(a => a.url === '/feedback');
+        if (!exists) {
+          atts.unshift({
+            label: 'ช่องทางแสดงความคิดเห็นและประเมินความพึงพอใจการให้บริการ',
+            url: '/feedback',
+            type: 'link'
+          });
+        }
+      } else if (item.code === 'O18') {
+        const existsComplaints = atts.some(a => a.url === '/complaints');
+        if (!existsComplaints) {
+          atts.unshift({
+            label: 'ช่องทางแจ้งเรื่องร้องเรียนการทุจริตและประพฤติมิชอบออนไลน์',
+            url: '/complaints',
+            type: 'link'
+          });
+        }
+        const existsTrack = atts.some(a => a.url === '/complaints/track');
+        if (!existsTrack) {
+          atts.push({
+            label: 'ระบบติดตามสถานะเรื่องร้องเรียนการทุจริต',
+            url: '/complaints/track',
+            type: 'link'
+          });
+        }
+      } else if (item.code === 'O19') {
+        const exists = atts.some(a => a.url === '/complaints/stats');
+        if (!exists) {
+          atts.unshift({
+            label: 'รายงานข้อมูลเชิงสถิติเรื่องร้องเรียนการทุจริตประจำปี (เรียลไทม์)',
+            url: '/complaints/stats',
+            type: 'link'
+          });
+        }
+      }
+
+      item.attachments = atts;
+    });
+
+    // Group items into indices for better representation (O1-O23 mapped into standard sections)
+    const categories = {
+      'ข้อมูลพื้นฐาน': items.filter(i => {
+        const num = parseInt(i.code.replace(/\D/g, ''), 10) || 0;
+        return num >= 1 && num <= 5;
+      }),
+      'การบริหารงาน': items.filter(i => {
+        const num = parseInt(i.code.replace(/\D/g, ''), 10) || 0;
+        return num >= 6 && num <= 9;
+      }),
+      'การจัดซื้อจัดจ้าง': items.filter(i => {
+        const num = parseInt(i.code.replace(/\D/g, ''), 10) || 0;
+        return num >= 10 && num <= 11;
+      }),
+      'การปฏิบัติหน้าที่': items.filter(i => {
+        const num = parseInt(i.code.replace(/\D/g, ''), 10) || 0;
+        return num >= 12 && num <= 15;
+      }),
+      'การบริหารทรัพยากรบุคคล': items.filter(i => {
+        const num = parseInt(i.code.replace(/\D/g, ''), 10) || 0;
+        return num >= 16 && num <= 17;
+      }),
+      'การจัดการเรื่องร้องเรียน': items.filter(i => {
+        const num = parseInt(i.code.replace(/\D/g, ''), 10) || 0;
+        return num >= 18 && num <= 19;
+      }),
+      'มาตรการป้องกันการทุจริต': items.filter(i => {
+        const num = parseInt(i.code.replace(/\D/g, ''), 10) || 0;
+        return num >= 20 && num <= 23;
+      })
+    };
+
+    // Calculate progress stats
+    const totalCount = items.length;
+    const completedCount = items.filter(i => {
+      const atts = Array.isArray(i.attachments) ? i.attachments : [];
+      return atts.length > 0 || (i.description && i.description.trim().length > 0);
+    }).length;
+
+    // Available years for filter selector
+    const yearsResult = await prisma.iTAItem.groupBy({
+      by: ['year'],
+      orderBy: { year: 'desc' }
+    });
+    const availableYears = yearsResult.map(y => y.year);
+
+    res.render('ita', {
+      title: `OIT การเปิดเผยข้อมูลสาธารณะ ประจำปีงบประมาณ พ.ศ. ${year} | วิทยาลัยการอาชีพบ่อไร่`,
+      year,
+      items,
+      categories,
+      totalCount,
+      completedCount,
+      availableYears: availableYears.length > 0 ? availableYears : ['2569']
+    });
+  } catch (error) {
+    console.error('[ITA Route Error]', error);
+    res.redirect('/');
+  }
+});
+
+
+// GET /complaints — Public complaint submission page
+router.get('/complaints', (req, res) => {
+  res.render('complaints', {
+    title: 'ช่องทางแจ้งเรื่องร้องเรียนการทุจริตและประพฤติมิชอบ | วิทยาลัยการอาชีพบ่อไร่'
+  });
+});
+
+// GET /complaints/track — Public complaint tracking page
+router.get('/complaints/track', (req, res) => {
+  res.render('complaint-track', {
+    title: 'ติดตามสถานะเรื่องร้องเรียนการทุจริต | วิทยาลัยการอาชีพบ่อไร่'
+  });
+});
+
+// GET /complaints/stats — Public complaints statistics page
+router.get('/complaints/stats', async (req, res) => {
+  try {
+    const total = await prisma.complaint.count();
+    const pending = await prisma.complaint.count({ where: { status: 'pending' } });
+    const investigating = await prisma.complaint.count({ where: { status: 'investigating' } });
+    const resolved = await prisma.complaint.count({ where: { status: 'resolved' } });
+    const rejected = await prisma.complaint.count({ where: { status: 'rejected' } });
+
+    const catFraud = await prisma.complaint.count({ where: { category: 'ทุจริตประพฤติมิชอบ' } });
+    const catService = await prisma.complaint.count({ where: { category: 'บริการไม่โปร่งใส' } });
+    const catGeneral = await prisma.complaint.count({ where: { category: 'ทั่วไป' } });
+
+    res.render('complaint-stats', {
+      title: 'รายงานสรุปสถิติเรื่องร้องเรียนการทุจริตประจำปี | วิทยาลัยการอาชีพบ่อไร่',
+      stats: {
+        total,
+        pending,
+        investigating,
+        resolved,
+        rejected,
+        category: {
+          fraud: catFraud,
+          service: catService,
+          general: catGeneral
+        }
+      }
+    });
+  } catch (error) {
+    console.error('[Route Complaint Stats Error]', error);
+    res.redirect('/complaints');
+  }
+});
+
+// GET /feedback — Public feedback submission page with App Store reviews styling
+router.get('/feedback', async (req, res) => {
+  try {
+    const feedbacks = await prisma.feedback.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const totalCount = feedbacks.length;
+
+    let averageRating = 0;
+    if (totalCount > 0) {
+      const sum = feedbacks.reduce((acc, curr) => acc + curr.rating, 0);
+      averageRating = parseFloat((sum / totalCount).toFixed(2));
+    }
+
+    const starCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    feedbacks.forEach(fb => {
+      if (starCounts[fb.rating] !== undefined) {
+        starCounts[fb.rating]++;
+      }
+    });
+
+    const starPercentages = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    if (totalCount > 0) {
+      for (let s = 1; s <= 5; s++) {
+        starPercentages[s] = Math.round((starCounts[s] / totalCount) * 100);
+      }
+    }
+
+    const recentReviews = feedbacks.slice(0, 6);
+
+    res.render('feedback', {
+      title: 'ช่องทางรับฟังความคิดเห็นและข้อเสนอแนะออนไลน์ | วิทยาลัยการอาชีพบ่อไร่',
+      stats: {
+        totalCount,
+        averageRating,
+        starCounts,
+        starPercentages
+      },
+      recentReviews
+    });
+  } catch (error) {
+    console.error('[Route Feedback Page Error]', error);
+    res.render('feedback', {
+      title: 'ช่องทางรับฟังความคิดเห็นและข้อเสนอแนะออนไลน์ | วิทยาลัยการอาชีพบ่อไร่',
+      stats: {
+        totalCount: 0,
+        averageRating: 0.00,
+        starCounts: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
+        starPercentages: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
+      },
+      recentReviews: []
+    });
+  }
+});
 
 module.exports = router;
 

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ติดตามสถานะความคืบหน้าเรื่องร้องเรียนการทุจริตประพฤติมิชอบ วิทยาลัยการอาชีพบ่อไร่" />
+  <title><%= title %></title>
+  <link rel="icon" href="/my-logo.webp" type="image/webp" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --complaint-primary: #ef4444;
+      --complaint-primary-glow: rgba(239, 68, 68, 0.15);
+      --complaint-bg: #f8fafc;
+      --complaint-card-bg: #ffffff;
+      --complaint-border: #e2e8f0;
+      --complaint-text: #0f172a;
+      --complaint-muted: #64748b;
+    }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: var(--complaint-bg);
+      color: var(--complaint-text);
+      min-height: 100vh;
+      scroll-behavior: smooth;
+    }
+
+    .hero-banner {
+      background: linear-gradient(135deg, #1e1b4b 0%, #1c1919 50%, #0f172a 100%);
+      color: #fff;
+      padding: 120px 24px 60px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 4px solid var(--complaint-primary);
+    }
+
+    .hero-content {
+      max-width: 800px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 10;
+    }
+
+    .title-h1 {
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    .main-wrap {
+      max-width: 800px;
+      margin: -30px auto 5rem;
+      padding: 0 24px;
+      position: relative;
+      z-index: 20;
+    }
+
+    .track-card {
+      background: var(--complaint-card-bg);
+      border: 1px solid var(--complaint-border);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+      margin-bottom: 2rem;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 1.5rem;
+    }
+
+    @media (max-width: 640px) {
+      .form-row {
+        flex-direction: column;
+      }
+    }
+
+    .form-control {
+      flex: 1;
+      padding: 0.85rem 1.1rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--complaint-text);
+      text-align: center;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      box-sizing: border-box;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--complaint-primary);
+      box-shadow: 0 0 0 3px var(--complaint-primary-glow);
+    }
+
+    .btn-search {
+      background: #0f172a;
+      color: #fff;
+      border: none;
+      padding: 0 2rem;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-search:hover {
+      background: #1e293b;
+    }
+
+    .btn-search:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+    }
+
+    /* Result Panel */
+    .result-panel {
+      display: none;
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+
+    .result-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Timeline Styles */
+    .timeline {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin: 3rem 0;
+      padding: 0 1rem;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      top: 20px;
+      left: 10%;
+      right: 10%;
+      height: 4px;
+      background: #e2e8f0;
+      z-index: 1;
+    }
+
+    .timeline-progress {
+      position: absolute;
+      top: 20px;
+      left: 10%;
+      width: 0%; /* Dynamic width based on status */
+      height: 4px;
+      background: #ef4444;
+      z-index: 2;
+      transition: width 0.5s ease;
+    }
+
+    .timeline-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 3;
+      flex: 1;
+    }
+
+    .step-node {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      border: 4px solid #fff;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
+    }
+
+    .timeline-step.completed .step-node {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .timeline-step.active .step-node {
+      background: #fef2f2;
+      color: #ef4444;
+      border-color: #ef4444;
+      box-shadow: 0 0 12px var(--complaint-primary-glow);
+    }
+
+    .step-label {
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #64748b;
+      text-align: center;
+    }
+
+    .timeline-step.completed .step-label,
+    .timeline-step.active .step-label {
+      color: #0f172a;
+    }
+
+    /* Details styling */
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    @media (max-width: 640px) {
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .detail-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+
+    .detail-val {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-top: 2px;
+    }
+
+    /* Admin note box */
+    .admin-note-box {
+      background: #fef2f2;
+      border-left: 4px solid #ef4444;
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-top: 1.5rem;
+    }
+  </style>
+</head>
+
+<body>
+  <%- include('partials/navbar'); %>
+
+  <!-- HERO BANNER -->
+  <section class="hero-banner">
+    <div class="hero-content">
+      <h1 class="title-h1">🔍 ติดตามสถานะเรื่องร้องเรียน</h1>
+      <p style="color:#cbd5e1; margin:0;">ป้อนรหัสความปลอดภัยของการแจ้งเรื่องร้องเรียน เพื่อสืบค้นผลความคืบหน้าการดำเนินงานของฝ่ายตรวจสอบ</p>
+    </div>
+  </section>
+
+  <!-- SEARCH INTERFACE -->
+  <main class="main-wrap">
+    <div class="track-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 1rem;">
+        <span style="font-weight: 800; font-size: 1.15rem; color: #1e293b;">กรอกรหัสติดตามความคืบหน้า (Token)</span>
+        <a href="/complaints/stats" style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-size: 0.8rem; font-weight: 700; text-decoration: none; padding: 6px 12px; border-radius: 100px; transition: all 0.2s;">📊 ดูสถิติเรื่องร้องเรียนประจำปี</a>
+      </div>
+      
+      <form id="trackForm" class="form-row">
+        <input type="text" id="tokenInput" class="form-control" placeholder="เช่น COMP-A1B2C3" required maxlength="20" autocomplete="off" />
+        <button type="submit" id="searchBtn" class="btn-search">🔍 ค้นหา</button>
+      </form>
+    </div>
+
+    <!-- RESULT PANEL -->
+    <div id="resultPanel" class="track-card result-panel">
+      <h3 style="margin:0 0 1.5rem; font-weight:800; border-bottom:1px solid #f1f5f9; padding-bottom:0.75rem; color:#0f172a; display:flex; justify-content:space-between; align-items:center;">
+        <span>📋 รายละเอียดเรื่องร้องเรียน</span>
+        <span id="resCategory" style="font-size:0.8rem; background:#fee2e2; color:#ef4444; padding:4px 12px; border-radius:100px; font-weight:700;">หมวดหมู่</span>
+      </h3>
+
+      <div style="margin-bottom:1.5rem;">
+        <div style="font-size:0.85rem; font-weight:700; color:#64748b;">หัวข้อเรื่อง</div>
+        <div id="resTitle" style="font-size:1.15rem; font-weight:800; color:#1e293b; margin-top:2px;">หัวข้อเรื่องร้องเรียน</div>
+      </div>
+
+      <div style="margin-bottom:1.5rem;">
+        <div style="font-size:0.85rem; font-weight:700; color:#64748b;">รายละเอียดเนื้อความ</div>
+        <div id="resDetail" style="font-size:0.95rem; line-height:1.6; color:#334155; margin-top:4px; white-space:pre-line; background:#f8fafc; padding:1rem; border-radius:8px; border:1px solid #e2e8f0;"></div>
+      </div>
+
+      <!-- TIMELINE -->
+      <div style="font-size:0.9rem; font-weight:800; color:#0f172a; margin-top:2rem;">🚀 สถานะความคืบหน้าการตรวจสอบ</div>
+      <div class="timeline">
+        <div id="timelineProgress" class="timeline-progress"></div>
+        
+        <div class="timeline-step" id="step-pending">
+          <div class="step-node">1</div>
+          <div class="step-label">ส่งเรื่องร้องเรียนแล้ว</div>
+        </div>
+        <div class="timeline-step" id="step-investigating">
+          <div class="step-node">2</div>
+          <div class="step-label">อยู่ระหว่างตรวจสอบ</div>
+        </div>
+        <div class="timeline-step" id="step-resolved">
+          <div class="step-node">3</div>
+          <div class="step-label" id="step-resolved-label">ดำเนินการเสร็จสิ้น</div>
+        </div>
+      </div>
+
+      <!-- ADMINISTRATIVE FEEDBACK (Admin Note) -->
+      <div id="adminNoteBlock" class="admin-note-box" style="display:none;">
+        <div style="font-size:0.9rem; font-weight:800; color:#9b2c2c; display:flex; align-items:center; gap:6px;">
+          <span>📢</span> บันทึกคำชี้แจงจากเจ้าหน้าที่ผู้พิจารณาเรื่อง
+        </div>
+        <div id="adminNoteContent" style="font-size:0.92rem; color:#7f1d1d; line-height:1.6; margin-top:6px; white-space:pre-line;"></div>
+      </div>
+
+      <div class="detail-grid">
+        <div class="detail-item">
+          <span class="detail-label">รหัสอ้างอิง (Token)</span>
+          <span id="resToken" class="detail-val">-</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">วันที่ส่งเรื่อง</span>
+          <span id="resDate" class="detail-val">-</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <%- include('partials/footer'); %>
+
+  <!-- SEARCH SCRIPT -->
+  <script>
+    const trackForm = document.getElementById('trackForm');
+    const tokenInput = document.getElementById('tokenInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const resultPanel = document.getElementById('resultPanel');
+
+    trackForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = tokenInput.value.trim().toUpperCase();
+      if (!token) return;
+
+      searchBtn.disabled = true;
+      searchBtn.innerText = 'กำลังค้นหา...';
+      resultPanel.classList.remove('active');
+
+      try {
+        const res = await fetch(`/api/complaints/track/${token}`);
+        const data = await res.json();
+
+        if (res.ok) {
+          // Populate details
+          document.getElementById('resTitle').innerText = data.title;
+          document.getElementById('resCategory').innerText = data.category;
+          document.getElementById('resDetail').innerText = data.detail;
+          document.getElementById('resToken').innerText = data.token;
+          document.getElementById('resDate').innerText = new Date(data.createdAt).toLocaleDateString('th-TH', {
+            year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+          }) + ' น.';
+
+          // Handle Timeline Status
+          const progressLine = document.getElementById('timelineProgress');
+          const stepPending = document.getElementById('step-pending');
+          const stepInvestigating = document.getElementById('step-investigating');
+          const stepResolved = document.getElementById('step-resolved');
+          const stepResolvedLabel = document.getElementById('step-resolved-label');
+
+          // Reset steps class
+          [stepPending, stepInvestigating, stepResolved].forEach(s => {
+            s.classList.remove('completed', 'active');
+          });
+
+          // Timeline logic
+          if (data.status === 'pending') {
+            stepPending.classList.add('active');
+            progressLine.style.width = '0%';
+          } else if (data.status === 'investigating') {
+            stepPending.classList.add('completed');
+            stepInvestigating.classList.add('active');
+            progressLine.style.width = '40%';
+          } else if (data.status === 'resolved') {
+            stepPending.classList.add('completed');
+            stepInvestigating.classList.add('completed');
+            stepResolved.classList.add('completed');
+            stepResolvedLabel.innerText = 'ตรวจสอบเสร็จสิ้น';
+            progressLine.style.width = '80%';
+          } else if (data.status === 'rejected') {
+            stepPending.classList.add('completed');
+            stepResolved.classList.add('active');
+            stepResolvedLabel.innerText = 'ไม่เข้าเกณฑ์ตรวจสอบ';
+            progressLine.style.width = '80%';
+          }
+
+          // Handle Admin Note Block
+          const adminNoteBlock = document.getElementById('adminNoteBlock');
+          const adminNoteContent = document.getElementById('adminNoteContent');
+          if (data.adminNote && data.adminNote.trim()) {
+            adminNoteContent.innerText = data.adminNote;
+            adminNoteBlock.style.display = 'block';
+          } else {
+            adminNoteBlock.style.display = 'none';
+          }
+
+          resultPanel.classList.add('active');
+        } else {
+          alert('ไม่พบเรื่องร้องเรียน: ' + (data.message || 'รหัส Token ไม่ถูกต้อง'));
+        }
+      } catch (err) {
+        console.error(err);
+        alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+      } finally {
+        searchBtn.disabled = false;
+        searchBtn.innerText = '🔍 ค้นหา';
+      }
+    });
+    // Auto-search if token query parameter is present in URL
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+      if (token) {
+        tokenInput.value = token.toUpperCase();
+        trackForm.dispatchEvent(new Event('submit'));
+      }
+    });
+  </script>
+</body>
+
+</html>

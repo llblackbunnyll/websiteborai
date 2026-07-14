@@ -908,16 +908,18 @@ router.delete('/downloads/:id', authenticateToken, async (req, res) => {
 // ITA ASSESSMENT (O1 - O37)
 // ──────────────────────────────────────────────────────────────────────────────
 
-// GET /api/ita — Fetch all ITA items
+// GET /api/ita — Fetch all ITA items for a year
 router.get('/ita', async (req, res) => {
+  const year = req.query.year || '2569';
   try {
     const items = await prisma.iTAItem.findMany({
+      where: { year },
       orderBy: { code: 'asc' }
     });
     // Sort logically (O1, O2, ... O10, O11...)
     const sorted = items.sort((a, b) => {
-      const numA = parseInt(a.code.substring(1));
-      const numB = parseInt(b.code.substring(1));
+      const numA = parseInt(a.code.replace(/\D/g, ''), 10) || 0;
+      const numB = parseInt(b.code.replace(/\D/g, ''), 10) || 0;
       return numA - numB;
     });
     res.json(sorted);
@@ -926,98 +928,176 @@ router.get('/ita', async (req, res) => {
   }
 });
 
-// POST /api/ita/init — Initialize O1-O37 if they don't exist
+// GET /api/ita/smart-options — Fetch options for Smart Link dropdown
+router.get('/ita/smart-options', authenticateToken, async (req, res) => {
+  try {
+    // 1. Fetch latest PR News
+    const prs = await prisma.pRItem.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 30,
+      select: { id: true, title: true }
+    });
+    const prOptions = prs.map(p => ({
+      label: `[ข่าวประชาสัมพันธ์] ${p.title}`,
+      url: `/news/${p.id}`,
+      id: p.id
+    }));
+
+    // 2. Fetch latest Public Documents
+    const docs = await prisma.publicDocument.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 35,
+      select: { id: true, title: true, fileUrl: true, type: true }
+    });
+    const docOptions = docs.map(d => ({
+      label: `[เอกสารเผยแพร่-${d.type === 'bidding' ? 'จัดซื้อจัดจ้าง' : 'ทั่วไป'}] ${d.title}`,
+      url: d.fileUrl,
+      id: d.id
+    }));
+
+    // 3. Fetch latest Download Documents
+    const downloads = await prisma.downloadDocument.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 35,
+      select: { id: true, title: true, fileUrl: true, division: true }
+    });
+    const downloadOptions = downloads.map(dl => ({
+      label: `[เอกสารดาวน์โหลด-${dl.division}] ${dl.title}`,
+      url: dl.fileUrl,
+      id: dl.id
+    }));
+
+    // 4. Fetch FAQs
+    const faqs = await prisma.fAQ.findMany({
+      orderBy: { order: 'asc' },
+      select: { id: true, question: true }
+    });
+    const faqOptions = faqs.map(f => ({
+      label: `[FAQ] ${f.question}`,
+      url: `/#faq`,
+      id: f.id
+    }));
+
+    res.json({
+      prs: prOptions,
+      docs: docOptions,
+      downloads: downloadOptions,
+      faqs: faqOptions
+    });
+  } catch (error) {
+    console.error('[ITA Smart Options Error]', error);
+    res.status(500).json({ message: 'Failed to fetch Smart Link options' });
+  }
+});
+
+// POST /api/ita/init — Initialize O1-O37 if they don't exist for the specified year
 router.post('/ita/init', authenticateToken, async (req, res) => {
+  const year = req.body.year || '2569';
   try {
     const itaList = [
-      { code: 'O1', title: 'โครงสร้างสถานศึกษา', description: 'แผนผังแสดงโครงสร้างการแบ่งส่วนราชการภายในสถานศึกษา หรือคำสั่งแบ่งงาน' },
-      { code: 'O2', title: 'ข้อมูลผู้บริหาร', description: 'รายนามผู้บริหาร รูปถ่าย ตำแหน่ง และช่องทางการติดต่อ' },
-      { code: 'O3', title: 'อำนาจหน้าที่', description: 'หน้าที่และอำนาจตามกฎหมาย หรือคำสั่งมอบหมายงานที่ระบุภารกิจชัดเจน' },
-      { code: 'O4', title: 'แผนพัฒนาสถานศึกษา', description: 'ยุทธศาสตร์ แผนพัฒนา หรือแผนปฏิบัติราชการประจำปี' },
-      { code: 'O5', title: 'ข้อมูลการติดต่อ', description: 'ที่อยู่ เบอร์โทรศัพท์ อีเมล และแผนที่ตั้งสถานศึกษา' },
-      { code: 'O6', title: 'กฎหมายที่เกี่ยวข้อง', description: 'กฎหมาย ระเบียบ หรือข้อบังคับที่เกี่ยวข้องกับการดำเนินงานหลัก' },
-      { code: 'O7', title: 'ข่าวประชาสัมพันธ์', description: 'รวมข่าวภารกิจ กิจกรรม และความเคลื่อนไหวล่าสุดในปีปัจจุบัน' },
-      { code: 'O8', title: 'Q&A (คำถาม-คำตอบ)', description: 'เมนูคำถามที่พบบ่อย หรือช่องทางที่คนภายนอกสามารถสอบถามข้อมูลได้' },
-      { code: 'O9', title: 'Social Network', description: 'ลิงก์สื่อสังคมออนไลน์ เช่น Facebook, YouTube หรือ Line' },
-      { code: 'O10', title: 'แผนการดำเนินงานประจำปี', description: 'แผนปฏิบัติราชการประจำปี (Action Plan) ของปีงบประมาณปัจจุบัน' },
-      { code: 'O11', title: 'รายงานผลการดำเนินงานประจำปี', description: 'รายงานสรุปผลการดำเนินงานของปีงบประมาณที่ผ่านมา' },
-      { code: 'O12', title: 'คู่มือหรือมาตรฐานการปฏิบัติงาน', description: 'คู่มือสำหรับเจ้าหน้าที่ (Internal Workflow) สำหรับงานแต่ละฝ่าย' },
-      { code: 'O13', title: 'คู่มือหรือมาตรฐานการให้บริการ', description: 'คู่มือสำหรับนักเรียนหรือประชาชนที่มาติดต่อรับบริการ' },
-      { code: 'O14', title: 'ข้อมูลเชิงสถิติการให้บริการ', description: 'รายงานจำนวนผู้มาติดต่อรับบริการจำแนกตามรายเดือนหรือรายปี' },
-      { code: 'O15', title: 'รายงานผลความพึงพอใจการให้บริการ', description: 'สรุปผลการประเมินความพึงพอใจจากผู้รับบริการในปีปัจจุบัน' },
-      { code: 'O16', title: 'E-Service (ระบบบริการออนไลน์)', description: 'ลิงก์ไปยังระบบรับสมัครออนไลน์ ระบบลงทะเบียน หรือบริการอื่นๆ' },
-      { code: 'O17', title: 'แผนการใช้จ่ายงบประมาณประจำปี', description: 'รายละเอียดการจัดสรรและแผนใช้จ่ายงบประมาณของสถานศึกษา' },
-      { code: 'O18', title: 'รายงานผลการใช้จ่ายงบประมาณประจำปี', description: 'สรุปผลการใช้จ่ายงบประมาณจริงเทียบกับแผน' },
-      { code: 'O19', title: 'แผนการจัดซื้อจัดจ้างหรือการจัดหาพัสดุ', description: 'แผนการจัดซื้อจัดจ้างประจำปีงบประมาณล่าสุด' },
-      { code: 'O20', title: 'ประกาศตารางการจัดซื้อจัดจ้าง', description: 'รวมประกาศเชิญชวน ประกาศผู้ชนะ และการจัดหาพัสดุต่างๆ' },
-      { code: 'O21', title: 'สรุปผลการจัดซื้อจัดจ้างรายเดือน (สขร.1)', description: 'สรุปผลการจัดหาพัสดุในแต่ละเดือนที่ต้องเผยแพร่' },
-      { code: 'O22', title: 'รายงานผลการจัดซื้อจัดจ้างประจำปี', description: 'สรุปผลการดำเนินงานจัดซื้อจัดจ้างในรอบปีงบประมาณที่ผ่านมา' },
-      { code: 'O23', title: 'กิจกรรมพัฒนาทรัพยากรบุคคล', description: 'กิจกรรมอบรมสัมมนา หรือโครงการพัฒนาบุคลากรในปีปัจจุบัน' },
-      { code: 'O24', title: 'หลักเกณฑ์การบริหารทรัพยากรบุคคล', description: 'ระเบียบการให้คุณให้โทษ การเลื่อนขั้น หรือหลักเกณฑ์ที่เกี่ยวข้อง' },
-      { code: 'O25', title: 'รายงานผลพัฒนาทรัพยากรบุคคลประจำปี', description: 'สรุปผลการพัฒนาและความก้าวหน้าของบุคลากรในรอบปี' },
-      { code: 'O26', title: 'แนวปฏิบัติการจัดการเรื่องร้องเรียนทุจริต', description: 'ขั้นตอนการจัดการและกระบวนการเมื่อได้รับเรื่องร้องเรียนการทุจริต' },
-      { code: 'O27', title: 'ช่องทางการแจ้งเรื่องร้องเรียนทุจริต', description: 'ลิงก์หรือหน้าเพจสำหรับส่งข้อมูลร้องเรียนการทุจริตโดยตรง' },
-      { code: 'O28', title: 'สถิติเรื่องร้องเรียนการทุจริตประจำปี', description: 'สรุปจำนวนเรื่องที่ได้รับการร้องเรียนและการดำเนินการในปีที่ผ่านมา' },
-      { code: 'O29', title: 'การเปิดโอกาสให้เกิดการมีส่วนร่วม', description: 'กิจกรรมที่เปิดให้ชุมชนหรือผู้มีส่วนได้ส่วนเสียเข้ามาร่วมวางแผน/ตรวจสอบ' },
-      { code: 'O30', title: 'เจตจำนงสุจริตของผู้บริหาร (No Gift Policy)', description: 'ประกาศนโยบายไม่รับของขวัญและของกำนัลจากการปฏิบัติหน้าที่' },
-      { code: 'O31', title: 'การมีส่วนร่วมของผู้บริหาร', description: 'กิจกรรมที่ผู้บริหารแสดงออกถึงการต่อต้านการทุจริต' },
-      { code: 'O32', title: 'การประเมินความเสี่ยงการทุจริตประจำปี', description: 'รายงานการประเมินโอกาสที่จะเกิดการทุจริตภายในหน่วยงาน' },
-      { code: 'O33', title: 'การดำเนินการจัดการความเสี่ยงทุจริต', description: 'มาตรการหรือกิจกรรมที่ใช้ลดความเสี่ยงจากการทุจริต' },
-      { code: 'O34', title: 'การเสริมสร้างวัฒนธรรมองค์กร', description: 'กิจกรรมปลูกฝังความซื่อสัตย์สุจริตและจริยธรรมให้แก่คนในวิทยาลัย' },
-      { code: 'O35', title: 'แผนปฏิบัติการป้องกันการทุจริต', description: 'แผนโครงการส่งเสริมความโปร่งใสและป้องกันทุจริตประจำปี' },
-      { code: 'O36', title: 'รายงานผลการป้องกันการทุจริตประจำปี', description: 'สรุปผลการดำเนินงานตามแผนป้องกันทุจริตในปีที่ผ่านมา' },
-      { code: 'O37', title: 'มาตรการส่งเสริมคุณธรรมและความโปร่งใส', description: 'มาตรการหรือกลไกภายในที่ใช้ควบคุมความโปร่งใสและจริยธรรม' }
+      { code: 'O1', title: 'โครงสร้างและอำนาจหน้าที่', description: 'แสดงแผนผังโครงสร้างการแบ่งส่วนราชการภายใน และแสดงข้อมูลหน้าที่/อำนาจของสถานศึกษาตามที่กฎหมายกำหนด' },
+      { code: 'O2', title: 'ข้อมูลผู้บริหารสถานศึกษา', description: 'แสดงข้อมูลผู้อำนวยการและรองผู้อำนวยการ โดยมี ชื่อ-สกุล, ตำแหน่ง, รูปถ่าย และช่องทางการติดต่อโดยตรง' },
+      { code: 'O3', title: 'แผนพัฒนาสถานศึกษา', description: 'แสดงแผนพัฒนาที่มีระยะมากกว่า 1 ปี โดยระบุรายละเอียด ยุทธศาสตร์/แนวทาง, กลยุทธ์, เป้าหมาย และตัวชี้วัด' },
+      { code: 'O4', title: 'ข้อมูลการติดต่อ', description: 'แสดงที่อยู่, เบอร์โทรศัพท์, อีเมลงานสารบรรณ, พิกัดที่ตั้ง (Google Maps) และช่องทาง Social Media อย่างน้อย 1 ช่องทาง' },
+      { code: 'O5', title: 'กฎหมายที่เกี่ยวข้อง', description: 'แสดงกฎหมายหรือระเบียบที่เกี่ยวข้องกับการดำเนินงานของสถานศึกษา ไม่น้อยกว่า 5 ฉบับ' },
+      { code: 'O6', title: 'แผนปฏิบัติราชการและแผนการใช้จ่ายงบประมาณ', description: 'สรุปผลการใช้จ่ายปีงบประมาณที่ผ่านมา, ประมาณการรายรับ, สรุปรายจ่ายปีปัจจุบัน และรายละเอียดโครงการ/งบประมาณ' },
+      { code: 'O7', title: 'รายงานผลการดำเนินงานประจำปี', description: 'แสดงรายงานย้อนหลัง 1 ปี ที่ระบุผลการทำโครงการ, งบประมาณที่ใช้ และปัญหา/อุปสรรค/ข้อเสนอแนะ' },
+      { code: 'O8', title: 'รายงานผลการประเมินตนเอง (SAR)', description: 'แสดงรายงาน SAR ย้อนหลัง 1 ปีการศึกษา ที่ประกอบด้วย ผลสัมฤทธิ์, จุดเด่น, จุดที่ควรพัฒนา และข้อเสนอแนะ' },
+      { code: 'O9', title: 'ข่าวประชาสัมพันธ์', description: 'แสดงข่าวสารการดำเนินงานหรือภารกิจของสถานศึกษาที่เกิดขึ้นในปีงบประมาณปัจจุบัน' },
+      { code: 'O10', title: 'ประกาศการจัดซื้อจัดจ้าง', description: 'แสดงประกาศตาม พ.ร.บ. จัดซื้อจัดจ้างฯ ปี 2560 (เช่น ประกาศเชิญชวน, ประกาศผู้ชนะ) ในปีงบประมาณปัจจุบัน' },
+      { code: 'O11', title: 'รายงานผลการจัดซื้อจัดจ้างประจำปี', description: 'แสดงสรุปรายงานผลการจัดซื้อจัดจ้างย้อนหลัง 1 ปีงบประมาณ' },
+      { code: 'O12', title: 'คู่มือ/ขั้นตอนการปฏิบัติงานภายใน', description: 'แสดงคู่มือหรือขั้นตอนการปฏิบัติงานของฝ่ายต่างๆ อย่างน้อย 4 เล่ม (ฝ่ายละ 1 เล่ม)' },
+      { code: 'O13', title: 'คู่มือ/ขั้นตอนการให้บริการ', description: 'แสดงคู่มือสำหรับประชาชนหรือนักเรียนที่มาติดต่อ อย่างน้อย 2 คู่มือ (เช่น คู่มือนักเรียน, คู่มือการลงทะเบียน)' },
+      { code: 'O14', title: 'E-Service', description: 'ช่องทางบริการออนไลน์บนเว็บไซต์หลักที่ผู้รับบริการไม่ต้องเดินทางมาเอง (เช่น ระบบ ศธ. 02)' },
+      { code: 'O15', title: 'ข้อมูลเชิงสถิติและความพึงพอใจ', description: 'แสดงข้อมูลสถิติและผลความพึงพอใจการให้บริการ ย้อนหลัง 1 ปี อย่างน้อย 3 โครงการ/กิจกรรม' },
+      { code: 'O16', title: 'การบริหารและพัฒนาทรัพยากรบุคคล', description: 'แสดงหลักเกณฑ์ 4 ด้าน ได้แก่ การสรรหา/บรรจุ, การพัฒนาบุคลากร, การประเมินผลปฏิบัติงาน และการสร้างขวัญกำลังใจ' },
+      { code: 'O17', title: 'ประมวลจริยธรรม', description: 'แสดงแนวปฏิบัติ Do’s & Don’t (สิ่งที่ควรและไม่ควรทำ) และผลการจัดกิจกรรม/อบรมที่สอดแทรกด้านจริยธรรมให้แก่ครูและบุคลากร' },
+      { code: 'O18', title: 'แนวทางปฏิบัติการจัดการร้องเรียน', description: 'แสดงคู่มือ/ขั้นตอนการร้องเรียนการทุจริต (ระบุวิธีการร้องเรียน, ขั้นตอนจัดการ, ฝ่ายรับผิดชอบ, ระยะเวลา และช่องทางแจ้งเรื่อง)' },
+      { code: 'O19', title: 'ข้อมูลเชิงสถิติเรื่องร้องเรียน', description: 'แสดงสถิติการร้องเรียนการทุจริต (จำนวนเรื่องทั้งหมด, ดำเนินการแล้วเสร็จ, อยู่ระหว่างดำเนินการ) ให้ครอบคลุมระยะเวลา 6 เดือนแรก' },
+      { code: 'O20', title: 'ประกาศนโยบายไม่รับของขวัญ (No Gift Policy)', description: 'แสดงประกาศเจตนารมณ์ No Gift Policy ที่ลงนามโดยผู้บริหาร และภาพกิจกรรมการมีส่วนร่วมในนโยบายนี้' },
+      { code: 'O21', title: 'การประเมินผลควบคุมภายใน', description: 'แสดงรายงานประเมินควบคุมภายในย้อนหลัง 1 ปี ใน 4 ด้าน (สภาพแวดล้อม, ความเสี่ยง, สารสนเทศ, การติดตามประเมินผล)' },
+      { code: 'O22', title: 'การเสริมสร้างวัฒนธรรมองค์กรให้ซื่อสัตย์สุจริต', description: 'แสดงหลักเกณฑ์การนำหลักสูตรต้านทุจริตศึกษาไปใช้ มีแผนการเรียนรู้ และการวัดผลครบ 4 ด้าน หรือกิจกรรมทดแทน' },
+      { code: 'O23', title: 'มาตรการส่งเสริมคุณธรรมและความโปร่งใส', description: 'แสดงโครงการ กิจกรรม หรือคำสั่งแต่งตั้งคณะกรรมการประเมิน ITA ประจำปีงบประมาณปัจจุบัน' }
     ];
+
+    // Delete any old items for this year that are not in O1-O23
+    const validCodes = itaList.map(item => item.code);
+    await prisma.iTAItem.deleteMany({
+      where: {
+        year: year,
+        code: { notIn: validCodes }
+      }
+    });
 
     for (const item of itaList) {
       await prisma.iTAItem.upsert({
-        where: { code: item.code },
-        update: { 
-          title: item.title,
-          description: item.description 
+        where: {
+          code_year: {
+            code: item.code,
+            year: year
+          }
         },
-        create: { 
-          code: item.code, 
-          title: item.title, 
+        update: {
+          title: item.title,
+          description: item.description
+        },
+        create: {
+          code: item.code,
+          year: year,
+          title: item.title,
           description: item.description,
-          attachments: [] 
+          attachments: []
         }
       });
     }
 
-    res.json({ message: 'ITA initialization with descriptions successful' });
+    res.json({ message: `ITA initialization for year ${year} successful` });
   } catch (error) {
     console.error('[ITA Init]', error);
     res.status(500).json({ message: 'Failed to initialize ITA data' });
   }
 });
 
-// PUT /api/ita/:code — Update ITA item (files + links)
-router.put('/ita/:code', authenticateToken, upload.array('files', 10), async (req, res) => {
+// PUT /api/ita/:code/:year — Update ITA item (files + links + description + title + isPublic)
+router.put('/ita/:code/:year', authenticateToken, upload.array('files', 10), async (req, res) => {
   try {
-    const { code } = req.params;
-    // attachments are sent as a JSON string describing current/remaining docs + links
-    const { existingAttachments } = req.body;
+    const { code, year } = req.params;
+    const { existingAttachments, description, title, isPublic } = req.body;
     
     let currentData = [];
     if (existingAttachments) {
-      try { currentData = JSON.parse(existingAttachments); } catch (e) { currentData = []; }
+      try {
+        currentData = typeof existingAttachments === 'string' ? JSON.parse(existingAttachments) : existingAttachments;
+      } catch (e) {
+        currentData = [];
+      }
     }
 
     // Process new file uploads
     if (req.files && req.files.length > 0) {
-      for (const file of req.files) {
-        // Find label in req.body for this specific file if provided, else use filename
+      let fileLabels = [];
+      if (req.body.fileLabels) {
+        try {
+          fileLabels = typeof req.body.fileLabels === 'string'
+            ? JSON.parse(req.body.fileLabels)
+            : req.body.fileLabels;
+        } catch (e) {
+          fileLabels = [];
+        }
+      }
+
+      req.files.forEach((file, idx) => {
         const fileUrl = saveFile(file, 'ita');
+        const customLabel = Array.isArray(fileLabels) && fileLabels[idx] ? fileLabels[idx] : file.originalname.split('.')[0];
         currentData.push({ 
-          label: file.originalname.split('.')[0], // fallback label
+          label: customLabel,
           url: fileUrl, 
           type: 'file' 
         });
-      }
+      });
     }
 
-    // Explicitly add any new link items if sent in a batch (client logic)
+    // Add new link items if sent in batch
     if (req.body.newLinks) {
        let newLinks = [];
        try { newLinks = JSON.parse(req.body.newLinks); } catch(e) {}
@@ -1026,10 +1106,27 @@ router.put('/ita/:code', authenticateToken, upload.array('files', 10), async (re
        }
     }
 
-    const updated = await prisma.iTAItem.update({
-      where: { code },
-      data: { 
+    const updated = await prisma.iTAItem.upsert({
+      where: {
+        code_year: {
+          code,
+          year
+        }
+      },
+      update: {
+        title: title || undefined,
+        description: description !== undefined ? description : undefined,
         attachments: currentData,
+        isPublic: isPublic !== undefined ? (isPublic === 'true' || isPublic === true || isPublic === '1') : undefined,
+        updatedAt: new Date()
+      },
+      create: {
+        code,
+        year,
+        title: title || `หัวข้อ ${code}`,
+        description: description || '',
+        attachments: currentData,
+        isPublic: isPublic !== undefined ? (isPublic === 'true' || isPublic === true || isPublic === '1') : true,
         updatedAt: new Date()
       }
     });
@@ -1464,5 +1561,294 @@ router.delete('/faqs/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// POST /api/pr/webhook (public, but secured by secret token)
+router.post('/pr/webhook', async (req, res) => {
+  const secret = req.query.secret || req.headers['x-webhook-secret'];
+  const expectedSecret = process.env.WEBHOOK_SECRET || 'borai_fb_webhook_secret_2026';
+  
+  if (!secret || secret !== expectedSecret) {
+    return res.status(401).json({ message: 'Unauthorized webhook request' });
+  }
+
+  try {
+    const { message, created_time, full_picture, permalink_url } = req.body;
+
+    // 1. Format date to Thai Buddhist Era format (e.g., "7 ก.ค. 2569")
+    let formattedDate = '';
+    try {
+      const d = new Date(created_time || new Date());
+      const thaiMonthsShort = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+      const day = d.getDate();
+      const month = thaiMonthsShort[d.getMonth()];
+      const year = d.getFullYear() + 543;
+      formattedDate = `${day} ${month} ${year}`;
+    } catch (e) {
+      formattedDate = 'ข่าวประชาสัมพันธ์';
+    }
+
+    // 2. Process / download image if present
+    let coverImage = 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=800';
+    let imagesArr = [];
+
+    if (full_picture) {
+      if (typeof fetch === 'function') {
+        try {
+          const response = await fetch(full_picture);
+          if (response.ok) {
+            const arrayBuffer = await response.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            const savedPath = await processAndSaveImage(buffer, 'fb-sync');
+            coverImage = savedPath;
+            imagesArr.push(savedPath);
+          } else {
+            coverImage = full_picture;
+            imagesArr.push(full_picture);
+          }
+        } catch (err) {
+          console.error('[Webhook Download Image Error]', err);
+          coverImage = full_picture;
+          imagesArr.push(full_picture);
+        }
+      } else {
+        coverImage = full_picture;
+        imagesArr.push(full_picture);
+      }
+    }
+
+    // 3. Construct content (include permalink if present)
+    let content = message || '';
+    if (permalink_url) {
+      content += `\n\nอ่านต่อบน Facebook: ${permalink_url}`;
+    }
+
+    // 4. Construct title (take first line or first 100 characters)
+    let title = 'ข่าวประชาสัมพันธ์จาก Facebook';
+    if (message) {
+      const lines = message.split('\n').map(l => l.trim()).filter(Boolean);
+      if (lines.length > 0) {
+        title = lines[0];
+        if (title.length > 100) {
+          title = title.substring(0, 100) + '...';
+        }
+      }
+    }
+
+    // 5. Save to Prisma DB
+    const newItem = await prisma.pRItem.create({
+      data: {
+        title,
+        date: formattedDate,
+        category: 'ข่าวประชาสัมพันธ์',
+        image: coverImage,
+        images: imagesArr,
+        content: content,
+        departmentTag: null
+      }
+    });
+
+    res.status(201).json({
+      message: 'PR item created via webhook successfully',
+      item: newItem
+    });
+  } catch (error) {
+    console.error('[Webhook Sync Error]', error);
+    res.status(500).json({ message: 'Failed to create PR item via webhook', error: error.message });
+  }
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+// FRAUD COMPLAINTS API
+// ──────────────────────────────────────────────────────────────────────────────
+
+// POST /api/complaints — Submit a new complaint
+router.post('/complaints', async (req, res) => {
+  try {
+    const { title, category, detail, isAnonymous, reporterName, reporterPhone, reporterEmail } = req.value || req.body;
+    
+    if (!title || !category || !detail) {
+      return res.status(400).json({ message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (หัวข้อ, หมวดหมู่, รายละเอียด)' });
+    }
+
+    // Generate unique tracking token (e.g., COMP-XXXXXX)
+    let token = '';
+    let isUnique = false;
+    while (!isUnique) {
+      const randStr = Math.random().toString(36).substring(2, 8).toUpperCase();
+      token = `COMP-${randStr}`;
+      const existing = await prisma.complaint.findUnique({ where: { token } });
+      if (!existing) isUnique = true;
+    }
+
+    const isAnon = isAnonymous === true || isAnonymous === 'true' || isAnonymous === '1';
+
+    const complaint = await prisma.complaint.create({
+      data: {
+        token,
+        title,
+        category,
+        detail,
+        isAnonymous: isAnon,
+        reporterName: isAnon ? null : reporterName,
+        reporterPhone: isAnon ? null : reporterPhone,
+        reporterEmail: isAnon ? null : reporterEmail,
+        status: 'pending'
+      }
+    });
+
+    res.status(201).json({
+      message: 'ส่งเรื่องร้องเรียนสำเร็จ',
+      token: complaint.token
+    });
+  } catch (error) {
+    console.error('[API Submit Complaint]', error);
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการบันทึกเรื่องร้องเรียน' });
+  }
+});
+
+// GET /api/complaints/track/:token — Track status of a complaint by token
+router.get('/complaints/track/:token', async (req, res) => {
+  const { token } = req.params;
+  try {
+    const complaint = await prisma.complaint.findUnique({
+      where: { token },
+      select: {
+        token: true,
+        title: true,
+        category: true,
+        detail: true,
+        status: true,
+        adminNote: true,
+        createdAt: true
+      }
+    });
+
+    if (!complaint) {
+      return res.status(404).json({ message: 'ไม่พบรหัสติดตามความคืบหน้านี้' });
+    }
+
+    res.json(complaint);
+  } catch (error) {
+    console.error('[API Track Complaint]', error);
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการค้นหาข้อมูล' });
+  }
+});
+
+// GET /api/admin/complaints — Admin: Get all complaints
+router.get('/admin/complaints', authenticateToken, async (req, res) => {
+  try {
+    const complaints = await prisma.complaint.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(complaints);
+  } catch (error) {
+    console.error('[API Admin Get Complaints]', error);
+    res.status(500).json({ message: 'Failed to fetch complaints' });
+  }
+});
+
+// PUT /api/admin/complaints/:id — Admin: Update status and notes for a complaint
+router.put('/admin/complaints/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { status, adminNote } = req.body;
+  try {
+    if (!['pending', 'investigating', 'resolved', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'สถานะไม่ถูกต้อง' });
+    }
+
+    const updated = await prisma.complaint.update({
+      where: { id },
+      data: {
+        status,
+        adminNote,
+        updatedAt: new Date()
+      }
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error('[API Admin Update Complaint]', error);
+    res.status(500).json({ message: 'Failed to update complaint' });
+  }
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+// PUBLIC FEEDBACK API
+// ──────────────────────────────────────────────────────────────────────────────
+
+// POST /api/feedback — Submit public feedback
+router.post('/feedback', async (req, res) => {
+  try {
+    const { title, category, detail, rating, reporterName, reporterEmail } = req.body;
+
+    if (!title || !category || !detail || !rating) {
+      return res.status(400).json({ message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (หัวข้อ, หมวดหมู่, รายละเอียด, คะแนนพึงพอใจ)' });
+    }
+
+    const ratingVal = parseInt(rating, 10);
+    if (isNaN(ratingVal) || ratingVal < 1 || ratingVal > 5) {
+      return res.status(400).json({ message: 'คะแนนระดับความพึงพอใจไม่ถูกต้อง' });
+    }
+
+    const feedback = await prisma.feedback.create({
+      data: {
+        title,
+        category,
+        detail,
+        rating: ratingVal,
+        reporterName: reporterName || null,
+        reporterEmail: reporterEmail || null
+      }
+    });
+
+    res.status(201).json({
+      message: 'ส่งข้อมูลข้อคิดเห็นสำเร็จ ขอบพระคุณสำหรับข้อเสนอแนะ',
+      id: feedback.id
+    });
+  } catch (error) {
+    console.error('[API Submit Feedback]', error);
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการบันทึกข้อคิดเห็น' });
+  }
+});
+
+// GET /api/admin/feedbacks — Admin: Get all feedbacks with analytics
+router.get('/admin/feedbacks', authenticateToken, async (req, res) => {
+  try {
+    const feedbacks = await prisma.feedback.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // Calculate average rating
+    let averageRating = 0;
+    if (feedbacks.length > 0) {
+      const sum = feedbacks.reduce((acc, curr) => acc + curr.rating, 0);
+      averageRating = parseFloat((sum / feedbacks.length).toFixed(2));
+    }
+
+    res.json({
+      feedbacks,
+      averageRating,
+      totalCount: feedbacks.length
+    });
+  } catch (error) {
+    console.error('[API Admin Get Feedbacks]', error);
+    res.status(500).json({ message: 'Failed to fetch feedbacks' });
+  }
+});
+
+// DELETE /api/admin/feedbacks/:id — Admin: Delete a feedback
+router.delete('/admin/feedbacks/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.feedback.delete({
+      where: { id }
+    });
+    res.json({ message: 'ลบข้อคิดเห็นเรียบร้อยแล้ว' });
+  } catch (error) {
+    console.error('[API Admin Delete Feedback]', error);
+    res.status(500).json({ message: 'Failed to delete feedback' });
+  }
+});
+
 module.exports = router;
+
 

@@ -1390,6 +1390,43 @@
                 </div>
               </div>
 
+              <!-- Strategic Plan Section (O3) -->
+              <div id="strategic-plan" class="strategic-section" style="margin-top: 40px; padding: 25px; background: rgba(255, 255, 255, 0.45); border: 1px solid rgba(255,255,255,0.5); border-radius: 20px; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05);">
+                <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--color-text-dark); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                  แผนยุทธศาสตร์และแผนพัฒนาสถานศึกษา
+                </h3>
+                <p style="font-size: 0.95rem; color: #475569; line-height: 1.6; margin-bottom: 20px;">
+                  แผนพัฒนาคุณภาพการจัดการศึกษาและแผนยุทธศาสตร์การพัฒนาสถานศึกษาในระยะยาวของวิทยาลัยการอาชีพบ่อไร่ มุ่งเน้นการยกระดับคุณภาพครู บุคลากรทางการศึกษา และนักเรียนนักศึกษาอย่างครบวงจร เพื่อผลิตกำลังคนที่มีทักษะวิชาชีพและมีคุณธรรม ตอบสนองต่อความต้องการของสังคมและประเทศชาติ
+                </p>
+
+                <% if (typeof strategicPlans !== 'undefined' && strategicPlans && strategicPlans.length > 0) { %>
+                  <div class="plans-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
+                    <% strategicPlans.forEach(plan => { %>
+                      <a href="<%= plan.url %>" target="_blank" rel="noopener" class="plan-card" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #fff; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 12px; text-decoration: none; color: inherit; transition: all 0.2s ease;">
+                        <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
+                          <span style="font-size: 1.5rem; flex-shrink: 0;">📄</span>
+                          <span style="font-size: 0.88rem; font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= plan.label %></span>
+                        </div>
+                        <span style="color: var(--color-accent-primary); font-size: 1.1rem; flex-shrink: 0;">⬇️</span>
+                      </a>
+                    <% }) %>
+                  </div>
+                <% } else { %>
+                  <div style="text-align: center; padding: 25px; border: 1px dashed #cbd5e1; border-radius: 12px; color: #94a3b8; font-size: 0.88rem; background: rgba(255,255,255,0.2);">
+                    🔒 เอกสารแผนพัฒนาสถานศึกษาอยู่ระหว่างการจัดเตรียมรูปเล่มฉบับเผยแพร่ หรือสามารถตรวจสอบลิงก์ข้อมูลเพิ่มเติมได้ที่หัวข้อ O3 ในหน้า ITA
+                  </div>
+                <% } %>
+              </div>
+
+              <style>
+                .plan-card:hover {
+                  border-color: var(--color-accent-primary) !important;
+                  transform: translateY(-2px);
+                  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.1);
+                }
+              </style>
+
               <!-- Management Section -->
               <% const findEx=(kw, dk)=> allPersonnel.find(p => {
                 const dts = Array.isArray(p.duties) ? p.duties : (p.duties ? JSON.parse(p.duties) : []);
@@ -2334,6 +2371,9 @@
       <script src="/js/webgl-bg.js"></script>
       <script src="/js/particles.js"></script>
       <script src="/js/main.js"></script>
+      <script id="budget-data" type="application/json">
+        <%- JSON.stringify(budgetData || null) %>
+      </script>
       <script>
         // Scroll reveal
         const revealAll = () => {
@@ -2369,13 +2409,14 @@
 
         if (ctxSource && ctxAlloc) {
           // Placeholder data if budgetData is null or empty
-          const isNoData = !<%- JSON.stringify(budgetData) %>;
+          const budgetDataRaw = JSON.parse(document.getElementById('budget-data').textContent);
+          const isNoData = !budgetDataRaw;
           
           const sourceLabels = ['งบประมาณแผ่นดิน', 'เงินรายได้สถานศึกษา', 'กองทุนอุดหนุนอื่นๆ'];
-          const sourceData = isNoData ? [40, 30, 30] : <%= JSON.stringify(budgetData ? budgetData.sources : []) %>;
+          const sourceData = isNoData ? [40, 30, 30] : (budgetDataRaw.sources || []);
           
           const allocLabels = ['บริหารจัดการ', 'จัดการเรียนการสอน', 'พัฒนาบุคลากร', 'อื่นๆ'];
-          const allocData = isNoData ? [45, 30, 15, 10] : <%= JSON.stringify(budgetData ? budgetData.allocation : []) %>;
+          const allocData = isNoData ? [45, 30, 15, 10] : (budgetDataRaw.allocation || []);
 
           new Chart(ctxSource, {
             type: 'doughnut',

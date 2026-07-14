@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ช่องทางการแจ้งเบาะแสเรื่องร้องเรียนการทุจริตและประพฤติมิชอบของบุคลากร วิทยาลัยการอาชีพบ่อไร่" />
+  <title><%= title %></title>
+  <link rel="icon" href="/my-logo.webp" type="image/webp" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --complaint-primary: #ef4444; /* Red for alert/anti-corruption */
+      --complaint-primary-glow: rgba(239, 68, 68, 0.15);
+      --complaint-bg: #f8fafc;
+      --complaint-card-bg: #ffffff;
+      --complaint-border: #e2e8f0;
+      --complaint-text: #0f172a;
+      --complaint-muted: #64748b;
+    }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: var(--complaint-bg);
+      color: var(--complaint-text);
+      min-height: 100vh;
+      scroll-behavior: smooth;
+    }
+
+    .hero-banner {
+      background: linear-gradient(135deg, #1e1b4b 0%, #311010 50%, #180505 100%);
+      color: #fff;
+      padding: 130px 24px 70px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 4px solid var(--complaint-primary);
+    }
+
+    .hero-banner::before {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(239, 68, 68, 0.15) 0%, transparent 70%);
+      top: -150px;
+      left: -150px;
+      pointer-events: none;
+    }
+
+    .hero-content {
+      max-width: 800px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 10;
+    }
+
+    .badge-icon {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 16px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #fca5a5;
+      backdrop-filter: blur(10px);
+      margin-bottom: 20px;
+    }
+
+    .badge-icon span {
+      width: 8px;
+      height: 8px;
+      background: var(--complaint-primary);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--complaint-primary);
+    }
+
+    .title-h1 {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      line-height: 1.3;
+      margin-bottom: 0.75rem;
+      background: linear-gradient(to right, #ffffff, #fca5a5);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle-p {
+      font-size: clamp(0.95rem, 2vw, 1.15rem);
+      color: #cbd5e1;
+      font-weight: 400;
+      line-height: 1.6;
+    }
+
+    .main-wrap {
+      max-width: 850px;
+      margin: -40px auto 5rem;
+      padding: 0 24px;
+      position: relative;
+      z-index: 20;
+    }
+
+    .form-card {
+      background: var(--complaint-card-bg);
+      border: 1px solid var(--complaint-border);
+      border-radius: 1.5rem;
+      padding: 2.5rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    }
+
+    @media (max-width: 640px) {
+      .form-card {
+        padding: 1.5rem;
+      }
+    }
+
+    .form-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .btn-track {
+      background: #f1f5f9;
+      color: #475569;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 100px;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s;
+    }
+
+    .btn-track:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.85rem 1.1rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      color: var(--complaint-text);
+      transition: all 0.3s ease;
+      background: #fff;
+      box-sizing: border-box;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--complaint-primary);
+      box-shadow: 0 0 0 3px var(--complaint-primary-glow);
+    }
+
+    /* Switch Container */
+    .switch-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff5f5;
+      border: 1px dashed #feb2b2;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+    }
+
+    .switch-label-group {
+      flex: 1;
+      padding-right: 1rem;
+    }
+
+    .switch-title {
+      font-weight: 800;
+      color: #9b2c2c;
+      font-size: 0.95rem;
+    }
+
+    .switch-desc {
+      font-size: 0.8rem;
+      color: #c53030;
+      margin-top: 2px;
+    }
+
+    /* Toggle Switch Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+      flex-shrink: 0;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #cbd5e1;
+      transition: .4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #ef4444;
+    }
+
+    input:focus + .slider {
+      box-shadow: 0 0 1px #ef4444;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    /* Reporter Info Block */
+    .reporter-info-block {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      transition: all 0.3s ease;
+    }
+
+    .reporter-info-block.hidden {
+      display: none;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 1rem;
+      background: var(--complaint-primary);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 12px var(--complaint-primary-glow);
+      transition: all 0.3s;
+    }
+
+    .btn-submit:hover {
+      background: #dc2626;
+      box-shadow: 0 6px 16px rgba(220, 38, 38, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .btn-submit:disabled {
+      background: #94a3b8;
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Success Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: all;
+    }
+
+    .modal-content {
+      background: white;
+      width: 100%;
+      max-width: 500px;
+      border-radius: 20px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      position: relative;
+      transform: scale(0.95) translateY(-20px);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      overflow: hidden;
+      text-align: center;
+      padding: 2.5rem;
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: scale(1) translateY(0);
+    }
+
+    .success-icon {
+      width: 70px;
+      height: 70px;
+      background: #dcfce7;
+      color: #15803d;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+    }
+
+    .token-display-box {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 1rem;
+      margin: 1.5rem 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .token-text {
+      font-family: monospace;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: 2px;
+      user-select: all;
+    }
+
+    .btn-copy {
+      background: #e2e8f0;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #334155;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-copy:hover {
+      background: #cbd5e1;
+      color: #0f172a;
+    }
+  </style>
+</head>
+
+<body>
+  <%- include('partials/navbar'); %>
+
+  <!-- HERO BANNER -->
+  <section class="hero-banner">
+    <div class="hero-content">
+      <div class="badge-icon">
+        <span></span> ITA · การส่งเสริมความโปร่งใส
+      </div>
+      <h1 class="title-h1">ช่องทางการแจ้งเรื่องร้องเรียนการทุจริต</h1>
+      <p class="subtitle-p">
+        วิทยาลัยการอาชีพบ่อไร่ มุ่งมั่นในการบริหารงานตามหลักธรรมาภิบาลอย่างโปร่งใส<br>
+        แจ้งเบาะแสการทุจริต ประพฤติมิชอบ หรือการปฏิบัติหน้าที่ไม่เป็นธรรมของบุคลากรได้ที่นี่
+      </p>
+    </div>
+  </section>
+
+  <!-- FORM CONTAINER -->
+  <main class="main-wrap">
+    <div class="form-card">
+      <div class="form-title">
+        <span>📋 ส่งเรื่องร้องเรียนการทุจริต</span>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <a href="/complaints/stats" class="btn-track" style="background: #e0f2fe; color: #0369a1; border-color: #bae6fd;">📊 สถิติร้องเรียนประจำปี</a>
+          <a href="/complaints/track" class="btn-track">🔍 ติดตามสถานะเรื่องร้องเรียน</a>
+        </div>
+      </div>
+
+      <form id="complaintForm">
+        <div class="form-group">
+          <label for="category" class="form-label">ประเภทของเรื่องร้องเรียน *</label>
+          <select id="category" class="form-control" required style="cursor: pointer;">
+            <option value="">-- กรุณาเลือกประเภท --</option>
+            <option value="ทุจริตประพฤติมิชอบ">การทุจริตประพฤติมิชอบในหน่วยงาน</option>
+            <option value="บริการไม่โปร่งใส">การให้บริการที่ไม่โปร่งใสหรือไม่เป็นธรรม</option>
+            <option value="ทั่วไป">เรื่องร้องเรียน/เสนอแนะทั่วไป</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="title" class="form-label">หัวข้อเรื่องร้องเรียน *</label>
+          <input type="text" id="title" class="form-control" placeholder="ระบุหัวข้อสั้นๆ เช่น การปฏิบัติหน้าที่โดยมิชอบ..." required />
+        </div>
+
+        <div class="form-group">
+          <label for="detail" class="form-label">รายละเอียดการร้องเรียน (ใคร, ทำอะไร, ที่ไหน, เมื่อไร) *</label>
+          <textarea id="detail" class="form-control" rows="6" placeholder="อธิบายข้อเท็จจริง พฤติการณ์การทุจริต หรือข้อมูลที่เป็นเบาะแสอย่างละเอียดที่สุดเท่าที่จะเป็นไปได้ เพื่อประโยชน์ในการดำเนินงานตรวจสอบ..." required></textarea>
+        </div>
+
+        <!-- SWITCH CONTAINER (Anonymous Toggle) -->
+        <div class="switch-container">
+          <div class="switch-label-group">
+            <div class="switch-title">🔒 ปกปิดตัวตนของผู้ร้องเรียน (ไม่แสดงตัวตน)</div>
+            <div class="switch-desc">ข้อมูลผู้แจ้งเบาะแสจะถูกปกปิดเป็นความลับสูงสุดของสถาบัน</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="isAnonymous" checked onchange="toggleAnonymousBlock(this.checked)" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- REPORTER INFO BLOCK -->
+        <div id="reporterInfoBlock" class="reporter-info-block hidden">
+          <h4 style="margin: 0 0 1rem; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem;">📄 ข้อมูลผู้ร้องเรียน (จะไม่ถูกเผยแพร่ต่อสาธารณะ)</h4>
+          
+          <div class="form-group">
+            <label for="reporterName" class="form-label">ชื่อ - นามสกุล ของผู้แจ้ง</label>
+            <input type="text" id="reporterName" class="form-control" placeholder="เช่น นายสมชาย รักความโปร่งใส" />
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="form-group">
+              <label for="reporterPhone" class="form-label">เบอร์โทรศัพท์ติดต่อ</label>
+              <input type="tel" id="reporterPhone" class="form-control" placeholder="เช่น 0812345678" />
+            </div>
+            <div class="form-group">
+              <label for="reporterEmail" class="form-label">อีเมล</label>
+              <input type="email" id="reporterEmail" class="form-control" placeholder="เช่น email@example.com" />
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn-submit">🚀 ส่งเรื่องร้องเรียน / แจ้งเบาะแส</button>
+      </form>
+    </div>
+  </main>
+
+  <!-- SUCCESS MODAL -->
+  <div id="successModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 580px; padding: 2rem;">
+      <div class="success-icon" style="margin-bottom: 1rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      
+      <h3 style="margin: 0 0 0.5rem; color: #0f172a; font-weight: 800; font-size: 1.4rem;">ส่งเรื่องร้องเรียนเรียบร้อยแล้ว!</h3>
+      <p style="color: #64748b; font-size: 0.88rem; line-height: 1.5; margin-bottom: 1.5rem;">ระบบได้รับเบาะแสเรียบร้อยแล้ว โปรดคัดลอกรหัสหรือบันทึกภาพตั๋วติดตามด้านล่างนี้ไว้ เพื่อใช้ติดตามสถานะและความคืบหน้า</p>
+      
+      <!-- Hidden/Temporary elements for references -->
+      <span id="tokenText" style="display: none;">COMP-XXXXXX</span>
+
+      <!-- TICKET DESIGN (FOR VISUAL SHARING) -->
+      <div id="ticketCard" style="background: linear-gradient(135deg, #1e1b4b 0%, #3b0712 50%, #0f172a 100%); border-radius: 16px; padding: 1.5rem; color: white; text-align: left; position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 1.5rem; overflow: hidden;">
+        <div style="font-weight: 800; font-size: 1.05rem; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 0.5rem; margin-bottom: 1rem; color: #fca5a5; display: flex; justify-content: space-between; align-items: center;">
+          <span>🎟️ บัตรติดตามเรื่องร้องเรียน</span>
+          <span style="font-size: 0.75rem; color: #cbd5e1; font-weight: 400;">วิทยาลัยการอาชีพบ่อไร่</span>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; gap: 15px; align-items: flex-start;">
+          <div style="flex: 1;">
+            <div style="margin-bottom: 12px;">
+              <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">รหัสคีย์ติดตาม (TOKEN)</span>
+              <div id="ticketToken" style="font-family: monospace; font-size: 1.6rem; font-weight: 800; color: #ffffff; letter-spacing: 2px; margin-top: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">COMP-XXXXXX</div>
+            </div>
+            <div style="margin-bottom: 12px;">
+              <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">หมวดหมู่เรื่องร้องเรียน</span>
+              <div id="ticketCategory" style="font-weight: 700; font-size: 0.92rem; color: #cbd5e1; margin-top: 2px;">-</div>
+            </div>
+            <div>
+              <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">วันที่แจ้งเบาะแส</span>
+              <div id="ticketDate" style="font-size: 0.92rem; color: #cbd5e1; margin-top: 2px;">-</div>
+            </div>
+          </div>
+          
+          <div style="text-align: center; flex-shrink: 0;">
+            <div style="background: white; padding: 6px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block;">
+              <img id="qrCodeImg" style="width: 100px; height: 100px; display: block; object-fit: contain;" alt="QR Code" />
+            </div>
+            <div style="font-size: 0.65rem; color: #cbd5e1; margin-top: 4px; font-weight: 700;">สแกนเพื่อติดตามข้อมูล</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Box -->
+      <div style="display: flex; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap;">
+        <button type="button" class="btn-copy" onclick="copyToken()" style="flex: 1; padding: 10px 15px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: 700; font-size: 0.9rem; cursor: pointer; color: #334155; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-sizing: border-box;">
+          📋 คัดลอกรหัส (Token)
+        </button>
+        <button type="button" onclick="downloadTicket()" style="flex: 1.2; padding: 10px 15px; border-radius: 8px; border: none; background: #0f172a; font-weight: 800; font-size: 0.9rem; cursor: pointer; color: white; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 10px rgba(15,23,42,0.2); box-sizing: border-box;">
+          💾 ดาวน์โหลดภาพตั๋ว (PNG)
+        </button>
+      </div>
+
+      <p style="color: #ef4444; font-size: 0.78rem; font-weight: 700; margin-bottom: 1.5rem; line-height: 1.4; text-align: left; background: #fff5f5; border: 1px dashed #fca5a5; padding: 10px; border-radius: 8px; margin-top: 0;">
+        ⚠️ ข้อควรระวัง: กรุณาบันทึกภาพตั๋วหรือรหัส Token นี้เก็บไว้ทันทีก่อนปิดหน้านี้ เนื่องจากข้อมูลรหัสความปลอดภัยนี้จะปรากฏเฉพาะที่หน้านี้เท่านั้น เพื่อความปลอดภัยสูงสุด
+      </p>
+
+      <div style="display: flex; gap: 10px;">
+        <button type="button" onclick="closeSuccessModal()" style="flex:1; padding: 12px; background: #e2e8f0; border: none; border-radius: 8px; font-weight: 700; color: #475569; cursor: pointer; transition: all 0.2s;">ปิดหน้าต่าง</button>
+        <a id="ticketTrackLink" href="/complaints/track" style="flex:1.5; padding: 12px; background: #ef4444; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;">🔍 ไปหน้าติดตามสถานะเรื่อง</a>
+      </div>
+    </div>
+  </div>
+
+  <%- include('partials/footer'); %>
+
+  <!-- FORM SCRIPT -->
+  <script>
+    function toggleAnonymousBlock(isAnon) {
+      const block = document.getElementById('reporterInfoBlock');
+      const nameInput = document.getElementById('reporterName');
+      const phoneInput = document.getElementById('reporterPhone');
+      const emailInput = document.getElementById('reporterEmail');
+
+      if (isAnon) {
+        block.classList.add('hidden');
+        nameInput.value = '';
+        phoneInput.value = '';
+        emailInput.value = '';
+        nameInput.required = false;
+      } else {
+        block.classList.remove('hidden');
+        nameInput.required = true;
+      }
+    }
+
+    // Modal Operations
+    const successModal = document.getElementById('successModal');
+    const complaintForm = document.getElementById('complaintForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    complaintForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'กำลังส่งข้อมูลเข้าระบบ...';
+
+      const payload = {
+        category: document.getElementById('category').value,
+        title: document.getElementById('title').value.trim(),
+        detail: document.getElementById('detail').value.trim(),
+        isAnonymous: document.getElementById('isAnonymous').checked,
+        reporterName: document.getElementById('reporterName').value.trim() || null,
+        reporterPhone: document.getElementById('reporterPhone').value.trim() || null,
+        reporterEmail: document.getElementById('reporterEmail').value.trim() || null
+      };
+
+      try {
+        const res = await fetch('/api/complaints', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        
+        if (res.ok && data.token) {
+          // Setup Ticket Values
+          document.getElementById('tokenText').innerText = data.token;
+          document.getElementById('ticketToken').innerText = data.token;
+          document.getElementById('ticketCategory').innerText = payload.category;
+          
+          const dateStr = new Date().toLocaleDateString('th-TH', {
+            year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+          }) + ' น.';
+          document.getElementById('ticketDate').innerText = dateStr;
+
+          // Generate QR Code URL pointing to track page with parameter
+          const trackUrl = window.location.origin + '/complaints/track?token=' + data.token;
+          document.getElementById('ticketTrackLink').href = '/complaints/track?token=' + data.token;
+          document.getElementById('qrCodeImg').src = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(trackUrl);
+
+          successModal.classList.add('active');
+          complaintForm.reset();
+          toggleAnonymousBlock(true);
+        } else {
+          alert('ผิดพลาด: ' + (data.message || 'ไม่สามารถยื่นข้อเสนอแนะได้'));
+        }
+      } catch (err) {
+        console.error(err);
+        alert('เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = '🚀 ส่งเรื่องร้องเรียน / แจ้งเบาะแส';
+      }
+    });
+
+    function closeSuccessModal() {
+      successModal.classList.remove('active');
+    }
+
+    function copyToken() {
+      const token = document.getElementById('tokenText').innerText;
+      navigator.clipboard.writeText(token).then(() => {
+        const copyBtn = document.querySelector('.btn-copy');
+        copyBtn.innerText = '✓ คัดลอกรหัสแล้ว';
+        copyBtn.style.background = '#dcfce7';
+        copyBtn.style.color = '#15803d';
+        setTimeout(() => {
+          copyBtn.innerText = '📋 คัดลอกรหัส (Token)';
+          copyBtn.style.background = '#f8fafc';
+          copyBtn.style.color = '#334155';
+        }, 2000);
+      });
+    }
+
+    function downloadTicket() {
+      const token = document.getElementById('tokenText').innerText;
+      const category = document.getElementById('ticketCategory').innerText;
+      const dateStr = document.getElementById('ticketDate').innerText;
+      const qrCodeImgSrc = document.getElementById('qrCodeImg').src;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 650;
+      canvas.height = 420;
+      const ctx = canvas.getContext('2d');
+
+      // Draw background gradient (dark premium look)
+      const grad = ctx.createLinearGradient(0, 0, 650, 420);
+      grad.addColorStop(0, '#1e1b4b'); // deep indigo
+      grad.addColorStop(0.5, '#3b0712'); // dark red
+      grad.addColorStop(1, '#0f172a'); // slate-900
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 650, 420);
+
+      // Draw Title & Brand
+      ctx.fillStyle = '#fca5a5';
+      ctx.font = 'bold 15px sans-serif';
+      ctx.fillText('🎟️ บัตรติดตามเรื่องร้องเรียนการทุจริต', 40, 50);
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '14px sans-serif';
+      ctx.fillText('วิทยาลัยการอาชีพบ่อไร่ (Anti-Corruption)', 40, 80);
+
+      // Draw dashed horizontal divider line
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      ctx.moveTo(40, 110);
+      ctx.lineTo(610, 110);
+      ctx.stroke();
+      ctx.setLineDash([]); // Reset line dash
+
+      // Draw Labels
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '13px sans-serif';
+      ctx.fillText('รหัสคีย์ติดตาม (TOKEN)', 40, 150);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 32px monospace';
+      ctx.fillText(token, 40, 195);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '13px sans-serif';
+      ctx.fillText('หมวดหมู่เรื่องร้องเรียน', 40, 245);
+
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = 'bold 15px sans-serif';
+      ctx.fillText(category, 40, 270);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '13px sans-serif';
+      ctx.fillText('วันที่ยื่นเรื่องเบาะแส', 40, 320);
+
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '15px sans-serif';
+      ctx.fillText(dateStr, 40, 345);
+
+      // Footer disclaimer text
+      ctx.fillStyle = '#fca5a5';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillText('* กรุณาเก็บรักษารหัสนี้เป็นความลับสูงสุดของท่านเพื่อความปลอดภัย', 40, 390);
+
+      // Load and Draw QR Code inside Canvas
+      const qrImg = new Image();
+      qrImg.crossOrigin = "Anonymous";
+      qrImg.src = qrCodeImgSrc;
+
+      qrImg.onload = function () {
+        // Draw white container box for QR Code
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(450, 140, 160, 160);
+
+        // Draw QR Image
+        ctx.drawImage(qrImg, 455, 145, 150, 150);
+
+        // Draw sublabel under QR
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('สแกนติดตามข้อมูล', 530, 320);
+
+        // Create download link and trigger
+        const link = document.createElement('a');
+        link.download = `complaint-ticket-${token}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      };
+
+      qrImg.onerror = function () {
+        // Download fallback (without QR if connection to QR service fails)
+        const link = document.createElement('a');
+        link.download = `complaint-ticket-${token}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      };
+    }
+  </script>
+</body>
+
+</html>
