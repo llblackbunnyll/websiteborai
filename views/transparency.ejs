@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="การควบคุมภายใน มาตรการส่งเสริมความโปร่งใส และการต่อต้านการทุจริต วิทยาลัยการอาชีพบ่อไร่" />
+  <title><%= title %></title>
+  <link rel="icon" href="/my-logo.webp" type="image/webp" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --tr-purple: #7042f8;
+      --tr-blue: #0ea5e9;
+      --tr-bg: #f8fafc;
+      --tr-border: rgba(112, 66, 248, 0.1);
+      --tr-text: #0f172a;
+      --tr-muted: #64748b;
+    }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      scroll-behavior: smooth;
+      background: var(--tr-bg);
+      color: var(--tr-text);
+      min-height: 100vh;
+    }
+
+    /* HERO */
+    .tr-hero {
+      width: 100%;
+      min-height: 360px;
+      position: relative;
+      background: linear-gradient(135deg, #0f0c29 0%, #2b1055 50%, #24243e 100%);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #fff;
+    }
+
+    .tr-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(112, 66, 248, 0.35) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .tr-hero-content {
+      position: relative;
+      z-index: 10;
+      padding: 100px 24px 60px;
+    }
+
+    .tr-hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 18px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 100px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .tr-hero h1 {
+      font-size: clamp(1.8rem, 5vw, 3.2rem);
+      font-weight: 900;
+      line-height: 1.2;
+      letter-spacing: -1px;
+      margin-bottom: 14px;
+    }
+
+    .tr-hero h1 span {
+      background: linear-gradient(135deg, #a78bfa, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .tr-hero-sub {
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.6);
+      max-width: 650px;
+      margin: 0 auto 28px;
+      line-height: 1.7;
+    }
+
+    .tr-breadcrumb {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .tr-breadcrumb a {
+      color: #a78bfa;
+      text-decoration: none;
+    }
+
+    .tr-breadcrumb span {
+      margin: 0 8px;
+    }
+
+    /* CONTAINER & CARDS */
+    .tr-container {
+      max-width: 1200px;
+      margin: 60px auto 100px;
+      padding: 0 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    .glass-card {
+      background: #fff;
+      border: 1px solid var(--tr-border);
+      border-radius: 32px;
+      padding: 44px;
+      box-shadow: 0 10px 40px rgba(112, 66, 248, 0.03);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 24px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      padding-bottom: 24px;
+      margin-bottom: 28px;
+    }
+
+    .panel-icon-box {
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .panel-title {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--tr-text);
+      margin-bottom: 6px;
+    }
+
+    .panel-desc {
+      font-size: 0.95rem;
+      color: var(--tr-muted);
+      line-height: 1.6;
+    }
+
+    /* LISTS & DOCUMENTS */
+    .doc-list-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 18px;
+    }
+
+    .doc-link-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 22px;
+      background: #fff;
+      border: 1px solid var(--tr-border);
+      border-radius: 20px;
+      text-decoration: none;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.01);
+    }
+
+    .doc-link-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 14px 28px rgba(112, 66, 248, 0.07);
+      border-color: rgba(112, 66, 248, 0.25);
+    }
+
+    .doc-card-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      overflow: hidden;
+    }
+
+    .doc-card-icon {
+      width: 44px;
+      height: 44px;
+      background: rgba(112, 66, 248, 0.05);
+      color: var(--tr-purple);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .doc-card-label {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--tr-text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .doc-card-meta {
+      font-size: 0.78rem;
+      color: var(--tr-muted);
+      margin-top: 3px;
+    }
+
+    .arrow-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--tr-bg);
+      color: var(--tr-purple);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .doc-link-card:hover .arrow-circle {
+      background: var(--tr-purple);
+      color: #fff;
+    }
+
+    @media (max-width: 992px) {
+      .panel-header {
+        flex-direction: column;
+        gap: 16px;
+      }
+      .glass-card {
+        padding: 24px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- HEADER -->
+  <%- include('partials/navbar') %>
+
+  <!-- HERO -->
+  <header class="tr-hero">
+    <div class="tr-hero-content">
+      <div class="tr-hero-eyebrow">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        การควบคุมภายในและการป้องกันการทุจริต
+      </div>
+      <h1>ความโปร่งใสและ <span>มาตรการป้องกันการทุจริต</span></h1>
+      <p class="tr-hero-sub">รายงานผลการควบคุมภายใน การส่งเสริมองค์กรคุณธรรม และนโยบายขับเคลื่อนความโปร่งใสประจำปีงบประมาณ</p>
+      <div class="tr-breadcrumb">
+        <a href="/">หน้าแรก</a>
+        <span>/</span>
+        <a href="/ita">ประเมิน ITA</a>
+        <span>/</span>
+        <span style="color:#a78bfa;">ความโปร่งใส</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTAINER -->
+  <main class="tr-container">
+    
+    <!-- SECTION: INTERNAL CONTROL -->
+    <div class="glass-card">
+      <div class="panel-header">
+        <div class="panel-icon-box" style="background: rgba(112, 66, 248, 0.07); color: var(--tr-purple);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div>
+          <h2 class="panel-title">การประเมินผลการควบคุมภายใน</h2>
+          <p class="panel-desc">รายงานการควบคุมภายในและการบริหารจัดการความเสี่ยง เพื่อให้บรรลุเป้าหมายการดำเนินงานและสร้างความเชื่อมั่นต่อสาธารณะ</p>
+        </div>
+      </div>
+
+      <div class="doc-list-grid">
+        <% if (o21Attachments && o21Attachments.length > 0) { %>
+          <% o21Attachments.forEach(att => { %>
+            <a href="<%= att.url %>" target="_blank" class="doc-link-card">
+              <div class="doc-card-info">
+                <div class="doc-card-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <div>
+                  <div class="doc-card-label" title="<%= att.label %>"><%= att.label %></div>
+                  <div class="doc-card-meta">ประเภท: PDF Document</div>
+                </div>
+              </div>
+              <div class="arrow-circle">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </div>
+            </a>
+          <% }) %>
+        <% } else { %>
+          <div style="grid-column: 1/-1; text-align: center; padding: 40px 20px; background: var(--tr-bg); border-radius: 20px; border: 1px dashed var(--tr-border);">
+            <p style="font-size: 0.9rem; color: var(--tr-muted); font-style: italic;">ยังไม่มีเอกสารรายงานผลในระบบ</p>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- SECTION: INTEGRITY CULTURE -->
+    <div class="glass-card">
+      <div class="panel-header">
+        <div class="panel-icon-box" style="background: rgba(16, 185, 129, 0.07); color: #10b981;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div>
+          <h2 class="panel-title">การส่งเสริมวัฒนธรรมองค์กรสุจริต</h2>
+          <p class="panel-desc">การจัดกิจกรรมและโครงการส่งเสริมให้บุคลากรมีวัฒนธรรมการทำงานด้วยความซื่อสัตย์ รวมถึงการนำหลักสูตรต้านทุจริตศึกษาไปบูรณาการใช้ในการจัดการศึกษา</p>
+        </div>
+      </div>
+
+      <div class="doc-list-grid">
+        <% if (o22Attachments && o22Attachments.length > 0) { %>
+          <% o22Attachments.forEach(att => { %>
+            <a href="<%= att.url %>" target="_blank" class="doc-link-card">
+              <div class="doc-card-info">
+                <div class="doc-card-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <div>
+                  <div class="doc-card-label" title="<%= att.label %>"><%= att.label %></div>
+                  <div class="doc-card-meta">ประเภท: PDF Document</div>
+                </div>
+              </div>
+              <div class="arrow-circle">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </div>
+            </a>
+          <% }) %>
+        <% } else { %>
+          <div style="grid-column: 1/-1; text-align: center; padding: 40px 20px; background: var(--tr-bg); border-radius: 20px; border: 1px dashed var(--tr-border);">
+            <p style="font-size: 0.9rem; color: var(--tr-muted); font-style: italic;">ยังไม่มีเอกสารรายงานผลในระบบ</p>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- SECTION: TRANSPARENCY MEASURES -->
+    <div class="glass-card">
+      <div class="panel-header">
+        <div class="panel-icon-box" style="background: rgba(14, 165, 233, 0.07); color: var(--tr-blue);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        </div>
+        <div>
+          <h2 class="panel-title">มาตรการส่งเสริมความโปร่งใสและคุณธรรม</h2>
+          <p class="panel-desc">มาตรการ โครงการขับเคลื่อนคณะทำงานประเมินคุณธรรมและความโปร่งใส (ITA) แผนและคำสั่งดำเนินงานของสถานศึกษาในรอบปีปัจจุบัน</p>
+        </div>
+      </div>
+
+      <div class="doc-list-grid">
+        <% if (o23Attachments && o23Attachments.length > 0) { %>
+          <% o23Attachments.forEach(att => { %>
+            <a href="<%= att.url %>" target="_blank" class="doc-link-card">
+              <div class="doc-card-info">
+                <div class="doc-card-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <div>
+                  <div class="doc-card-label" title="<%= att.label %>"><%= att.label %></div>
+                  <div class="doc-card-meta">ประเภท: PDF Document</div>
+                </div>
+              </div>
+              <div class="arrow-circle">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </div>
+            </a>
+          <% }) %>
+        <% } else { %>
+          <div style="grid-column: 1/-1; text-align: center; padding: 40px 20px; background: var(--tr-bg); border-radius: 20px; border: 1px dashed var(--tr-border);">
+            <p style="font-size: 0.9rem; color: var(--tr-muted); font-style: italic;">ยังไม่มีเอกสารรายงานผลในระบบ</p>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <%- include('partials/footer') %>
+</body>
+
+</html>

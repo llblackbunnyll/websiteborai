@@ -388,6 +388,143 @@
       background: #cbd5e1;
       color: #0f172a;
     }
+
+    /* ══ RESOURCES SECTION ══ */
+    .resources-section {
+      max-width: 850px;
+      margin: -40px auto 0;
+      padding: 0 24px 2rem;
+      position: relative;
+      z-index: 20;
+    }
+
+    .resources-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 640px) {
+      .resources-grid { grid-template-columns: 1fr; }
+    }
+
+    .resource-card {
+      background: #fff;
+      border-radius: 1.25rem;
+      border: 1px solid var(--complaint-border);
+      padding: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    }
+
+    .resource-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid #f1f5f9;
+    }
+
+    .resource-card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 1.1rem;
+    }
+
+    .icon-manual { background: #fef3c7; }
+    .icon-summary { background: #ede9fe; }
+
+    .resource-card-title {
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: #0f172a;
+    }
+
+    .resource-card-subtitle {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 1px;
+    }
+
+    .resource-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .resource-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      text-decoration: none;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      color: #1e293b;
+      font-size: 0.875rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .resource-item:hover {
+      background: #f1f5f9;
+      border-color: var(--complaint-primary);
+      color: var(--complaint-primary);
+      transform: translateX(3px);
+    }
+
+    .resource-item-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.85rem;
+    }
+
+    .resource-item-text {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .resource-empty {
+      text-align: center;
+      padding: 20px 0;
+      color: #94a3b8;
+      font-size: 0.85rem;
+      font-style: italic;
+    }
+
+    .resource-item-download {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: #64748b;
+      transition: all 0.2s;
+    }
+
+    .resource-item:hover .resource-item-download {
+      background: var(--complaint-primary);
+      color: #fff;
+    }
   </style>
 </head>
 
@@ -407,6 +544,63 @@
       </p>
     </div>
   </section>
+
+  <!-- RESOURCES SECTION: คู่มือ + เอกสารสรุปการร้องเรียน -->
+  <% if ((manuals && manuals.length > 0) || (summaryDocs && summaryDocs.length > 0)) { %>
+  <section class="resources-section">
+    <div class="resources-grid">
+
+      <!-- คู่มือการร้องเรียน -->
+      <% if (manuals && manuals.length > 0) { %>
+      <div class="resource-card">
+        <div class="resource-card-header">
+          <div class="resource-card-icon icon-manual">📖</div>
+          <div>
+            <div class="resource-card-title">คู่มือการร้องเรียน</div>
+            <div class="resource-card-subtitle">แนวทางและขั้นตอนการแจ้งเรื่องร้องเรียน</div>
+          </div>
+        </div>
+        <div class="resource-list">
+          <% manuals.forEach(item => { %>
+          <a href="<%= item.url %>" target="_blank" class="resource-item">
+            <div class="resource-item-icon">📄</div>
+            <span class="resource-item-text"><%= item.label %></span>
+            <div class="resource-item-download">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </div>
+          </a>
+          <% }) %>
+        </div>
+      </div>
+      <% } %>
+
+      <!-- รายงานสรุปผลการร้องเรียน -->
+      <% if (summaryDocs && summaryDocs.length > 0) { %>
+      <div class="resource-card">
+        <div class="resource-card-header">
+          <div class="resource-card-icon icon-summary">📊</div>
+          <div>
+            <div class="resource-card-title">รายงานสรุปผลการร้องเรียน</div>
+            <div class="resource-card-subtitle">สรุปผลการดำเนินการและสถิติการร้องเรียนรายปี</div>
+          </div>
+        </div>
+        <div class="resource-list">
+          <% summaryDocs.forEach(item => { %>
+          <a href="<%= item.url %>" target="_blank" class="resource-item">
+            <div class="resource-item-icon">📑</div>
+            <span class="resource-item-text"><%= item.label %></span>
+            <div class="resource-item-download">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </div>
+          </a>
+          <% }) %>
+        </div>
+      </div>
+      <% } %>
+
+    </div>
+  </section>
+  <% } %>
 
   <!-- FORM CONTAINER -->
   <main class="main-wrap">

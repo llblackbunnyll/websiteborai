@@ -1288,7 +1288,7 @@
             <line x1="12" y1="1" x2="12" y2="23" />
             <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
           </svg>
-          ข้อมูลงบประมาณ
+          งบประมาณและรายงานผล
         </a>
         <a href="#asset-info" class="sidebar-link">
           <svg class="s-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1333,7 +1333,7 @@
         <!-- Divider + Org Chart Link -->
         <div style="border-top:1px solid rgba(112,66,248,.12); margin: 10px 0 8px;"></div>
         <a href="/org-chart" class="sidebar-link"
-          style="background:linear-gradient(135deg,rgba(112,66,248,.06),rgba(14,165,233,.04));border-left-color:#7042f8;">
+          style="background:linear-gradient(135deg,rgba(112,66,248,.06),rgba(14,165,233,.04));border-left-color:#7042f8; margin-bottom: 4px;">
           <svg class="s-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="3" width="7" height="7" />
@@ -1342,6 +1342,12 @@
             <rect x="3" y="14" width="7" height="7" />
           </svg>
           ผังการบริหาร
+        </a>
+        <a href="/laws" class="sidebar-link"
+          style="background:linear-gradient(135deg,rgba(112,66,248,.06),rgba(14,165,233,.04));border-left-color:#7042f8;">
+          <svg class="s-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          กฎหมายที่เกี่ยวข้อง
         </a>
       </aside>
 
@@ -1932,7 +1938,7 @@
 
 
         <!-- 5. งบประมาณ -->
-        <section id="budget-info" class="info-section reveal">
+        <section id="budget-info" class="info-section reveal" style="border-bottom: none; padding-bottom: 0;">
           <div class="section-label">
             <span class="section-eyebrow">Finance &amp; Budget</span>
             <span class="section-accent-dot" style="background: #f43f5e;"></span>
@@ -1961,6 +1967,32 @@
                     📦 อัปเดตล่าสุด: <%= new Date().toLocaleDateString('th-TH') %>
                   </span>
                 </div>
+              </div>
+            <% } else if (budgetInfoStatus === 'ita_o6') { %>
+              <!-- ITA O6 Documents Mode -->
+              <div style="background: #fff; padding: 30px; border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.03); border: 1px solid var(--a-border); margin: 1.5rem 0;">
+                <p style="font-size: 0.95rem; color: #475569; line-height: 1.6; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--a-purple)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                  เอกสารแผนการใช้จ่ายงบประมาณและแผนปฏิบัติราชการประจำปี (อ้างอิงข้อมูลการเปิดเผยสาธารณะ ITA - ตัวชี้วัด O6)
+                </p>
+
+                <% if (typeof budgetDocuments !== 'undefined' && budgetDocuments && budgetDocuments.length > 0) { %>
+                  <div class="plans-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
+                    <% budgetDocuments.forEach(doc => { %>
+                      <a href="<%= doc.url %>" target="_blank" rel="noopener" class="plan-card" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px 18px; border-radius: 14px; text-decoration: none; color: inherit; transition: all 0.2s ease;">
+                        <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
+                          <span style="font-size: 1.4rem; flex-shrink: 0;">📄</span>
+                          <span style="font-size: 0.88rem; font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= doc.label %></span>
+                        </div>
+                        <span style="color: var(--a-purple); font-size: 1.1rem; flex-shrink: 0;">⬇️</span>
+                      </a>
+                    <% }) %>
+                  </div>
+                <% } else { %>
+                  <div style="text-align: center; padding: 25px; border: 1px dashed #cbd5e1; border-radius: 12px; color: #94a3b8; font-size: 0.88rem; background: rgba(255,255,255,0.2);">
+                    🔒 เอกสารแผนการดำเนินงานและแผนการใช้จ่ายงบประมาณอยู่ระหว่างการจัดทำรูปเล่ม หรือตรวจสอบลิงก์ข้อมูลเพิ่มเติมได้ที่หัวข้อ O6 ในหน้า ITA
+                  </div>
+                <% } %>
               </div>
             <% } else { %>
               <!-- Normal View -->
@@ -2023,6 +2055,78 @@
             <% } %>
           </div>
         </section>
+
+        <!-- Annual Reports & SAR section (O7 & O8) -->
+         <section id="evaluation-reports" class="info-section reveal" style="margin-top: -20px;">
+          <div class="section-label">
+            <span class="section-eyebrow">Evaluation &amp; Performance</span>
+            <span class="section-accent-dot" style="background: #10b981;"></span>
+          </div>
+          <h2 class="section-h2">รายงานการประเมินและผลการดำเนินงานประจำปี</h2>
+          <div class="section-body" style="margin-bottom: 2rem;">
+            <p>รายงานผลสัมฤทธิ์การดำเนินงานตามโครงการ/กิจกรรม ผลการใช้จ่ายงบประมาณ และรายงานผลการประเมินตนเอง (SAR) ประจำปีงบประมาณที่ผ่านมาเพื่อความโปร่งใสตรวจสอบได้</p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px;">
+            <!-- Column 1: รายงานผลการดำเนินงานประจำปี (O7) -->
+            <div id="annual-report" style="background: #fff; padding: 25px; border-radius: 20px; border: 1px solid var(--a-border); box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
+              <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--a-text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--a-purple)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                รายงานผลการดำเนินงานประจำปี (O7)
+              </h3>
+              <p style="font-size: 0.88rem; color: var(--a-muted); line-height: 1.5; margin-bottom: 20px;">
+                เอกสารรายงานสรุปผลการจัดโครงการ/กิจกรรม อัตราการเบิกจ่ายงบประมาณ และปัญหาอุปสรรคการดำเนินงานประจำปีงบประมาณที่ผ่านมา
+              </p>
+
+              <% if (typeof annualReports !== 'undefined' && annualReports && annualReports.length > 0) { %>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <% annualReports.forEach(doc => { %>
+                    <a href="<%= doc.url %>" target="_blank" rel="noopener" class="plan-card" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 12px; text-decoration: none; color: inherit; transition: all 0.2s ease;">
+                      <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
+                        <span style="font-size: 1.3rem; flex-shrink: 0;">📄</span>
+                        <span style="font-size: 0.85rem; font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= doc.label %></span>
+                      </div>
+                      <span style="color: var(--a-purple); font-size: 1rem; flex-shrink: 0;">⬇️</span>
+                    </a>
+                  <% }) %>
+                </div>
+              <% } else { %>
+                <div style="text-align: center; padding: 20px; border: 1px dashed #cbd5e1; border-radius: 12px; color: #94a3b8; font-size: 0.82rem; background: rgba(255,255,255,0.2);">
+                  🔒 อยู่ระหว่างจัดเตรียมเล่มเอกสารรายงานผลดำเนินงาน หรือตรวจสอบลิงก์ข้อมูลเพิ่มเติมได้ที่ข้อ O7 ในหน้า ITA
+                </div>
+              <% } %>
+            </div>
+
+            <!-- Column 2: รายงานประเมินตนเอง SAR (O8) -->
+            <div id="sar-report" style="background: #fff; padding: 25px; border-radius: 20px; border: 1px solid var(--a-border); box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
+              <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--a-text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--a-purple)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                รายงานการประเมินตนเอง SAR (O8)
+              </h3>
+              <p style="font-size: 0.88rem; color: var(--a-muted); line-height: 1.5; margin-bottom: 20px;">
+                เอกสารรายงานการประเมินคุณภาพภายในระดับสถานศึกษา (Self-Assessment Report) เพื่อเสนอต่อหน่วยงานต้นสังกัดและเผยแพร่สู่สาธารณะ
+              </p>
+
+               <% if (typeof sarReports !== 'undefined' && sarReports && sarReports.length > 0) { %>
+                 <div style="display: flex; flex-direction: column; gap: 10px;">
+                   <% sarReports.forEach(doc => { %>
+                     <a href="<%= doc.url %>" target="_blank" rel="noopener" class="plan-card" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 12px; text-decoration: none; color: inherit; transition: all 0.2s ease;">
+                       <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
+                         <span style="font-size: 1.3rem; flex-shrink: 0;">📄</span>
+                         <span style="font-size: 0.85rem; font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= doc.label %></span>
+                       </div>
+                       <span style="color: var(--a-purple); font-size: 1rem; flex-shrink: 0;">⬇️</span>
+                     </a>
+                   <% }) %>
+                 </div>
+               <% } else { %>
+                 <div style="text-align: center; padding: 20px; border: 1px dashed #cbd5e1; border-radius: 12px; color: #94a3b8; font-size: 0.82rem; background: rgba(255,255,255,0.2);">
+                   🔒 อยู่ระหว่างจัดเตรียมเล่มรายงานการประเมินตนเอง (SAR) หรือตรวจสอบลิงก์ข้อมูลเพิ่มเติมได้ที่ข้อ O8 ในหน้า ITA
+                 </div>
+               <% } %>
+             </div>
+           </div>
+         </section>
 
         <!-- 6. ครุภัณฑ์ -->
         <section id="asset-info" class="info-section reveal">

@@ -423,6 +423,39 @@ router.get('/about', async (req, res) => {
     });
     const strategicPlans = itaO3 && Array.isArray(itaO3.attachments) ? itaO3.attachments : [];
 
+    // Fetch ITA O6 (Budget documents) for current year 2569
+    const itaO6 = await prisma.iTAItem.findUnique({
+      where: {
+        code_year: {
+          code: 'O6',
+          year: '2569'
+        }
+      }
+    });
+    const budgetDocuments = itaO6 && Array.isArray(itaO6.attachments) ? itaO6.attachments : [];
+
+    // Fetch ITA O7 (Annual Report) for current year 2569
+    const itaO7 = await prisma.iTAItem.findUnique({
+      where: {
+        code_year: {
+          code: 'O7',
+          year: '2569'
+        }
+      }
+    });
+    const annualReports = itaO7 && Array.isArray(itaO7.attachments) ? itaO7.attachments : [];
+
+    // Fetch ITA O8 (SAR Report) for current year 2569
+    const itaO8 = await prisma.iTAItem.findUnique({
+      where: {
+        code_year: {
+          code: 'O8',
+          year: '2569'
+        }
+      }
+    });
+    const sarReports = itaO8 && Array.isArray(itaO8.attachments) ? itaO8.attachments : [];
+
     res.render('about', {
       title: 'ข้อมูลวิทยาลัย | วิทยาลัยการอาชีพบ่อไร่',
       departments: await getDepartments(),
@@ -432,7 +465,10 @@ router.get('/about', async (req, res) => {
       academicYear,
       budgetInfoStatus,
       budgetData: null, // Set to null to show 'No Data' state as requested
-      strategicPlans
+      strategicPlans,
+      budgetDocuments,
+      annualReports,
+      sarReports
     });
   } catch (error) {
     console.error(error);
@@ -445,17 +481,34 @@ router.get('/about', async (req, res) => {
       academicYear: '2567',
       budgetInfoStatus: 'active',
       budgetData: null,
-      strategicPlans: []
+      strategicPlans: [],
+      budgetDocuments: [],
+      annualReports: [],
+      sarReports: []
     });
   }
 });
 
 // GET /personnel — Personnel Page
 router.get('/personnel', async (req, res) => {
+  const year = req.query.year || '2569';
   try {
     const allPersonnel = await prisma.personnel.findMany({
       orderBy: [{ order: 'asc' }, { firstName: 'asc' }]
     });
+
+    // Fetch O16 & O17 (HR & Ethics) for selected year
+    const [itaO16, itaO17] = await Promise.all([
+      prisma.iTAItem.findUnique({
+        where: { code_year: { code: 'O16', year } }
+      }),
+      prisma.iTAItem.findUnique({
+        where: { code_year: { code: 'O17', year } }
+      })
+    ]);
+
+    const hrAttachments = itaO16 && Array.isArray(itaO16.attachments) ? itaO16.attachments : [];
+    const ethicsAttachments = itaO17 && Array.isArray(itaO17.attachments) ? itaO17.attachments : [];
 
     // 1. Executives (Director + Deputies + Positions labeled 'ผู้บริหาร')
     const executives = allPersonnel.filter(p => 
@@ -526,7 +579,10 @@ router.get('/personnel', async (req, res) => {
       executives,
       teachers,
       supportStaff,
-      total: allPersonnel.length
+      total: allPersonnel.length,
+      hrAttachments,
+      ethicsAttachments,
+      selectedYear: year
     });
   } catch (error) {
     console.warn('[Database Offline] Rendering personnel page without data.', error.message);
@@ -535,7 +591,38 @@ router.get('/personnel', async (req, res) => {
       executives: [],
       teachers: [],
       supportStaff: [],
-      total: 0
+      total: 0,
+      hrAttachments: [],
+      ethicsAttachments: []
+    });
+  }
+});
+
+
+// GET /laws — Related Laws Page (O5)
+router.get('/laws', async (req, res) => {
+  try {
+    const itaO5 = await prisma.iTAItem.findUnique({
+      where: {
+        code_year: {
+          code: 'O5',
+          year: '2569'
+        }
+      }
+    });
+    const laws = itaO5 && Array.isArray(itaO5.attachments) ? itaO5.attachments : [];
+
+    res.render('laws', {
+      title: 'กฎหมายที่เกี่ยวข้อง | วิทยาลัยการอาชีพบ่อไร่',
+      laws,
+      departments: await getDepartments()
+    });
+  } catch (error) {
+    console.error('[Laws Page Error]', error);
+    res.render('laws', {
+      title: 'กฎหมายที่เกี่ยวข้อง | วิทยาลัยการอาชีพบ่อไร่',
+      laws: [],
+      departments: await getDepartments()
     });
   }
 });
@@ -582,6 +669,92 @@ router.get('/org-chart', async (req, res) => {
 });
 
 
+// GET /no-gift-policy — No Gift Policy Page (O20)
+router.get('/no-gift-policy', async (req, res) => {
+  const year = req.query.year || '2569';
+  try {
+    const itaO20 = await prisma.iTAItem.findUnique({
+      where: { code_year: { code: 'O20', year } }
+    });
+    const attachments = itaO20 && Array.isArray(itaO20.attachments) ? itaO20.attachments : [];
+
+    // Load dynamic settings for specific year
+    const settingKey = `nogift_settings_${year}`;
+    const setting = await prisma.siteSettings.findUnique({
+      where: { key: settingKey }
+    });
+
+    let bannerUrl = '/images/no_gift_policy_banner.png';
+    let statementTh = 'วิทยาลัยการอาชีพบ่อไร่ ประกาศเจตนารมณ์ในการไม่รับของขวัญและของกำนัลทุกชนิดจากการปฏิบัติหน้าที่ (No Gift Policy) โดยผู้บริหาร ครู และบุคลากรทางการศึกษาทุกคน จะต้องไม่แสวงหาหรือรับของขวัญ ของกำนัล หรือผลประโยชน์ใดๆ ที่ส่งผลให้เกิดความไม่โปร่งใส หรือก่อให้เกิดการเลือกปฏิบัติ เพื่อร่วมกันขับเคลื่อนสถานศึกษาที่มีคุณธรรม มีความโปร่งใส และมุ่งมั่นให้บริการประชาชนอย่างเท่าเทียม';
+    let statementEn = 'Bo Rai Industrial and Community Education College declares its commitment to the "No Gift Policy". All executives, teachers, and staff members shall not seek or accept any gifts, rewards, or favors of any kind from performing their duties, either before, during, or after their operations, to foster an organizational culture of integrity, transparency, and equal treatment for all.';
+    let knowledgeImages = [];
+
+    if (setting) {
+      const parsed = JSON.parse(setting.value);
+      bannerUrl = parsed.bannerUrl || bannerUrl;
+      statementTh = parsed.statementTh || statementTh;
+      statementEn = parsed.statementEn || statementEn;
+      knowledgeImages = parsed.knowledgeImages || [];
+    }
+
+    res.render('no-gift-policy', {
+      title: 'นโยบาย No Gift Policy | วิทยาลัยการอาชีพบ่อไร่',
+      attachments,
+      itaO20,
+      bannerUrl,
+      statementTh,
+      statementEn,
+      knowledgeImages,
+      selectedYear: year
+    });
+  } catch (error) {
+    console.error('[No Gift Policy Error]', error);
+    res.render('no-gift-policy', {
+      title: 'นโยบาย No Gift Policy | วิทยาลัยการอาชีพบ่อไร่',
+      attachments: [],
+      itaO20: null,
+      bannerUrl: '/images/no_gift_policy_banner.png',
+      statementTh: 'วิทยาลัยการอาชีพบ่อไร่ ประกาศเจตนารมณ์ในการไม่รับของขวัญและของกำนัลทุกชนิดจากการปฏิบัติหน้าที่ (No Gift Policy)',
+      statementEn: 'Bo Rai Industrial and Community Education College declares its commitment to the "No Gift Policy".',
+      knowledgeImages: [],
+      selectedYear: year
+    });
+  }
+});
+
+// GET /transparency — Internal Control & Anti-Corruption Page (O21, O22, O23)
+router.get('/transparency', async (req, res) => {
+  try {
+    const [itaO21, itaO22, itaO23] = await Promise.all([
+      prisma.iTAItem.findUnique({ where: { code_year: { code: 'O21', year: '2569' } } }),
+      prisma.iTAItem.findUnique({ where: { code_year: { code: 'O22', year: '2569' } } }),
+      prisma.iTAItem.findUnique({ where: { code_year: { code: 'O23', year: '2569' } } })
+    ]);
+
+    res.render('transparency', {
+      title: 'การควบคุมภายในและความโปร่งใส | วิทยาลัยการอาชีพบ่อไร่',
+      itaO21,
+      itaO22,
+      itaO23,
+      o21Attachments: itaO21 && Array.isArray(itaO21.attachments) ? itaO21.attachments : [],
+      o22Attachments: itaO22 && Array.isArray(itaO22.attachments) ? itaO22.attachments : [],
+      o23Attachments: itaO23 && Array.isArray(itaO23.attachments) ? itaO23.attachments : []
+    });
+  } catch (error) {
+    console.error('[Transparency Error]', error);
+    res.render('transparency', {
+      title: 'การควบคุมภายในและความโปร่งใส | วิทยาลัยการอาชีพบ่อไร่',
+      itaO21: null,
+      itaO22: null,
+      itaO23: null,
+      o21Attachments: [],
+      o22Attachments: [],
+      o23Attachments: []
+    });
+  }
+});
+
+
 // GET /ita — Public ITA OIT Dashboard (Redirect to current year 2569)
 router.get('/ita', async (req, res) => {
   res.redirect('/ita/2569');
@@ -622,16 +795,18 @@ router.get('/ita/:year', async (req, res) => {
           atts.unshift({
             label: 'แผนผังโครงสร้างการแบ่งส่วนราชการและผังการบริหาร',
             url: '/org-chart',
-            type: 'link'
+            type: 'link',
+            isSmartLink: true
           });
         }
       } else if (item.code === 'O2') {
-        const exists = atts.some(a => a.url === '/personnel');
+        const exists = atts.some(a => a.url === '/personnel' || a.url === `/personnel?year=${year}`);
         if (!exists) {
           atts.unshift({
             label: 'ข้อมูลผู้บริหารสถานศึกษาและบุคลากรวิทยาลัย',
-            url: '/personnel',
-            type: 'link'
+            url: `/personnel?year=${year}`,
+            type: 'link',
+            isSmartLink: true
           });
         }
       } else if (item.code === 'O3') {
@@ -640,7 +815,8 @@ router.get('/ita/:year', async (req, res) => {
           atts.unshift({
             label: 'แผนพัฒนาสถานศึกษาและแผนยุทธศาสตร์ (ระยะยาว)',
             url: '/about#strategic-plan',
-            type: 'link'
+            type: 'link',
+            isSmartLink: true
           });
         }
       } else if (item.code === 'O4') {
@@ -649,16 +825,67 @@ router.get('/ita/:year', async (req, res) => {
           atts.unshift({
             label: 'ข้อมูลการติดต่อของสถานศึกษา (ที่อยู่ เบอร์โทรศัพท์ Social Media และแผนที่ที่ตั้ง)',
             url: '/#contact',
-            type: 'link'
+            type: 'link',
+            isSmartLink: true
+          });
+        }
+      } else if (item.code === 'O5') {
+        const exists = atts.some(a => a.url === '/laws');
+        if (!exists) {
+          atts.unshift({
+            label: 'กฎหมายที่เกี่ยวข้องกับการดำเนินงานของสถานศึกษา (พ.ร.บ. ระเบียบ และข้อบังคับ)',
+            url: '/laws',
+            type: 'link',
+            isSmartLink: true
+          });
+        }
+      } else if (item.code === 'O6') {
+        const exists = atts.some(a => a.url === '/about#budget-info');
+        if (!exists) {
+          atts.unshift({
+            label: 'แผนปฏิบัติราชการและแผนการใช้จ่ายงบประมาณประจำปี',
+            url: '/about#budget-info',
+            type: 'link',
+            isSmartLink: true
+          });
+        }
+      } else if (item.code === 'O7') {
+        const exists = atts.some(a => a.url === '/about#annual-report');
+        if (!exists) {
+          atts.unshift({
+            label: 'รายงานผลการดำเนินงานประจำปีงบประมาณที่ผ่านมา',
+            url: '/about#annual-report',
+            type: 'link',
+            isSmartLink: true
+          });
+        }
+      } else if (item.code === 'O8') {
+        const exists = atts.some(a => a.url === '/about#sar-report');
+        if (!exists) {
+          atts.unshift({
+            label: 'รายงานการประเมินตนเองของสถานศึกษา (SAR) ประจำปีงบประมาณที่ผ่านมา',
+            url: '/about#sar-report',
+            type: 'link',
+            isSmartLink: true
           });
         }
       } else if (item.code === 'O9') {
-        const exists = atts.some(a => a.url === '/news');
-        if (!exists) {
+        const existsFb = atts.some(a => a.url === 'https://www.facebook.com/borai.tart');
+        if (!existsFb) {
           atts.unshift({
-            label: 'ข่าวประชาสัมพันธ์ของสถานศึกษา',
+            label: 'เพจ Facebook วิทยาลัยการอาชีพบ่อไร่ (ช่องทางประชาสัมพันธ์หลัก)',
+            url: 'https://www.facebook.com/borai.tart',
+            type: 'link',
+            isSmartLink: true
+          });
+        }
+        const existsNews = atts.some(a => a.url === '/news');
+        if (!existsNews) {
+          atts.unshift({
+            label: 'ข่าวประชาสัมพันธ์ของสถานศึกษา (หน้าเว็บไซต์วิทยาลัย)',
             url: '/news',
-            type: 'link'
+            type: 'link',
+            isSmartLink: true
           });
         }
       } else if (item.code === 'O10') {
@@ -667,7 +894,18 @@ router.get('/ita/:year', async (req, res) => {
           atts.unshift({
             label: 'ประกาศการจัดซื้อจัดจ้างและการจัดหาพัสดุ (ประกวดราคา)',
             url: '/documents?type=bidding',
-            type: 'link'
+            type: 'link',
+            isSmartLink: true
+          });
+        }
+      } else if (item.code === 'O11') {
+        const exists = atts.some(a => a.url === '/documents?type=bidding');
+        if (!exists) {
+          atts.unshift({
+            label: 'สรุปผลการจัดซื้อจัดจ้างหรือการจัดหาพัสดุรายเดือน (รายงาน สขร. 1)',
+            url: '/documents?type=bidding',
+            type: 'link',
+            isSmartLink: true
           });
         }
       } else if (item.code === 'O12') {
@@ -676,7 +914,8 @@ router.get('/ita/:year', async (req, res) => {
           atts.unshift({
             label: 'คู่มือและขั้นตอนการปฏิบัติงานภายใน (ศูนย์ดาวน์โหลดเอกสาร)',
             url: '/downloads',
-            type: 'link'
+            type: 'link',
+            isSmartLink: true
           });
         }
       } else if (item.code === 'O13') {
@@ -685,7 +924,27 @@ router.get('/ita/:year', async (req, res) => {
           atts.unshift({
             label: 'คู่มือหรือมาตรฐานขั้นตอนการให้บริการประชาชน (ศูนย์ดาวน์โหลดเอกสาร)',
             url: '/downloads',
-            type: 'link'
+            type: 'link',
+            isSmartLink: true
+          });
+        }
+      } else if (item.code === 'O14') {
+        const existsStd = atts.some(a => a.url === 'https://std2018.vec.go.th/');
+        if (!existsStd) {
+          atts.unshift({
+            label: 'ระบบบริการสถานศึกษาออนไลน์ (ศธ.02)',
+            url: 'https://std2018.vec.go.th/',
+            type: 'link',
+            isSmartLink: true
+          });
+        }
+        const existsRms = atts.some(a => a.url === 'http://rms.borai.ac.th/');
+        if (!existsRms) {
+          atts.push({
+            label: 'ระบบบริหารจัดการสถานศึกษา (RMS)',
+            url: 'http://rms.borai.ac.th/',
+            type: 'link',
+            isSmartLink: true
           });
         }
       } else if (item.code === 'O15') {
@@ -694,7 +953,28 @@ router.get('/ita/:year', async (req, res) => {
           atts.unshift({
             label: 'ช่องทางแสดงความคิดเห็นและประเมินความพึงพอใจการให้บริการ',
             url: '/feedback',
-            type: 'link'
+            type: 'link',
+            isSmartLink: true
+          });
+        }
+      } else if (item.code === 'O16') {
+        const exists = atts.some(a => a.url === '/personnel#hr-ethics' || a.url === `/personnel?year=${year}#hr-ethics`);
+        if (!exists) {
+          atts.unshift({
+            label: 'การบริหารและพัฒนาทรัพยากรบุคคล (ระเบียบ หลักเกณฑ์ และการพัฒนา)',
+            url: `/personnel?year=${year}#hr-ethics`,
+            type: 'link',
+            isSmartLink: true
+          });
+        }
+      } else if (item.code === 'O17') {
+        const exists = atts.some(a => a.url === '/personnel#hr-ethics' || a.url === `/personnel?year=${year}#hr-ethics`);
+        if (!exists) {
+          atts.unshift({
+            label: 'ประมวลจริยธรรมของข้าราชการครูและบุคลากรทางการศึกษา และแนวปฏิบัติ Do\'s & Don\'ts',
+            url: `/personnel?year=${year}#hr-ethics`,
+            type: 'link',
+            isSmartLink: true
           });
         }
       } else if (item.code === 'O18') {
@@ -703,7 +983,8 @@ router.get('/ita/:year', async (req, res) => {
           atts.unshift({
             label: 'ช่องทางแจ้งเรื่องร้องเรียนการทุจริตและประพฤติมิชอบออนไลน์',
             url: '/complaints',
-            type: 'link'
+            type: 'link',
+            isSmartLink: true
           });
         }
         const existsTrack = atts.some(a => a.url === '/complaints/track');
@@ -711,7 +992,8 @@ router.get('/ita/:year', async (req, res) => {
           atts.push({
             label: 'ระบบติดตามสถานะเรื่องร้องเรียนการทุจริต',
             url: '/complaints/track',
-            type: 'link'
+            type: 'link',
+            isSmartLink: true
           });
         }
       } else if (item.code === 'O19') {
@@ -720,7 +1002,48 @@ router.get('/ita/:year', async (req, res) => {
           atts.unshift({
             label: 'รายงานข้อมูลเชิงสถิติเรื่องร้องเรียนการทุจริตประจำปี (เรียลไทม์)',
             url: '/complaints/stats',
-            type: 'link'
+            type: 'link',
+            isSmartLink: true
+          });
+        }
+      } else if (item.code === 'O20') {
+        const exists = atts.some(a => a.url === '/no-gift-policy');
+        if (!exists) {
+          atts.unshift({
+            label: 'นโยบายไม่รับของขวัญ (No Gift Policy) จากการปฏิบัติหน้าที่',
+            url: '/no-gift-policy',
+            type: 'link',
+            isSmartLink: true
+          });
+        }
+      } else if (item.code === 'O21') {
+        const exists = atts.some(a => a.url === '/transparency');
+        if (!exists) {
+          atts.unshift({
+            label: 'การประเมินผลการควบคุมภายในประจำปี',
+            url: '/transparency',
+            type: 'link',
+            isSmartLink: true
+          });
+        }
+      } else if (item.code === 'O22') {
+        const exists = atts.some(a => a.url === '/transparency');
+        if (!exists) {
+          atts.unshift({
+            label: 'การส่งเสริมวัฒนธรรมองค์กรสุจริต (การนำหลักสูตรต้านทุจริตศึกษาไปใช้)',
+            url: '/transparency',
+            type: 'link',
+            isSmartLink: true
+          });
+        }
+      } else if (item.code === 'O23') {
+        const exists = atts.some(a => a.url === '/transparency');
+        if (!exists) {
+          atts.unshift({
+            label: 'มาตรการส่งเสริมคุณธรรมและความโปร่งใส (คำสั่งและแนวทางขับเคลื่อน ITA)',
+            url: '/transparency',
+            type: 'link',
+            isSmartLink: true
           });
         }
       }
@@ -791,10 +1114,33 @@ router.get('/ita/:year', async (req, res) => {
 
 
 // GET /complaints — Public complaint submission page
-router.get('/complaints', (req, res) => {
-  res.render('complaints', {
-    title: 'ช่องทางแจ้งเรื่องร้องเรียนการทุจริตและประพฤติมิชอบ | วิทยาลัยการอาชีพบ่อไร่'
-  });
+router.get('/complaints', async (req, res) => {
+  const year = req.query.year || '2569';
+  try {
+    const settingKey = `complaint_resources_${year}`;
+    const setting = await prisma.siteSettings.findUnique({ where: { key: settingKey } });
+    let manuals = [];
+    let summaryDocs = [];
+    if (setting) {
+      const parsed = JSON.parse(setting.value);
+      manuals = parsed.manuals || [];
+      summaryDocs = parsed.summaryDocs || [];
+    }
+    res.render('complaints', {
+      title: 'ช่องทางแจ้งเรื่องร้องเรียนการทุจริตและประพฤติมิชอบ | วิทยาลัยการอาชีพบ่อไร่',
+      manuals,
+      summaryDocs,
+      selectedYear: year
+    });
+  } catch (error) {
+    console.warn('[Route /complaints] DB error, rendering with empty resources:', error.message);
+    res.render('complaints', {
+      title: 'ช่องทางแจ้งเรื่องร้องเรียนการทุจริตและประพฤติมิชอบ | วิทยาลัยการอาชีพบ่อไร่',
+      manuals: [],
+      summaryDocs: [],
+      selectedYear: year
+    });
+  }
 });
 
 // GET /complaints/track — Public complaint tracking page

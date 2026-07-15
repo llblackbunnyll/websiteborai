@@ -110,26 +110,14 @@ function getAuthHeaders() {
         loadFeedbacks();
       } else if (targetId === 'complaints-panel') {
         loadComplaints();
+      } else if (targetId === 'nogift-panel') {
+        loadNoGiftSettings();
+      } else if (targetId === 'ita-panel') {
+        loadITA();
       }
     });
   });
 
-  // On load: restore saved tab or find the currently active button and expand its group
-  const savedTab = localStorage.getItem('activeAdminTab');
-  if (savedTab) {
-    const targetBtn = document.querySelector(`.nav-btn[data-target="${savedTab}"]`);
-    if (targetBtn) {
-      // Trigger click to activate the panel and expand group
-      targetBtn.click();
-    } else {
-      // Fallback to default
-      const initialActive = document.querySelector('.nav-btn.active');
-      if (initialActive) expandGroupOfActiveBtn(initialActive);
-    }
-  } else {
-    const initialActive = document.querySelector('.nav-btn.active');
-    if (initialActive) expandGroupOfActiveBtn(initialActive);
-  }
 
   // 2. PR PANEL LOGIC
   const prTbody = document.getElementById('pr-tbody');
@@ -291,8 +279,46 @@ function getAuthHeaders() {
   const docForm = document.getElementById('doc-form');
   let allDocs = [];
 
+  const THAI_MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
+  function parseThaiDateToISO(thaiDate) {
+    if (!thaiDate) return '';
+    const parts = thaiDate.trim().split(/\s+/);
+    if (parts.length < 3) return '';
+    const day = parts[0].padStart(2, '0');
+    const monthIndex = THAI_MONTHS.indexOf(parts[1]);
+    if (monthIndex === -1) return '';
+    const yearBE = parseInt(parts[2]);
+    const yearCE = yearBE - 543;
+    const month = String(monthIndex + 1).padStart(2, '0');
+    return `${yearCE}-${month}-${day}`;
+  }
+
+  function formatISOToThaiDate(isoDate) {
+    if (!isoDate) return '';
+    const parts = isoDate.split('-');
+    if (parts.length < 3) return '';
+    const yearCE = parseInt(parts[0]);
+    const monthIndex = parseInt(parts[1]) - 1;
+    const day = parseInt(parts[2]);
+    const yearBE = yearCE + 543;
+    const monthName = THAI_MONTHS[monthIndex] || '';
+    return `${day} ${monthName} ${yearBE}`;
+  }
+
   docAddBtn?.addEventListener('click', () => {
     docForm.reset();
+    
+    // Default date to today in YYYY-MM-DD format
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const docDateEl = document.getElementById('doc-date');
+    if (docDateEl) {
+      docDateEl.value = `${yyyy}-${mm}-${dd}`;
+    }
+
     document.getElementById('doc-id').value = '';
     document.getElementById('doc-form-title').textContent = 'เพิ่มเอกสารใหม่';
     document.getElementById('doc-file').required = true;
@@ -360,7 +386,12 @@ function getAuthHeaders() {
     document.getElementById('doc-id').value = item.id;
     document.getElementById('doc-title').value = item.title;
     document.getElementById('doc-type').value = item.type;
-    document.getElementById('doc-date').value = item.date;
+    
+    const docDateEl = document.getElementById('doc-date');
+    if (docDateEl) {
+      docDateEl.value = parseThaiDateToISO(item.date) || new Date().toISOString().split('T')[0];
+    }
+
     // Reset file input (optional for edit)
     document.getElementById('doc-file').value = '';
     document.getElementById('doc-file').required = false;
@@ -379,6 +410,11 @@ function getAuthHeaders() {
     btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
     try {
       const formData = new FormData(docForm);
+      
+      const isoDate = formData.get('date');
+      const thaiDate = formatISOToThaiDate(isoDate);
+      formData.set('date', thaiDate);
+
       const url = isEdit ? `${API_BASE}/docs/${docId}` : `${API_BASE}/docs`;
       const method = isEdit ? 'PUT' : 'POST';
       const res = await fetch(url, { method, headers: getAuthHeaders(), body: formData });
@@ -1492,37 +1528,22 @@ function getAuthHeaders() {
   };
 
   // ─── BUDGET STATUS MANAGEMENT ──────────────────────────────────────────
-  const budgetStatusToggle = document.getElementById('budget-status-toggle');
-  const budgetStatusText = document.getElementById('budget-status-text');
+  const budgetStatusSelect = document.getElementById('budget-status-select');
 
   async function loadBudgetStatus() {
-    if (!budgetStatusToggle) return;
+    if (!budgetStatusSelect) return;
     try {
       const res = await fetch('/api/students', { headers: getAuthHeaders() }); // Global settings are inside this endpoint
       if (res.ok) {
         const { settings } = await res.json();
         const status = settings.budget_info_status || 'active';
-        budgetStatusToggle.checked = (status === 'active');
-        updateBudgetStatusUI(status);
+        budgetStatusSelect.value = status;
       }
     } catch (e) { console.error('Error loading budget status:', e); }
   }
 
-  function updateBudgetStatusUI(status) {
-    if (!budgetStatusText) return;
-    if (status === 'active') {
-      budgetStatusText.innerHTML = '🟢 เปิดใช้งานปกติ';
-      budgetStatusText.style.color = '#10b981';
-    } else {
-      budgetStatusText.innerHTML = '🟠 อยู่ระหว่างปรับปรุง';
-      budgetStatusText.style.color = '#f59e0b';
-    }
-  }
-
-  budgetStatusToggle?.addEventListener('change', async () => {
-    const newStatus = budgetStatusToggle.checked ? 'active' : 'maintenance';
-    updateBudgetStatusUI(newStatus);
-    
+  budgetStatusSelect?.addEventListener('change', async () => {
+    const newStatus = budgetStatusSelect.value;
     try {
       const res = await fetch(`${API_BASE}/students`, {
         method: 'POST',
@@ -2218,6 +2239,12 @@ function getAuthHeaders() {
     renderTempAttachments();
   };
 
+  window.switchToNoGiftPanel = function() {
+    closeItaModal();
+    const btn = document.querySelector('.nav-btn[data-target="nogift-panel"]');
+    if (btn) btn.click();
+  };
+
   // ── Open / Close Modal ──────────────────────────────────────────────────────
   function openItaModal(item) {
     tempAttachments = Array.isArray(item.attachments) ? JSON.parse(JSON.stringify(item.attachments)) : [];
@@ -2229,6 +2256,17 @@ function getAuthHeaders() {
     document.getElementById('ita-edit-title').value = item.title || '';
     document.getElementById('ita-edit-description').value = item.description || '';
     document.getElementById('ita-edit-isPublic').checked = item.isPublic !== false;
+
+    // Toggle sections based on code O20
+    const o20Notice = document.getElementById('ita-o20-notice-section');
+    const attsEditor = document.getElementById('ita-attachments-editor-section');
+    if (item.code === 'O20') {
+      if (o20Notice) o20Notice.style.display = 'flex';
+      if (attsEditor) attsEditor.style.display = 'none';
+    } else {
+      if (o20Notice) o20Notice.style.display = 'none';
+      if (attsEditor) attsEditor.style.display = 'block';
+    }
 
     // Reset smart-link and manual sub-forms
     if (itaSmartLinkType) itaSmartLinkType.value = '';
@@ -2271,6 +2309,249 @@ function getAuthHeaders() {
       itaTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:#ef4444;">โหลดข้อมูลล้มเหลว — ลองรีเฟรชหน้าเว็บ</td></tr>';
     }
   }
+
+  // ── No Gift Policy Settings Management ─────────────────────────────────────────
+  const nogiftForm = document.getElementById('nogift-settings-form');
+  const nogiftBannerInput = document.getElementById('nogift-banner-input');
+  const nogiftBannerPreviewContainer = document.getElementById('nogift-banner-preview-container');
+  const nogiftBannerPreview = document.getElementById('nogift-banner-preview');
+  const nogiftThInput = document.getElementById('nogift-statement-th-input');
+  const nogiftEnInput = document.getElementById('nogift-statement-en-input');
+  const nogiftAdminYearSelect = document.getElementById('nogift-admin-year-select');
+  const nogiftKnowledgeInput = document.getElementById('nogift-knowledge-input');
+  const nogiftKnowledgePreviewContainer = document.getElementById('nogift-knowledge-preview-container');
+  const nogiftKnowledgeList = document.getElementById('nogift-knowledge-list');
+
+  // Attachments Elements
+  const nogiftPdfFileInput = document.getElementById('nogift-pdf-file-input');
+  const nogiftPdfLabelInput = document.getElementById('nogift-pdf-label-input');
+  const nogiftPdfAddBtn = document.getElementById('nogift-pdf-add-btn');
+  const nogiftLinkLabelInput = document.getElementById('nogift-link-label-input');
+  const nogiftLinkUrlInput = document.getElementById('nogift-link-url-input');
+  const nogiftLinkAddBtn = document.getElementById('nogift-link-add-btn');
+  const nogiftAttachmentsListContainer = document.getElementById('nogift-attachments-list-container');
+
+  let tempKnowledgeImages = []; // List of objects: { type: 'existing'|'pending', url: string, file: File, previewUrl: string }
+  let nogiftAttachments = []; // List of objects: { label: string, url?: string, type: 'file'|'link', file?: File, isPending?: boolean }
+
+  function renderKnowledgeImages() {
+    if (!nogiftKnowledgeList || !nogiftKnowledgePreviewContainer) return;
+    if (tempKnowledgeImages.length === 0) {
+      nogiftKnowledgePreviewContainer.style.display = 'none';
+      nogiftKnowledgeList.innerHTML = '';
+      return;
+    }
+    nogiftKnowledgePreviewContainer.style.display = 'block';
+    nogiftKnowledgeList.innerHTML = tempKnowledgeImages.map((item, idx) => {
+      const src = item.type === 'existing' ? item.url : item.previewUrl;
+      const isPendingLabel = item.type === 'pending' 
+        ? `<span style="position:absolute;bottom:4px;left:4px;background:#f59e0b;color:#fff;font-size:0.68rem;padding:1px 6px;border-radius:4px;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,0.1);">รอนำส่ง</span>` 
+        : '';
+      return `
+        <div style="position:relative;border:1px solid var(--color-border);border-radius:12px;overflow:hidden;background:#f8fafc;display:flex;align-items:center;justify-content:center;height:85px;box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+          <img src="${src}" style="max-width:100%;max-height:100%;object-fit:cover;" />
+          ${isPendingLabel}
+          <button type="button" onclick="deleteKnowledgeImage(${idx})" style="position:absolute;top:4px;right:4px;background:#fee2e2;color:#ef4444;border:none;border-radius:50%;width:22px;height:22px;font-size:0.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(0,0,0,0.15);" title="ลบรูปภาพ">🗑️</button>
+        </div>`;
+    }).join('');
+  }
+
+  window.deleteKnowledgeImage = function(idx) {
+    tempKnowledgeImages.splice(idx, 1);
+    renderKnowledgeImages();
+  };
+
+  // Listen to new file selections to add them to tempKnowledgeImages as pending
+  nogiftKnowledgeInput?.addEventListener('change', (e) => {
+    const files = Array.from(e.target.files || []);
+    let processedCount = 0;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        tempKnowledgeImages.push({
+          type: 'pending',
+          file: file,
+          previewUrl: event.target.result
+        });
+        processedCount++;
+        if (processedCount === files.length) {
+          renderKnowledgeImages();
+          nogiftKnowledgeInput.value = '';
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+
+  // Render No Gift attachments list
+  function renderNoGiftAttachments() {
+    if (!nogiftAttachmentsListContainer) return;
+    if (nogiftAttachments.length === 0) {
+      nogiftAttachmentsListContainer.innerHTML = '<span style="color:#cbd5e1;font-size:0.85rem;font-style:italic;padding:8px;display:block;">ยังไม่มีเอกสารแนบในนโยบายนี้ (กรุณาอัปโหลดไฟล์ PDF หรือวางลิงก์จากฟอร์มด้านล่าง)</span>';
+      return;
+    }
+    
+    nogiftAttachmentsListContainer.innerHTML = nogiftAttachments.map((att, idx) => {
+      const typeBadge = att.type === 'file' ? '📄 [ไฟล์ PDF]' : '🔗 [ลิงก์ตรง]';
+      const label = escapeHtml(att.label);
+      const pendingLabel = att.isPending ? ' <span style="color:#f59e0b;font-weight:700;font-size:0.75rem;">(รอนำส่ง)</span>' : '';
+      const urlText = att.url ? ` <span style="font-size:0.75rem;color:#94a3b8;word-break:break-all;">(${escapeHtml(att.url)})</span>` : '';
+      return `
+        <div style="display:flex;align-items:center;justify-content:space-between;background:#f8fafc;padding:8px 12px;border:1px solid var(--color-border);border-radius:8px;">
+          <div>
+            <span style="font-weight:600;font-size:0.82rem;color:var(--color-text-primary);">${typeBadge} ${label}</span>
+            ${pendingLabel}
+            ${urlText}
+          </div>
+          <button type="button" onclick="deleteNoGiftAttachment(${idx})" style="background:#fee2e2;color:#ef4444;border:none;border-radius:4px;padding:4px 8px;font-size:0.75rem;cursor:pointer;display:flex;align-items:center;gap:4px;" title="ลบรายการ">🗑️ ลบ</button>
+        </div>`;
+    }).join('');
+  }
+  
+  window.deleteNoGiftAttachment = function(idx) {
+    nogiftAttachments.splice(idx, 1);
+    renderNoGiftAttachments();
+  };
+
+  // Add PDF Document trigger
+  nogiftPdfAddBtn?.addEventListener('click', () => {
+    if (!nogiftPdfFileInput || !nogiftPdfFileInput.files[0]) return alert('กรุณาเลือกไฟล์เอกสาร PDF ก่อนครับ');
+    const file = nogiftPdfFileInput.files[0];
+    const label = nogiftPdfLabelInput.value.trim();
+    if (!label) return alert('กรุณาระบุชื่อเรียกเอกสารด้วยครับ');
+    
+    nogiftAttachments.push({
+      type: 'file',
+      label: label,
+      file: file,
+      isPending: true
+    });
+    
+    renderNoGiftAttachments();
+    nogiftPdfFileInput.value = '';
+    nogiftPdfLabelInput.value = '';
+  });
+
+  // Add Link trigger
+  nogiftLinkAddBtn?.addEventListener('click', () => {
+    const label = nogiftLinkLabelInput.value.trim();
+    const url = nogiftLinkUrlInput.value.trim();
+    if (!label) return alert('กรุณาระบุชื่อเรียกป้ายลิงก์ด้วยครับ');
+    if (!url) return alert('กรุณาระบุที่อยู่ URL ด้วยครับ');
+    
+    nogiftAttachments.push({
+      type: 'link',
+      label: label,
+      url: url
+    });
+    
+    renderNoGiftAttachments();
+    nogiftLinkLabelInput.value = '';
+    nogiftLinkUrlInput.value = '';
+  });
+
+  async function loadNoGiftSettings() {
+    const year = nogiftAdminYearSelect?.value || '2569';
+    try {
+      const res = await fetch(`${API_BASE}/ita/nogift-settings/${year}`, {
+        headers: getAuthHeaders()
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (nogiftThInput) nogiftThInput.value = data.statementTh || '';
+        if (nogiftEnInput) nogiftEnInput.value = data.statementEn || '';
+        
+        // Load main banner preview
+        if (data.bannerUrl) {
+          if (nogiftBannerPreview) nogiftBannerPreview.src = data.bannerUrl;
+          if (nogiftBannerPreviewContainer) nogiftBannerPreviewContainer.style.display = 'block';
+        } else {
+          if (nogiftBannerPreviewContainer) nogiftBannerPreviewContainer.style.display = 'none';
+        }
+
+        // Load knowledge images as existing
+        const urls = data.knowledgeImages || [];
+        tempKnowledgeImages = urls.map(u => ({ type: 'existing', url: u }));
+        renderKnowledgeImages();
+
+        // Load attachments
+        nogiftAttachments = data.attachments || [];
+        renderNoGiftAttachments();
+      }
+    } catch (err) {
+      console.error('[NoGift Settings] Failed to load settings:', err);
+    }
+  }
+
+  nogiftAdminYearSelect?.addEventListener('change', loadNoGiftSettings);
+
+  // Handle form submission
+  nogiftForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = nogiftForm.querySelector('button[type="submit"]');
+    const year = nogiftAdminYearSelect?.value || '2569';
+    btn.disabled = true;
+    btn.textContent = 'กำลังบันทึก...';
+    try {
+      const formData = new FormData();
+      formData.append('statementTh', nogiftThInput.value);
+      formData.append('statementEn', nogiftEnInput.value);
+
+      // Append banner file if selected
+      if (nogiftBannerInput.files && nogiftBannerInput.files[0]) {
+        formData.append('banner', nogiftBannerInput.files[0]);
+      }
+
+      // Append list of remaining existing image URLs
+      const existingUrls = tempKnowledgeImages
+        .filter(item => item.type === 'existing')
+        .map(item => item.url);
+      formData.append('existingKnowledgeImages', JSON.stringify(existingUrls));
+
+      // Append new pending file objects
+      const pendingItems = tempKnowledgeImages.filter(item => item.type === 'pending');
+      pendingItems.forEach(item => {
+        formData.append('knowledge', item.file);
+      });
+
+      // Append list of remaining existing PDF / link attachments
+      const existingAtts = nogiftAttachments.filter(att => !att.isPending);
+      formData.append('existingAttachments', JSON.stringify(existingAtts));
+
+      // Append new pending PDF file objects
+      const pendingAttFiles = nogiftAttachments.filter(att => att.isPending);
+      const pendingAttLabels = [];
+      pendingAttFiles.forEach(att => {
+        formData.append('attachments', att.file);
+        pendingAttLabels.push(att.label);
+      });
+      formData.append('attachmentLabels', JSON.stringify(pendingAttLabels));
+      
+      const res = await fetch(`${API_BASE}/ita/nogift-settings/${year}`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: formData
+      });
+      if (res.ok) {
+        showItaNotice('✅ บันทึกการตั้งค่า No Gift Policy สำเร็จ');
+        
+        // Reset file inputs
+        if (nogiftBannerInput) nogiftBannerInput.value = '';
+        if (nogiftKnowledgeInput) nogiftKnowledgeInput.value = '';
+        if (nogiftPdfFileInput) nogiftPdfFileInput.value = '';
+        
+        loadNoGiftSettings();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        showItaNotice('❌ บันทึกไม่สำเร็จ: ' + (err.message || 'ไม่ทราบสาเหตุ'), true);
+      }
+    } catch (e) {
+      showItaNotice('❌ เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '💾 บันทึกการตั้งค่า No Gift Policy';
+    }
+  });
 
   function renderITA(items) {
     const statTotal   = document.getElementById('ita-stat-total');
@@ -2806,6 +3087,23 @@ function getAuthHeaders() {
   loadComplaints();
   loadFeedbacks();
 
+  // On load: restore saved tab or find the currently active button and expand its group
+  const savedTab = localStorage.getItem('activeAdminTab');
+  if (savedTab) {
+    const targetBtn = document.querySelector(`.nav-btn[data-target="${savedTab}"]`);
+    if (targetBtn) {
+      // Trigger click to activate the panel and expand group
+      targetBtn.click();
+    } else {
+      // Fallback to default
+      const initialActive = document.querySelector('.nav-btn.active');
+      if (initialActive) expandGroupOfActiveBtn(initialActive);
+    }
+  } else {
+    const initialActive = document.querySelector('.nav-btn.active');
+    if (initialActive) expandGroupOfActiveBtn(initialActive);
+  }
+
 
   // Logout
   const logoutBtn = document.getElementById('logout-btn');
@@ -2820,3 +3118,224 @@ function escapeHtml(str) {
   const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
   return String(str || '').replace(/[&<>"']/g, m => map[m]);
 }
+
+// ─── COMPLAINT RESOURCES (คู่มือ + เอกสารสรุปการร้องเรียน) ──────────────────
+(function complaintResourcesPanel() {
+  const panel = document.getElementById('complaint-resources-panel');
+  if (!panel) return;
+
+  let currentYear = '2569';
+  // Staging: files and existing items pending save
+  let pendingManuals = []; // { label, file } — new files not yet uploaded
+  let pendingSummary = []; // { label, file } — new files not yet uploaded
+  let existingManuals = []; // { label, url, type }
+  let existingSummary = []; // { label, url, type }
+
+  const yearSelect = document.getElementById('complaint-res-year-select');
+  const manualsList = document.getElementById('complaint-manuals-list');
+  const summaryList = document.getElementById('complaint-summary-list');
+
+  // Render existing + pending manuals
+  function renderManuals() {
+    manualsList.innerHTML = '';
+    if (existingManuals.length === 0 && pendingManuals.length === 0) {
+      manualsList.innerHTML = '<p style="color:#94a3b8; font-size:0.85rem; font-style:italic; margin: 0;">ยังไม่มีคู่มือในระบบ</p>';
+      return;
+    }
+    existingManuals.forEach((item, idx) => {
+      const row = document.createElement('div');
+      row.style = 'display:flex; align-items:center; gap:10px; padding:10px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px;';
+      row.innerHTML = `
+        <span style="font-size:0.85rem; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+          📄 ${escapeHtml(item.label)}
+        </span>
+        <a href="${item.url}" target="_blank" style="font-size:0.78rem; color:#0ea5e9; font-weight:600; text-decoration:none; white-space:nowrap;">ดูไฟล์</a>
+        <button type="button" style="background:#fee2e2; color:#dc2626; border:none; border-radius:6px; padding:4px 10px; font-size:0.78rem; font-weight:700; cursor:pointer;"
+          data-del-manual="${idx}">🗑 ลบ</button>
+      `;
+      row.querySelector(`[data-del-manual]`).addEventListener('click', () => {
+        existingManuals.splice(idx, 1);
+        renderManuals();
+      });
+      manualsList.appendChild(row);
+    });
+    pendingManuals.forEach((item, idx) => {
+      const row = document.createElement('div');
+      row.style = 'display:flex; align-items:center; gap:10px; padding:10px 12px; background:#fffbeb; border:1px dashed #fbbf24; border-radius:10px;';
+      row.innerHTML = `
+        <span style="font-size:0.85rem; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+          ⏳ ${escapeHtml(item.label)} <span style="color:#d97706;">(รอบันทึก)</span>
+        </span>
+        <button type="button" style="background:#fee2e2; color:#dc2626; border:none; border-radius:6px; padding:4px 10px; font-size:0.78rem; font-weight:700; cursor:pointer;"
+          data-del-pmanual="${idx}">✕ ยกเลิก</button>
+      `;
+      row.querySelector(`[data-del-pmanual]`).addEventListener('click', () => {
+        pendingManuals.splice(idx, 1);
+        renderManuals();
+      });
+      manualsList.appendChild(row);
+    });
+  }
+
+  // Render existing + pending summary docs
+  function renderSummary() {
+    summaryList.innerHTML = '';
+    if (existingSummary.length === 0 && pendingSummary.length === 0) {
+      summaryList.innerHTML = '<p style="color:#94a3b8; font-size:0.85rem; font-style:italic; margin: 0;">ยังไม่มีรายงานสรุปในระบบ</p>';
+      return;
+    }
+    existingSummary.forEach((item, idx) => {
+      const row = document.createElement('div');
+      row.style = 'display:flex; align-items:center; gap:10px; padding:10px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px;';
+      row.innerHTML = `
+        <span style="font-size:0.85rem; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+          📑 ${escapeHtml(item.label)}
+        </span>
+        <a href="${item.url}" target="_blank" style="font-size:0.78rem; color:#0ea5e9; font-weight:600; text-decoration:none; white-space:nowrap;">ดูไฟล์</a>
+        <button type="button" style="background:#fee2e2; color:#dc2626; border:none; border-radius:6px; padding:4px 10px; font-size:0.78rem; font-weight:700; cursor:pointer;"
+          data-del-summary="${idx}">🗑 ลบ</button>
+      `;
+      row.querySelector(`[data-del-summary]`).addEventListener('click', () => {
+        existingSummary.splice(idx, 1);
+        renderSummary();
+      });
+      summaryList.appendChild(row);
+    });
+    pendingSummary.forEach((item, idx) => {
+      const row = document.createElement('div');
+      row.style = 'display:flex; align-items:center; gap:10px; padding:10px 12px; background:#f5f3ff; border:1px dashed #8b5cf6; border-radius:10px;';
+      row.innerHTML = `
+        <span style="font-size:0.85rem; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+          ⏳ ${escapeHtml(item.label)} <span style="color:#7c3aed;">(รอบันทึก)</span>
+        </span>
+        <button type="button" style="background:#fee2e2; color:#dc2626; border:none; border-radius:6px; padding:4px 10px; font-size:0.78rem; font-weight:700; cursor:pointer;"
+          data-del-psummary="${idx}">✕ ยกเลิก</button>
+      `;
+      row.querySelector(`[data-del-psummary]`).addEventListener('click', () => {
+        pendingSummary.splice(idx, 1);
+        renderSummary();
+      });
+      summaryList.appendChild(row);
+    });
+  }
+
+  // Load data from API
+  async function loadComplaintResources(year) {
+    try {
+      const res = await fetch(`${API_BASE}/complaint-resources?year=${year}`);
+      if (!res.ok) throw new Error('Load failed');
+      const data = await res.json();
+      existingManuals = Array.isArray(data.manuals) ? [...data.manuals] : [];
+      existingSummary = Array.isArray(data.summaryDocs) ? [...data.summaryDocs] : [];
+    } catch {
+      existingManuals = [];
+      existingSummary = [];
+    }
+    pendingManuals = [];
+    pendingSummary = [];
+    renderManuals();
+    renderSummary();
+  }
+
+  // Year select change
+  if (yearSelect) {
+    yearSelect.addEventListener('change', () => {
+      currentYear = yearSelect.value;
+      loadComplaintResources(currentYear);
+    });
+  }
+
+  // Add manual button
+  const addManualBtn = document.getElementById('cr-add-manual-btn');
+  if (addManualBtn) {
+    addManualBtn.addEventListener('click', () => {
+      const label = document.getElementById('cr-manual-label').value.trim();
+      const file = document.getElementById('cr-manual-file').files[0];
+      if (!label) { alert('กรุณาระบุชื่อคู่มือก่อน'); return; }
+      if (!file) { alert('กรุณาเลือกไฟล์ PDF ก่อน'); return; }
+      pendingManuals.push({ label, file });
+      document.getElementById('cr-manual-label').value = '';
+      document.getElementById('cr-manual-file').value = '';
+      renderManuals();
+    });
+  }
+
+  // Add summary button
+  const addSummaryBtn = document.getElementById('cr-add-summary-btn');
+  if (addSummaryBtn) {
+    addSummaryBtn.addEventListener('click', () => {
+      const label = document.getElementById('cr-summary-label').value.trim();
+      const file = document.getElementById('cr-summary-file').files[0];
+      if (!label) { alert('กรุณาระบุชื่อรายงานก่อน'); return; }
+      if (!file) { alert('กรุณาเลือกไฟล์ PDF ก่อน'); return; }
+      pendingSummary.push({ label, file });
+      document.getElementById('cr-summary-label').value = '';
+      document.getElementById('cr-summary-file').value = '';
+      renderSummary();
+    });
+  }
+
+  // Form submit — build FormData and POST
+  const form = document.getElementById('complaint-resources-form');
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = '⏳ กำลังบันทึก...';
+
+      try {
+        const fd = new FormData();
+        fd.append('year', currentYear);
+        fd.append('existingManuals', JSON.stringify(existingManuals));
+        fd.append('existingSummaryDocs', JSON.stringify(existingSummary));
+
+        pendingManuals.forEach((item, i) => {
+          fd.append('manuals', item.file);
+          fd.append('manualLabels', item.label);
+        });
+        pendingSummary.forEach((item, i) => {
+          fd.append('summaryDocs', item.file);
+          fd.append('summaryDocLabels', item.label);
+        });
+
+        const res = await fetch(`${API_BASE}/complaint-resources`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: fd
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.message || 'บันทึกไม่สำเร็จ');
+
+        existingManuals = Array.isArray(data.manuals) ? [...data.manuals] : [];
+        existingSummary = Array.isArray(data.summaryDocs) ? [...data.summaryDocs] : [];
+        pendingManuals = [];
+        pendingSummary = [];
+        renderManuals();
+        renderSummary();
+
+        alert('✅ บันทึกเอกสารการร้องเรียนสำเร็จ!');
+      } catch (err) {
+        alert('❌ ' + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '💾 บันทึกเอกสารทั้งหมด';
+      }
+    });
+  }
+
+  // Load on panel reveal
+  const navBtnTarget = document.querySelector('.nav-btn[data-target="complaint-resources-panel"]');
+  if (navBtnTarget) {
+    navBtnTarget.addEventListener('click', () => {
+      currentYear = yearSelect ? yearSelect.value : '2569';
+      loadComplaintResources(currentYear);
+    });
+  }
+
+  // Initial load if panel is active on page load
+  if (!panel.classList.contains('hide')) {
+    loadComplaintResources(currentYear);
+  }
+})();

@@ -928,6 +928,203 @@ router.get('/ita', async (req, res) => {
   }
 });
 
+// GET /api/ita/nogift-settings/:year — Fetch No Gift Policy settings for a specific year
+router.get('/ita/nogift-settings/:year', async (req, res) => {
+  const { year } = req.params;
+  try {
+    const settingKey = `nogift_settings_${year}`;
+    const [setting, itaO20] = await Promise.all([
+      prisma.siteSettings.findUnique({ where: { key: settingKey } }),
+      prisma.iTAItem.findUnique({ where: { code_year: { code: 'O20', year } } })
+    ]);
+
+    const attachments = itaO20 && Array.isArray(itaO20.attachments) ? itaO20.attachments : [];
+
+    if (setting) {
+      const parsed = JSON.parse(setting.value);
+      return res.json({
+        ...parsed,
+        attachments
+      });
+    }
+
+    // Return default values if not configured yet for this year
+    res.json({
+      bannerUrl: '/images/no_gift_policy_banner.png',
+      statementTh: 'วิทยาลัยการอาชีพบ่อไร่ ประกาศเจตนารมณ์ในการไม่รับของขวัญและของกำนัลทุกชนิดจากการปฏิบัติหน้าที่ (No Gift Policy) โดยผู้บริหาร ครู และบุคลากรทางการศึกษาทุกคน จะต้องไม่แสวงหาหรือรับของขวัญ ของกำนัล หรือผลประโยชน์ใดๆ ที่ส่งผลให้เกิดความไม่โปร่งใส หรือก่อให้เกิดการเลือกปฏิบัติ เพื่อร่วมกันขับเคลื่อนสถานศึกษาที่มีคุณธรรม มีความโปร่งใส และมุ่งมั่นให้บริการประชาชนอย่างเท่าเทียม',
+      statementEn: 'Bo Rai Industrial and Community Education College declares its commitment to the "No Gift Policy". All executives, teachers, and staff members shall not seek or accept any gifts, rewards, or favors of any kind from performing their duties, either before, during, or after their operations, to foster an organizational culture of integrity, transparency, and equal treatment for all.',
+      attachments
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch No Gift Policy settings' });
+  }
+});
+
+// POST /api/ita/nogift-settings/:year — Save/Update No Gift Policy settings for a specific year
+router.post('/ita/nogift-settings/:year', authenticateToken, upload.fields([
+  { name: 'banner', maxCount: 1 },
+  { name: 'knowledge', maxCount: 10 },
+  { name: 'attachments', maxCount: 10 }
+]), async (req, res) => {
+  const { year } = req.params;
+  const { statementTh, statementEn, existingKnowledgeImages, existingAttachments, attachmentLabels } = req.body;
+  try {
+    const settingKey = `nogift_settings_${year}`;
+    const existingSetting = await prisma.siteSettings.findUnique({
+      where: { key: settingKey }
+    });
+
+    let bannerUrl = '/images/no_gift_policy_banner.png';
+    let oldBannerUrl = null;
+    let oldKnowledgeImages = [];
+    let currentKnowledgeImages = [];
+
+    if (existingSetting) {
+      const parsed = JSON.parse(existingSetting.value);
+      bannerUrl = parsed.bannerUrl || bannerUrl;
+      oldBannerUrl = parsed.bannerUrl;
+      oldKnowledgeImages = parsed.knowledgeImages || [];
+    }
+
+    // Parse existing knowledge images list passed back from front-end
+    if (existingKnowledgeImages) {
+      try {
+        currentKnowledgeImages = JSON.parse(existingKnowledgeImages);
+      } catch (e) {
+        currentKnowledgeImages = [];
+      }
+    } else {
+      currentKnowledgeImages = oldKnowledgeImages;
+    }
+
+    // Process new banner upload if any
+    const bannerFiles = req.files && req.files['banner'] ? req.files['banner'] : [];
+    if (bannerFiles.length > 0) {
+      bannerUrl = await processAndSaveImage(bannerFiles[0].buffer, 'nogift');
+      if (oldBannerUrl && oldBannerUrl.startsWith('/uploads/')) {
+        deleteImage(oldBannerUrl);
+      }
+    }
+
+    // Process new knowledge images upload if any
+    const knowledgeFiles = req.files && req.files['knowledge'] ? req.files['knowledge'] : [];
+    if (knowledgeFiles.length > 0) {
+      for (const file of knowledgeFiles) {
+        const savedUrl = await processAndSaveImage(file.buffer, 'nogift-edu');
+        currentKnowledgeImages.push(savedUrl);
+      }
+    }
+
+    // Identify deleted knowledge images and remove them from disk
+    const deletedImages = oldKnowledgeImages.filter(img => !currentKnowledgeImages.includes(img));
+    for (const img of deletedImages) {
+      if (img.startsWith('/uploads/')) {
+        deleteImage(img);
+      }
+    }
+
+    // Save SiteSettings JSON
+    const valuePayload = JSON.stringify({
+      bannerUrl,
+      statementTh,
+      statementEn,
+      knowledgeImages: currentKnowledgeImages
+    });
+
+    const updatedSetting = await prisma.siteSettings.upsert({
+      where: { key: settingKey },
+      update: { value: valuePayload },
+      create: { key: settingKey, value: valuePayload }
+    });
+
+    // --- NOW MANAGE ATTACHMENTS FOR O20 ---
+    const itaO20 = await prisma.iTAItem.findUnique({
+      where: { code_year: { code: 'O20', year } }
+    });
+    
+    let oldAttachments = [];
+    if (itaO20 && Array.isArray(itaO20.attachments)) {
+      oldAttachments = itaO20.attachments;
+    }
+
+    let parsedExistingAttachments = [];
+    if (existingAttachments) {
+      try {
+        parsedExistingAttachments = JSON.parse(existingAttachments);
+      } catch (e) {
+        parsedExistingAttachments = [];
+      }
+    } else {
+      parsedExistingAttachments = oldAttachments;
+    }
+
+    // Handle new PDF files upload
+    const attachmentFiles = req.files && req.files['attachments'] ? req.files['attachments'] : [];
+    let parsedAttachmentLabels = [];
+    if (attachmentLabels) {
+      try {
+        parsedAttachmentLabels = JSON.parse(attachmentLabels);
+      } catch (e) {
+        parsedAttachmentLabels = [];
+      }
+    }
+
+    const savedNewAttachments = [];
+    attachmentFiles.forEach((file, idx) => {
+      const fileUrl = saveFile(file, 'ita');
+      const label = parsedAttachmentLabels[idx] || file.originalname.split('.')[0];
+      savedNewAttachments.push({
+        label: label,
+        url: fileUrl,
+        type: 'file'
+      });
+    });
+
+    // Merge existing and new attachments
+    const finalAttachments = [...parsedExistingAttachments, ...savedNewAttachments];
+
+    // Clean up deleted files from disk
+    const deletedAttachments = oldAttachments.filter(oldAtt => {
+      if (oldAtt.type !== 'file') return false;
+      return !finalAttachments.some(newAtt => newAtt.url === oldAtt.url);
+    });
+
+    deletedAttachments.forEach(att => {
+      if (att.url && att.url.startsWith('/uploads/')) {
+        deleteFile(att.url);
+      }
+    });
+
+    // Save back to ITAItem O20
+    await prisma.iTAItem.upsert({
+      where: { code_year: { code: 'O20', year } },
+      update: {
+        attachments: finalAttachments,
+        updatedAt: new Date()
+      },
+      create: {
+        code: 'O20',
+        year,
+        title: 'ประกาศนโยบายไม่รับของขวัญ (No Gift Policy)',
+        description: 'แสดงประกาศเจตนารมณ์ No Gift Policy ที่ลงนามโดยผู้บริหาร และภาพกิจกรรมการมีส่วนร่วมในนโยบายนี้',
+        attachments: finalAttachments,
+        isPublic: true,
+        updatedAt: new Date()
+      }
+    });
+
+    res.json({ 
+      message: 'บันทึกการตั้งค่า No Gift Policy สำเร็จ', 
+      data: JSON.parse(updatedSetting.value),
+      attachments: finalAttachments 
+    });
+  } catch (error) {
+    console.error('[No Gift Settings POST Error]', error);
+    res.status(500).json({ message: 'Failed to save No Gift Policy settings', error: error.message });
+  }
+});
+
+
 // GET /api/ita/smart-options — Fetch options for Smart Link dropdown
 router.get('/ita/smart-options', authenticateToken, async (req, res) => {
   try {
@@ -1657,8 +1854,119 @@ router.post('/pr/webhook', async (req, res) => {
 });
 
 // ──────────────────────────────────────────────────────────────────────────────
+// COMPLAINT RESOURCES (คู่มือ + เอกสารสรุปการร้องเรียน)
+// ──────────────────────────────────────────────────────────────────────────────
+
+// GET /api/complaint-resources — Fetch complaint resources (manual + summary docs)
+router.get('/complaint-resources', async (req, res) => {
+  const year = req.query.year || '2569';
+  try {
+    const settingKey = `complaint_resources_${year}`;
+    const setting = await prisma.siteSettings.findUnique({ where: { key: settingKey } });
+    if (setting) {
+      return res.json(JSON.parse(setting.value));
+    }
+    res.json({ manuals: [], summaryDocs: [] });
+  } catch (error) {
+    console.error('[API Get Complaint Resources]', error);
+    res.status(500).json({ message: 'Failed to fetch complaint resources' });
+  }
+});
+
+// POST /api/complaint-resources — Save/Update complaint resources (admin only)
+router.post('/complaint-resources', authenticateToken, upload.fields([
+  { name: 'manuals', maxCount: 10 },
+  { name: 'summaryDocs', maxCount: 20 }
+]), async (req, res) => {
+  const year = req.body.year || '2569';
+  const { existingManuals, existingSummaryDocs, manualLabels, summaryDocLabels } = req.body;
+  try {
+    const settingKey = `complaint_resources_${year}`;
+
+    // Load existing data
+    const existingSetting = await prisma.siteSettings.findUnique({ where: { key: settingKey } });
+    let currentData = { manuals: [], summaryDocs: [] };
+    let oldManuals = [];
+    let oldSummaryDocs = [];
+    if (existingSetting) {
+      currentData = JSON.parse(existingSetting.value);
+      oldManuals = currentData.manuals || [];
+      oldSummaryDocs = currentData.summaryDocs || [];
+    }
+
+    // --- Manuals ---
+    let keepManuals = [];
+    try { keepManuals = JSON.parse(existingManuals || '[]'); } catch { keepManuals = []; }
+    if (!Array.isArray(keepManuals)) keepManuals = [];
+
+    // Delete manuals that were removed
+    const removedManuals = oldManuals.filter(old => !keepManuals.some(k => k.url === old.url));
+    for (const m of removedManuals) {
+      if (m.url && m.url.startsWith('/uploads/')) {
+        deleteFile(m.url);
+      }
+    }
+
+    // Upload new manual files
+    const newManuals = [];
+    const manualFiles = (req.files && req.files['manuals']) || [];
+    const manualLabelArr = manualFiles.map((_, i) => {
+      const labels = typeof manualLabels === 'string' ? [manualLabels] : (manualLabels || []);
+      return labels[i] || `คู่มือร้องเรียน ${i + 1}`;
+    });
+    for (let i = 0; i < manualFiles.length; i++) {
+      const fileUrl = await saveFile(manualFiles[i]);
+      newManuals.push({ label: manualLabelArr[i], url: fileUrl, type: 'file' });
+    }
+
+    const finalManuals = [...keepManuals, ...newManuals];
+
+    // --- Summary Documents ---
+    let keepSummaryDocs = [];
+    try { keepSummaryDocs = JSON.parse(existingSummaryDocs || '[]'); } catch { keepSummaryDocs = []; }
+    if (!Array.isArray(keepSummaryDocs)) keepSummaryDocs = [];
+
+    // Delete summary docs that were removed
+    const removedSummaryDocs = oldSummaryDocs.filter(old => !keepSummaryDocs.some(k => k.url === old.url));
+    for (const d of removedSummaryDocs) {
+      if (d.url && d.url.startsWith('/uploads/')) {
+        deleteFile(d.url);
+      }
+    }
+
+    // Upload new summary doc files
+    const newSummaryDocs = [];
+    const summaryFiles = (req.files && req.files['summaryDocs']) || [];
+    const summaryLabelArr = summaryFiles.map((_, i) => {
+      const labels = typeof summaryDocLabels === 'string' ? [summaryDocLabels] : (summaryDocLabels || []);
+      return labels[i] || `รายงานสรุปผลการร้องเรียน ${i + 1}`;
+    });
+    for (let i = 0; i < summaryFiles.length; i++) {
+      const fileUrl = await saveFile(summaryFiles[i]);
+      newSummaryDocs.push({ label: summaryLabelArr[i], url: fileUrl, type: 'file' });
+    }
+
+    const finalSummaryDocs = [...keepSummaryDocs, ...newSummaryDocs];
+
+    // Save to SiteSettings
+    const newValue = JSON.stringify({ manuals: finalManuals, summaryDocs: finalSummaryDocs });
+    await prisma.siteSettings.upsert({
+      where: { key: settingKey },
+      update: { value: newValue },
+      create: { key: settingKey, value: newValue }
+    });
+
+    res.json({ message: 'บันทึกเอกสารการร้องเรียนสำเร็จ', manuals: finalManuals, summaryDocs: finalSummaryDocs });
+  } catch (error) {
+    console.error('[API Save Complaint Resources]', error);
+    res.status(500).json({ message: 'Failed to save complaint resources' });
+  }
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
 // FRAUD COMPLAINTS API
 // ──────────────────────────────────────────────────────────────────────────────
+
 
 // POST /api/complaints — Submit a new complaint
 router.post('/complaints', async (req, res) => {

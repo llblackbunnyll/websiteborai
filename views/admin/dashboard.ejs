@@ -355,6 +355,12 @@
           <button class="nav-btn" data-target="images-panel">
             <span>🖼️</span> รูปภาพเว็บไซต์
           </button>
+          <button class="nav-btn" data-target="nogift-panel">
+            <span>🎁</span> นโยบาย No Gift Policy
+          </button>
+          <button class="nav-btn" data-target="complaint-resources-panel">
+            <span>📋</span> เอกสารการร้องเรียน
+          </button>
         </div>
       </div>
 
@@ -454,6 +460,113 @@
       </button>
     </div>
     
+    <!-- ========================= NO GIFT PANEL ========================= -->
+    <section id="nogift-panel" class="admin-panel hide">
+      <div class="panel-header">
+        <div>
+          <h1>🎁 ตั้งค่านโยบาย No Gift Policy (O20) รายปี</h1>
+          <p>จัดการรูปภาพแบนเนอร์รณรงค์ และคำประกาศเจตนารมณ์ประจำปีการประเมินแยกตามปีงบประมาณ</p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <label style="font-weight: 700; color: var(--color-text-secondary); font-size: 0.9rem;">ปีงบประมาณ:</label>
+          <select id="nogift-admin-year-select" class="form-control" style="width: 140px;">
+            <option value="2569">พ.ศ. 2569</option>
+            <option value="2568">พ.ศ. 2568</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="admin-card mt-3">
+        <form id="nogift-settings-form" enctype="multipart/form-data">
+          <div class="form-grid">
+            <div class="form-group form-full">
+              <label for="nogift-banner-input">รูปภาพแบนเนอร์รณรงค์ (ถ้าไม่เลือกใหม่จะใช้รูปเดิม)</label>
+              <input type="file" id="nogift-banner-input" name="banner" accept="image/*" class="form-control file-input" />
+              <div id="nogift-banner-preview-container" class="mt-2" style="display: none;">
+                <span style="font-size: 0.8rem; color: var(--color-text-secondary); display: block; margin-bottom: 4px;">ตัวอย่างภาพปัจจุบัน:</span>
+                <img id="nogift-banner-preview" src="" alt="Banner Preview" style="max-height: 120px; border-radius: 8px; border: 1px solid var(--color-border);" />
+              </div>
+            </div>
+
+            <div class="form-group form-full">
+              <label for="nogift-statement-th-input">คำประกาศภาษาไทย (TH Statement)</label>
+              <textarea id="nogift-statement-th-input" name="statementTh" class="form-control" rows="5" placeholder="ระบุคำประกาศภาษาไทย..." required></textarea>
+            </div>
+
+            <div class="form-group form-full">
+              <label for="nogift-statement-en-input">คำประกาศภาษาอังกฤษ (EN Statement)</label>
+              <textarea id="nogift-statement-en-input" name="statementEn" class="form-control" rows="5" placeholder="Specify English statement..." required></textarea>
+            </div>
+
+            <div class="form-group form-full" style="border-top: 1px dashed var(--color-border); padding-top: 1.5rem; margin-top: 0.5rem;">
+              <label style="font-weight: 700; display: block; margin-bottom: 4px;">🖼️ อัปโหลดรูปภาพสื่อให้ความรู้ No Gift Policy เพิ่มเติม (ได้หลายภาพ)</label>
+              <input type="file" id="nogift-knowledge-input" name="knowledge" accept="image/*" class="form-control file-input" multiple />
+              
+              <!-- Previews Container -->
+              <div id="nogift-knowledge-preview-container" class="mt-2" style="display: none;">
+                <span style="font-size: 0.8rem; color: var(--color-text-secondary); display: block; margin-bottom: 6px;">สื่อความรู้ที่แสดงผลอยู่ปัจจุบัน (คลิกถังขยะเพื่อลบออก):</span>
+                <div id="nogift-knowledge-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px;">
+                  <!-- Dynamically populated previews -->
+                </div>
+              </div>
+            </div>
+
+            <!-- PDF Documents Management Section -->
+            <div class="form-group form-full" style="border-top: 1px dashed var(--color-border); padding-top: 1.5rem; margin-top: 0.5rem;">
+              <label style="font-weight: 700; display: block; margin-bottom: 8px;">📥 จัดการเอกสารประกาศนโยบาย No Gift Policy (เอกสารดาวน์โหลดที่เกี่ยวข้อง)</label>
+              
+              <!-- Previews Container for current attachments -->
+              <div id="nogift-attachments-list-container" class="mb-3" style="display: flex; flex-direction: column; gap: 8px;">
+                <!-- Renders dynamically with delete buttons -->
+              </div>
+
+              <!-- Attachment Forms wrapper -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 1rem;">
+                <!-- Upload New PDF File -->
+                <div style="background: rgba(112,66,248,0.02); border: 1px dashed rgba(112,66,248,0.15); padding: 1.25rem; border-radius: 12px; display: flex; flex-direction: column; gap: 10px;">
+                  <span style="font-size: 0.9rem; font-weight: 600; color: var(--color-primary); display: flex; align-items: center; gap: 6px;">
+                    📄 อัปโหลดไฟล์เอกสารใหม่ (PDF)
+                  </span>
+                  <div class="form-group">
+                    <label style="font-size: 0.78rem; font-weight: 600; margin-bottom: 4px; display: block;">เลือกไฟล์ PDF:</label>
+                    <input type="file" id="nogift-pdf-file-input" accept=".pdf" class="form-control file-input" style="padding: 5px 10px;" />
+                  </div>
+                  <div class="form-group">
+                    <label style="font-size: 0.78rem; font-weight: 600; margin-bottom: 4px; display: block;">ชื่อเรียกเอกสาร (Label):</label>
+                    <input type="text" id="nogift-pdf-label-input" class="form-control" placeholder="เช่น ประกาศนโยบาย No Gift Policy..." style="height: 38px;" />
+                  </div>
+                  <div style="display: flex; justify-content: flex-end; margin-top: 4px;">
+                    <button type="button" id="nogift-pdf-add-btn" class="btn-accent" style="padding: 6px 14px; font-size: 0.82rem;">+ เพิ่มเอกสาร PDF</button>
+                  </div>
+                </div>
+
+                <!-- Manual Add Links -->
+                <div style="background: rgba(100,116,139,0.02); border: 1px dashed rgba(100,116,139,0.15); padding: 1.25rem; border-radius: 12px; display: flex; flex-direction: column; gap: 10px;">
+                  <span style="font-size: 0.9rem; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 6px;">
+                    🔗 เพิ่มลิงก์หลักฐานภายนอก (External Link)
+                  </span>
+                  <div class="form-group">
+                    <label style="font-size: 0.78rem; font-weight: 600; margin-bottom: 4px; display: block;">ชื่อป้ายลิงก์ (Label):</label>
+                    <input type="text" id="nogift-link-label-input" class="form-control" placeholder="เช่น รายงานจากหน่วยงานต้นสังกัด..." style="height: 38px;" />
+                  </div>
+                  <div class="form-group">
+                    <label style="font-size: 0.78rem; font-weight: 600; margin-bottom: 4px; display: block;">ที่อยู่ลิงก์ตรง (URL):</label>
+                    <input type="url" id="nogift-link-url-input" class="form-control" placeholder="https://..." style="height: 38px;" />
+                  </div>
+                  <div style="display: flex; justify-content: flex-end; margin-top: 4px;">
+                    <button type="button" id="nogift-link-add-btn" class="btn-secondary" style="padding: 6px 14px; font-size: 0.82rem; color: white;">+ เพิ่มลิงก์</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-actions mt-3">
+            <button type="submit" class="btn-accent">💾 บันทึกการตั้งค่า No Gift Policy</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
     <!-- ========================= PR PANEL ========================= -->
     <section id="pr-panel" class="admin-panel active">
       <div class="panel-header">
@@ -700,7 +813,7 @@
 
             <div class="form-group">
               <label for="doc-date">วันที่ปะหน้า</label>
-              <input id="doc-date" name="date" type="text" class="form-control" placeholder="เช่น 15 มี.ค. 2569" required />
+              <input id="doc-date" name="date" type="date" class="form-control" required />
             </div>
 
             <div class="form-group form-full">
@@ -1331,15 +1444,17 @@
           <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.5rem;">โครงการที่ปิดงานเรียบร้อย</div>
         </div>
         <div class="admin-card" style="border: 1px solid var(--color-accent-primary); background: rgba(112,66,248,0.02);">
-          <div class="stat-mini-label" style="color: var(--color-accent-primary);">สถานะการแสดงหน้าเว็บ (Public)</div>
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.85rem;">
-            <div id="budget-status-text" style="font-size: 0.95rem; font-weight: 800; color: #10b981;">🟢 เปิดใช้งานปกติ</div>
-            <label class="admin-switch">
-              <input type="checkbox" id="budget-status-toggle" checked>
-              <span class="admin-slider"></span>
-            </label>
+          <div class="stat-mini-label" style="color: var(--color-accent-primary);">การแสดงผลหน้าเว็บ (Public)</div>
+          <div style="margin-top: 0.85rem;">
+            <select id="budget-status-select" class="form-control" style="width: 100%; font-weight: 700; margin-bottom: 8px;">
+              <option value="active">🟢 แสดงหมวดหมู่และกราฟแบบเดิม</option>
+              <option value="ita_o6">🔵 ใช้ข้อมูลเอกสารจาก ITA (ข้อ O6)</option>
+              <option value="maintenance">🟠 ปิดการแสดงผล / อยู่ระหว่างปรับปรุง</option>
+            </select>
           </div>
-          <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.8rem; line-height: 1.4;">ปิดเพื่อแสดงข้อความ "อยู่ระหว่างปรับปรุง" ในหน้าข้อมูลวิทยาลัย</div>
+          <div style="font-size: 0.75rem; color: #64748b; line-height: 1.4;">
+            เลือกว่าต้องการแสดงผลข้อมูลงบประมาณในหน้า "ข้อมูลวิทยาลัย" รูปแบบใด
+          </div>
         </div>
       </div>
 
@@ -1663,7 +1778,6 @@
           </table>
         </div>
       </div>
-
       <!-- ITA Modal Management inside panel -->
       <div id="ita-edit-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 700px;">
@@ -1696,8 +1810,18 @@
                   </label>
                 </div>
 
+                <!-- Redirect banner for O20 No Gift Policy management -->
+                <div id="ita-o20-notice-section" style="display: none; grid-column: 1 / -1; background: rgba(112,66,248,0.04); border: 1px dashed var(--color-primary); padding: 1.25rem; border-radius: 12px; margin-top: 1rem; text-align: center; flex-direction: column; gap: 10px; align-items: center;">
+                  <span style="font-size: 1.5rem;">🎁</span>
+                  <div style="font-weight: 700; font-size: 0.95rem; color: var(--color-primary);">สำหรับตัวชี้วัด O20 (ประกาศนโยบาย No Gift Policy)</div>
+                  <p style="font-size: 0.82rem; color: var(--color-text-secondary); max-width: 500px; margin: 0 auto; line-height: 1.4;">
+                    คุณครูสามารถจัดการไฟล์เอกสารประกาศนโยบาย และลิงก์หลักฐานดาวน์โหลดโดยตรงได้ทางเมนูจัดการ **"นโยบาย No Gift Policy"** เพื่อรวมศูนย์และอัปเดตระบบพร้อมกันโดยอัตโนมัติ
+                  </p>
+                  <button type="button" onclick="switchToNoGiftPanel()" class="btn-accent" style="padding: 8px 16px; font-size: 0.85rem; cursor: pointer; border-radius: 8px; margin-top: 6px;">👉 ไปที่หน้าจัดการ No Gift Policy</button>
+                </div>
+
                 <!-- Link/File evidence section -->
-                <div class="form-group form-full" style="border-top: 1px solid #f1f5f9; padding-top: 1.5rem; margin-top: 0.5rem;">
+                <div id="ita-attachments-editor-section" class="form-group form-full" style="border-top: 1px solid #f1f5f9; padding-top: 1.5rem; margin-top: 0.5rem;">
                   <h4 class="mb-1" style="font-size: 1rem; font-weight: 700;">🔗 จัดการเอกสารแนบและลิงก์หลักฐาน</h4>
                   <p class="text-muted mb-2" style="font-size: 0.8rem;">แนบไฟล์หลักฐานอัปโหลด หรือเชื่อมโยงลิงก์ภายนอกเข้ากับหัวข้อประเมิน</p>
                   
@@ -1705,7 +1829,7 @@
                   <div id="ita-attachments-list-container" class="mb-2" style="display: flex; flex-direction: column; gap: 8px;">
                     <!-- List items with remove buttons -->
                   </div>
-
+ 
                   <!-- Dropdown Smart Link tools -->
                   <div class="mb-2" style="background: rgba(112,66,248,0.03); border: 1px dashed var(--color-border); border-radius: 12px; padding: 1rem; margin-top: 1rem;">
                     <span style="font-size: 0.85rem; font-weight: 800; color: var(--color-accent-primary); display: flex; align-items: center; gap: 4px; margin-bottom: 8px;">
@@ -1725,7 +1849,7 @@
                       <button type="button" id="ita-smart-link-add-btn" class="btn-accent" style="padding: 0 15px;" disabled>เชื่อมโยง</button>
                     </div>
                   </div>
-
+ 
                   <!-- Manual Add Section -->
                   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 1rem;">
                     <div style="grid-column: 1 / -1; font-weight: 600; font-size: 0.85rem; color: #475569; margin-bottom: 4px;">หรือ เพิ่มหลักฐาน/ลิงก์แบบกำหนดเอง:</div>
@@ -1823,6 +1947,92 @@
             </tbody>
           </table>
         </div>
+      </div>
+    </section>
+
+    <!-- ========================= COMPLAINT RESOURCES PANEL ========================= -->
+    <section id="complaint-resources-panel" class="admin-panel hide">
+      <div class="panel-header">
+        <div>
+          <h1>📋 จัดการเอกสารการร้องเรียน (O18)</h1>
+          <p>อัปโหลดคู่มือการร้องเรียน และรายงานสรุปผลการดำเนินการรายปี เพื่อเผยแพร่บนหน้าร้องเรียนสาธารณะ</p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <label style="font-weight: 700; color: var(--color-text-secondary); font-size: 0.9rem;">ปีงบประมาณ:</label>
+          <select id="complaint-res-year-select" class="form-control" style="width: 140px;">
+            <option value="2569">พ.ศ. 2569</option>
+            <option value="2568">พ.ศ. 2568</option>
+            <option value="2567">พ.ศ. 2567</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="admin-card mt-3">
+        <form id="complaint-resources-form" enctype="multipart/form-data">
+
+          <!-- === MANUALS SECTION === -->
+          <div class="form-group form-full" style="border-bottom: 1px dashed var(--color-border); padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+            <label style="font-weight: 800; font-size: 1rem; display: flex; align-items: center; gap: 8px; margin-bottom: 1rem;">
+              📖 คู่มือการร้องเรียน
+              <span style="font-size: 0.78rem; font-weight: 400; color: var(--color-text-secondary);">แนวทางและขั้นตอนการแจ้งเรื่องร้องเรียน</span>
+            </label>
+
+            <!-- Current manuals list -->
+            <div id="complaint-manuals-list" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 1rem;"></div>
+
+            <!-- Add new manual -->
+            <div style="background: rgba(251,191,36,0.05); border: 1px dashed rgba(251,191,36,0.4); border-radius: 12px; padding: 1.25rem;">
+              <span style="font-size: 0.88rem; font-weight: 700; color: #92400e; display: block; margin-bottom: 12px;">📄 เพิ่มคู่มือใหม่ (PDF)</span>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: end;">
+                <div class="form-group" style="margin: 0;">
+                  <label style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 4px;">ชื่อคู่มือ (Label):</label>
+                  <input type="text" id="cr-manual-label" class="form-control" placeholder="เช่น คู่มือการร้องเรียนปี 2569" style="height: 38px;" />
+                </div>
+                <div class="form-group" style="margin: 0;">
+                  <label style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 4px;">ไฟล์เอกสาร (PDF):</label>
+                  <input type="file" id="cr-manual-file" accept=".pdf,.doc,.docx" class="form-control file-input" style="padding: 5px 8px;" />
+                </div>
+              </div>
+              <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+                <button type="button" id="cr-add-manual-btn" class="btn-accent" style="padding: 6px 16px; font-size: 0.85rem; background: #d97706;">+ เพิ่มคู่มือ</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- === SUMMARY DOCS SECTION === -->
+          <div class="form-group form-full">
+            <label style="font-weight: 800; font-size: 1rem; display: flex; align-items: center; gap: 8px; margin-bottom: 1rem;">
+              📊 รายงานสรุปผลการร้องเรียน
+              <span style="font-size: 0.78rem; font-weight: 400; color: var(--color-text-secondary);">สรุปผลการดำเนินการและสถิติรายปี</span>
+            </label>
+
+            <!-- Current summary docs list -->
+            <div id="complaint-summary-list" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 1rem;"></div>
+
+            <!-- Add new summary doc -->
+            <div style="background: rgba(139,92,246,0.05); border: 1px dashed rgba(139,92,246,0.3); border-radius: 12px; padding: 1.25rem;">
+              <span style="font-size: 0.88rem; font-weight: 700; color: #5b21b6; display: block; margin-bottom: 12px;">📑 เพิ่มรายงานสรุปใหม่ (PDF)</span>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: end;">
+                <div class="form-group" style="margin: 0;">
+                  <label style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 4px;">ชื่อรายงาน (Label):</label>
+                  <input type="text" id="cr-summary-label" class="form-control" placeholder="เช่น รายงานสรุปการร้องเรียน ปีงบประมาณ 2569" style="height: 38px;" />
+                </div>
+                <div class="form-group" style="margin: 0;">
+                  <label style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 4px;">ไฟล์รายงาน (PDF):</label>
+                  <input type="file" id="cr-summary-file" accept=".pdf,.doc,.docx" class="form-control file-input" style="padding: 5px 8px;" />
+                </div>
+              </div>
+              <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+                <button type="button" id="cr-add-summary-btn" class="btn-accent" style="padding: 6px 16px; font-size: 0.85rem;">+ เพิ่มรายงาน</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions mt-3">
+            <a href="/complaints" target="_blank" class="btn-outline" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">🔗 ดูหน้าร้องเรียน</a>
+            <button type="submit" class="btn-accent">💾 บันทึกเอกสารทั้งหมด</button>
+          </div>
+        </form>
       </div>
     </section>
 

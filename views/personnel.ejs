@@ -735,6 +735,75 @@
       </div>
     <% } %>
 
+    <!-- ========================= HR POLICY & ETHICS SECTION (O16 & O17) ========================= -->
+    <div id="hr-ethics" class="p-section reveal mt-5" style="border-top: 1px solid var(--p-border); padding-top: 50px; margin-top: 60px;">
+      <div class="p-section-header">
+        <h2 class="p-section-title">การบริหารงานบุคคลและจริยธรรมองค์กร</h2>
+        <div class="p-title-line"></div>
+        <p class="p-section-subtitle">นโยบาย หลักเกณฑ์ และแนวปฏิบัติเพื่อการบริหารทรัพยากรบุคคลและการดำเนินงานด้วยความซื่อสัตย์สุจริต</p>
+      </div>
+
+      <div class="hr-ethics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-top: 30px;">
+        <!-- Card O16: HR Policy -->
+        <div class="hr-card glass" style="background: #fff; border: 1px solid var(--p-border); border-radius: 24px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s; position: relative; overflow: hidden;">
+          <div>
+            <div style="width: 48px; height: 48px; background: rgba(14,165,233,0.1); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: var(--p-blue); margin-bottom: 20px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--p-dark); margin-bottom: 12px;">การบริหารและพัฒนาทรัพยากรบุคคล (O16)</h3>
+            <p style="font-size: 0.9rem; color: var(--p-muted); line-height: 1.6; margin-bottom: 24px;">หลักเกณฑ์และนโยบายการบริหารงานบุคคลของวิทยาลัย ครอบคลุมการสรรหา การประเมินผลการปฏิบัติงาน การพัฒนาบุคลากร และการสร้างขวัญกำลังใจแก่เจ้าหน้าที่</p>
+          </div>
+
+          <div>
+            <div style="border-top: 1px solid var(--p-border); padding-top: 20px;">
+              <h4 style="font-size: 0.82rem; font-weight: 700; color: var(--p-dark); text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;">เอกสารที่เกี่ยวข้อง</h4>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <% if (hrAttachments && hrAttachments.length > 0) { %>
+                  <% hrAttachments.forEach(att => { %>
+                    <a href="<%= att.url %>" target="_blank" style="display: flex; align-items: center; gap: 10px; font-size: 0.88rem; color: var(--p-purple); font-weight: 600; text-decoration: none; padding: 8px 12px; background: rgba(112,66,248,0.04); border-radius: 10px; border: 1px dashed rgba(112,66,248,0.15); transition: all 0.2s;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                      <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><%= att.label %></span>
+                    </a>
+                  <% }) %>
+                <% } else { %>
+                  <p style="font-size: 0.85rem; color: var(--p-muted); font-style: italic;">ยังไม่มีเอกสารแนบในระบบ</p>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card O17: Code of Conduct & Ethics -->
+        <div class="hr-card glass" style="background: #fff; border: 1px solid var(--p-border); border-radius: 24px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s; position: relative; overflow: hidden;">
+          <div>
+            <div style="width: 48px; height: 48px; background: rgba(16,185,129,0.1); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: #10b981; margin-bottom: 20px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--p-dark); margin-bottom: 12px;">ประมวลจริยธรรมบุคลากร (O17)</h3>
+            <p style="font-size: 0.9rem; color: var(--p-muted); line-height: 1.6; margin-bottom: 24px;">ประมวลจริยธรรมข้าราชการครูและบุคลากรทางการศึกษา รวมถึงแนวปฏิบัติ Do's & Don'ts เพื่อส่งเสริมคุณธรรม และผลการจัดกิจกรรมส่งเสริมจริยธรรม</p>
+          </div>
+
+          <div>
+            <div style="border-top: 1px solid var(--p-border); padding-top: 20px;">
+              <h4 style="font-size: 0.82rem; font-weight: 700; color: var(--p-dark); text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;">เอกสารที่เกี่ยวข้อง</h4>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <% if (ethicsAttachments && ethicsAttachments.length > 0) { %>
+                  <% ethicsAttachments.forEach(att => { %>
+                    <a href="<%= att.url %>" target="_blank" style="display: flex; align-items: center; gap: 10px; font-size: 0.88rem; color: var(--p-purple); font-weight: 600; text-decoration: none; padding: 8px 12px; background: rgba(112,66,248,0.04); border-radius: 10px; border: 1px dashed rgba(112,66,248,0.15); transition: all 0.2s;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                      <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><%= att.label %></span>
+                    </a>
+                  <% }) %>
+                <% } else { %>
+                  <p style="font-size: 0.85rem; color: var(--p-muted); font-style: italic;">ยังไม่มีเอกสารแนบในระบบ</p>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <%- include('partials/footer') %>
