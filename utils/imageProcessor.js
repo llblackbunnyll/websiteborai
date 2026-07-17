@@ -15,16 +15,41 @@ if (!fs.existsSync(UPLOADS_DIR)) {
  * @param {string} prefix - Filename prefix (e.g., 'pr', 'personnel')
  * @returns {string} The public URL path to the saved image
  */
-async function processAndSaveImage(buffer, prefix = 'img') {
+async function processAndSaveImage(buffer, prefix = 'img', options = {}) {
+  // กำหนดขนาดตามประเภทของรูปภาพเพื่อไม่ให้ภาพขนาดใหญ่ (เช่น Banner) แตกเบลอ
+  let defaultWidth = 900;
+  let defaultHeight = 600;
+  let defaultQuality = 82;
+
+  if (prefix.startsWith('hero')) {
+    defaultWidth = 1920;
+    defaultHeight = 1080;
+    defaultQuality = 85;
+  } else if (prefix.startsWith('subbanner') || (prefix.startsWith('nogift') && !prefix.startsWith('nogift-edu'))) {
+    defaultWidth = 1920;
+    defaultHeight = 600;
+    defaultQuality = 85;
+  } else if (prefix.startsWith('nogift-edu')) {
+    defaultWidth = 1600;
+    defaultHeight = 2000;
+    defaultQuality = 85;
+  }
+
+  const {
+    width = defaultWidth,
+    height = defaultHeight,
+    quality = defaultQuality
+  } = options;
+
   const filename = `${prefix}-${Date.now()}.webp`;
   const filepath = path.join(UPLOADS_DIR, filename);
 
   await sharp(buffer)
-    .resize(900, 600, {
+    .resize(width, height, {
       fit: sharp.fit.inside,
       withoutEnlargement: true,
     })
-    .webp({ quality: 82 })
+    .webp({ quality })
     .toFile(filepath);
 
   return `/uploads/${filename}`;
