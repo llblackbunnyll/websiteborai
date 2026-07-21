@@ -671,10 +671,76 @@
         <form id="personnel-import-form">
           <div style="display:flex; gap:1rem; align-items:center;">
             <input type="file" id="excel-file" name="excel" accept=".xlsx, .xls" class="form-control file-input" required style="max-width:300px;" />
-            <button type="submit" class="btn-accent">เริ่มนำเข้า</button>
+            <button type="submit" class="btn-accent">🔍 ตรวจสอบ & พรีวิวข้อมูล</button>
             <button type="button" id="personnel-import-cancel-btn" class="btn-outline">ยกเลิก</button>
           </div>
         </form>
+      </div>
+
+      <!-- Personnel Import Preview Modal -->
+      <div id="personnel-import-preview-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 900px; width: 95%; max-height: 90vh; display: flex; flex-direction: column;">
+          <div class="modal-header">
+            <h3 style="display: flex; align-items: center; gap: 8px;">📋 รายงานการตรวจสอบก่อนการอัปเดตข้อมูลบุคลากร</h3>
+            <button type="button" class="modal-close-btn" id="preview-modal-close-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+          
+          <div class="modal-body" style="overflow-y: auto; flex: 1; padding: 20px;">
+            <!-- Summary Badges -->
+            <div id="preview-summary-badges" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+              <span class="badge" style="background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 0.88rem;">➕ เพิ่มใหม่: <strong id="badge-create-count">0</strong></span>
+              <span class="badge" style="background: #fef3c7; color: #b45309; padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 0.88rem;">✏️ แก้ไขอัปเดต: <strong id="badge-update-count">0</strong></span>
+              <span class="badge" style="background: #fee2e2; color: #b91c1c; padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 0.88rem;">⚠️ ไม่มีในไฟล์ (พ้นสภาพ): <strong id="badge-missing-count">0</strong></span>
+              <span class="badge" style="background: #f1f5f9; color: #64748b; padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 0.88rem;">✔ ไม่เปลี่ยนแปลง: <strong id="badge-unchanged-count">0</strong></span>
+            </div>
+
+            <!-- Tabs -->
+            <div class="preview-tabs" style="display: flex; gap: 8px; border-bottom: 2px solid #e2e8f0; margin-bottom: 16px;">
+              <button type="button" class="tab-btn active" data-tab="tab-update" style="padding: 10px 18px; border: none; background: transparent; font-weight: 700; cursor: pointer; color: var(--color-accent-primary); border-bottom: 3px solid var(--color-accent-primary); font-size: 0.92rem;">รายการอัปเดต (<span id="tab-update-cnt">0</span>)</button>
+              <button type="button" class="tab-btn" data-tab="tab-create" style="padding: 10px 18px; border: none; background: transparent; font-weight: 600; cursor: pointer; color: #64748b; font-size: 0.92rem;">รายการใหม่ (<span id="tab-create-cnt">0</span>)</button>
+              <button type="button" class="tab-btn" data-tab="tab-missing" style="padding: 10px 18px; border: none; background: transparent; font-weight: 600; cursor: pointer; color: #dc2626; font-size: 0.92rem;">ไม่มีในไฟล์/พ้นสภาพ (<span id="tab-missing-cnt">0</span>)</button>
+            </div>
+
+            <!-- Tab Content: Update -->
+            <div id="tab-update" class="preview-tab-content">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: #faf5ff; padding: 10px 14px; border-radius: 8px; border: 1px solid #f3e8ff;">
+                <p style="font-size: 0.85rem; color: #6b21a8; margin: 0;">💡 ข้อมูลช่องที่เป็น <strong>-</strong> หรือ <strong>ว่าง</strong> ใน Excel จะถูกข้าม (ไม่เขียนทับข้อมูลเดิม)</p>
+                <label style="font-size: 0.88rem; font-weight: 600; cursor: pointer; color: var(--color-accent-primary); whitespace: nowrap;"><input type="checkbox" id="check-all-update" checked /> เลือกทั้งหมด</label>
+              </div>
+              <div id="preview-update-list" class="preview-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            </div>
+
+            <!-- Tab Content: Create -->
+            <div id="tab-create" class="preview-tab-content hide">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: #f0fdf4; padding: 10px 14px; border-radius: 8px; border: 1px solid #dcfce7;">
+                <p style="font-size: 0.85rem; color: #166534; margin: 0;">พบรายชื่อใหม่ในไฟล์ Excel ที่ยังไม่มีในฐานข้อมูลระบบ</p>
+                <label style="font-size: 0.88rem; font-weight: 600; cursor: pointer; color: #16a34a; whitespace: nowrap;"><input type="checkbox" id="check-all-create" checked /> เลือกทั้งหมด</label>
+              </div>
+              <div id="preview-create-list" class="preview-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            </div>
+
+            <!-- Tab Content: Missing / Resigned -->
+            <div id="tab-missing" class="preview-tab-content hide">
+              <div style="padding: 12px 16px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; margin-bottom: 12px; font-size: 0.88rem; color: #9f1239;">
+                ⚠️ <strong>ตรวจสอบผู้พ้นสภาพ / ลาออก:</strong> รายชื่อบุคลากรด้านล่างนี้อยู่ในระบบเดิม แต่ไม่พบในไฟล์ Excel ฉบับใหม่ ท่านสามารถติ๊กเลือกเฉพาะผู้ที่พ้นสภาพหรือลาออกเพื่อลบออกจากระบบได้
+              </div>
+              <div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
+                <label style="font-size: 0.88rem; font-weight: 600; cursor: pointer; color: #dc2626;"><input type="checkbox" id="check-all-missing" /> เลือกลบทั้งหมด</label>
+              </div>
+              <div id="preview-missing-list" class="preview-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            </div>
+          </div>
+
+          <div class="modal-footer" style="padding: 16px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.85rem; color: #64748b;">ท่านสามารถเลือกลบหรือไม่ลบ หรือเว้นการอัปเดตได้ตามต้องการ</span>
+            <div style="display: flex; gap: 10px;">
+              <button type="button" id="btn-cancel-import-preview" class="btn-outline">ยกเลิก</button>
+              <button type="button" id="btn-confirm-import-preview" class="btn-accent">💾 ยืนยันการบันทึกข้อมูล</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Personnel Modal -->

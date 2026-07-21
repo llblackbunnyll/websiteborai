@@ -748,25 +748,233 @@ function getAuthHeaders() {
     } catch (err) { alert('Error deleting personnel'); }
   };
 
+  // Personnel Import Preview & Selective Update Logic
+  const previewModal = document.getElementById('personnel-import-preview-modal');
+  const previewCloseIcon = document.getElementById('preview-modal-close-icon');
+  const btnCancelPreview = document.getElementById('btn-cancel-import-preview');
+  const btnConfirmPreview = document.getElementById('btn-confirm-import-preview');
+
+  let currentPreviewData = null;
+
   pnImportForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = pnImportForm.querySelector('button[type="submit"]');
-    btn.disabled = true; btn.textContent = 'กำลังนำเข้า...';
+    btn.disabled = true; 
+    btn.textContent = 'กำลังตรวจสอบไฟล์...';
     try {
       const formData = new FormData(pnImportForm);
-      const res = await fetch(`${API_BASE}/personnel/import`, { method: 'POST', headers: getAuthHeaders(), body: formData });
+      const res = await fetch(`${API_BASE}/personnel/import-preview`, { method: 'POST', headers: getAuthHeaders(), body: formData });
       const result = await res.json();
+      
       if (res.ok) {
-        alert(result.message || 'นำเข้าข้อมูลสำเร็จ');
+        currentPreviewData = result;
+        renderImportPreviewModal(result);
+        previewModal.classList.add('active');
+      } else {
+        alert(result.message || 'ไม่สามารถพรีวิวไฟล์ Excel ได้');
+      }
+    } catch (err) {
+      alert('เกิดข้อผิดพลาดในการอ่านไฟล์ Excel: ' + err.message);
+    } finally {
+      btn.disabled = false; 
+      btn.textContent = '🔍 ตรวจสอบ & พรีวิวข้อมูล';
+    }
+  });
+
+  const closePreviewModal = () => {
+    previewModal?.classList.remove('active');
+  };
+
+  previewCloseIcon?.addEventListener('click', closePreviewModal);
+  btnCancelPreview?.addEventListener('click', closePreviewModal);
+
+  // Tab switching inside preview modal
+  previewModal?.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      previewModal.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.style.color = b.dataset.tab === 'tab-missing' ? '#dc2626' : '#64748b';
+        b.style.borderBottom = 'none';
+        b.style.fontWeight = '600';
+      });
+      btn.classList.add('active');
+      btn.style.color = btn.dataset.tab === 'tab-missing' ? '#dc2626' : 'var(--color-accent-primary)';
+      btn.style.borderBottom = '3px solid ' + (btn.dataset.tab === 'tab-missing' ? '#dc2626' : 'var(--color-accent-primary)');
+      btn.style.fontWeight = '700';
+
+      previewModal.querySelectorAll('.preview-tab-content').forEach(c => c.classList.add('hide'));
+      const targetContent = document.getElementById(btn.dataset.tab);
+      if (targetContent) targetContent.classList.remove('hide');
+    });
+  });
+
+  // Select all toggles
+  document.getElementById('check-all-update')?.addEventListener('change', (e) => {
+    document.querySelectorAll('.chk-update-item').forEach(chk => chk.checked = e.target.checked);
+  });
+  document.getElementById('check-all-create')?.addEventListener('change', (e) => {
+    document.querySelectorAll('.chk-create-item').forEach(chk => chk.checked = e.target.checked);
+  });
+  document.getElementById('check-all-missing')?.addEventListener('change', (e) => {
+    document.querySelectorAll('.chk-missing-item').forEach(chk => chk.checked = e.target.checked);
+  });
+
+  function renderImportPreviewModal(data) {
+    const { toCreate = [], toUpdate = [], unchanged = [], missingInExcel = [] } = data;
+
+    // Update counts
+    document.getElementById('badge-create-count').textContent = toCreate.length;
+    document.getElementById('badge-update-count').textContent = toUpdate.length;
+    document.getElementById('badge-missing-count').textContent = missingInExcel.length;
+    document.getElementById('badge-unchanged-count').textContent = unchanged.length;
+
+    document.getElementById('tab-create-cnt').textContent = toCreate.length;
+    document.getElementById('tab-update-cnt').textContent = toUpdate.length;
+    document.getElementById('tab-missing-cnt').textContent = missingInExcel.length;
+
+    // Render Update List
+    const updateListEl = document.getElementById('preview-update-list');
+    if (toUpdate.length === 0) {
+      updateListEl.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 20px;">ไม่มีรายการที่มีการเปลี่ยนแปลงข้อมูล</div>';
+    } else {
+      updateListEl.innerHTML = toUpdate.map(item => {
+        const diffsHtml = item.diffs.map(d => `
+          <div style="font-size: 0.85rem; margin-bottom: 3px;">
+            <strong style="color: #475569;">${escapeHtml(d.label)}:</strong> 
+            <span style="text-decoration: line-through; color: #ef4444; margin-right: 4px;">${escapeHtml(d.oldVal)}</span> 
+            ➔ <span style="color: #16a34a; font-weight: 600; margin-left: 4px;">${escapeHtml(d.newVal)}</span>
+          </div>
+        `).join('');
+
+        return `
+          <div class="preview-item-card" style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; background: #fff;">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
+              <label style="display: flex; align-items: center; gap: 10px; font-weight: 700; cursor: pointer; font-size: 0.95rem; color: #1e293b;">
+                <input type="checkbox" class="chk-update-item" data-id="${item.id}" checked />
+                ${escapeHtml(item.fullName)} <span style="font-size: 0.8rem; font-weight: 400; color: #64748b;">(${escapeHtml(item.department)})</span>
+              </label>
+              <span style="font-size: 0.78rem; background: #fef3c7; color: #b45309; padding: 3px 10px; border-radius: 12px; font-weight: 600;">เปลี่ยน ${item.diffs.length} รายการ</span>
+            </div>
+            <div style="padding-left: 28px;">
+              ${diffsHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Render Create List
+    const createListEl = document.getElementById('preview-create-list');
+    if (toCreate.length === 0) {
+      createListEl.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 20px;">ไม่มีรายชื่อใหม่ในไฟล์ Excel</div>';
+    } else {
+      createListEl.innerHTML = toCreate.map(item => `
+        <div class="preview-item-card" style="border: 1px solid #dcfce7; border-radius: 10px; padding: 12px 16px; background: #f0fdf4;">
+          <label style="display: flex; align-items: center; gap: 10px; font-weight: 700; cursor: pointer; font-size: 0.95rem; color: #14532d;">
+            <input type="checkbox" class="chk-create-item" data-tempid="${item.tempId}" checked />
+            ${escapeHtml(item.fullName)} <span style="font-size: 0.82rem; font-weight: 400; color: #166534;">(${escapeHtml(item.createData.position)} — ${escapeHtml(item.department)})</span>
+          </label>
+        </div>
+      `).join('');
+    }
+
+    // Render Missing List
+    const missingListEl = document.getElementById('preview-missing-list');
+    if (missingInExcel.length === 0) {
+      missingListEl.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 20px;">ไม่พบบุคลากรสูญหาย บุคลากรในระบบตรงกับไฟล์ Excel ครบทุกท่าน</div>';
+    } else {
+      missingListEl.innerHTML = missingInExcel.map(item => `
+        <div class="preview-item-card" style="border: 1px solid #fecdd3; border-radius: 10px; padding: 12px 16px; background: #fff5f5;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <label style="display: flex; align-items: center; gap: 10px; font-weight: 700; cursor: pointer; font-size: 0.95rem; color: #991b1b;">
+              <input type="checkbox" class="chk-missing-item" data-id="${item.id}" />
+              ${escapeHtml(item.fullName)} <span style="font-size: 0.82rem; font-weight: 400; color: #7f1d1d;">(${escapeHtml(item.position)} — ${escapeHtml(item.department)})</span>
+            </label>
+            <span style="font-size: 0.8rem; color: #dc2626; font-weight: 600; background: #ffe4e6; padding: 3px 10px; border-radius: 12px;">⚠️ เลือกลบ (ผู้พ้นสภาพ)</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Reset select all checkboxes state
+    const chkAllUp = document.getElementById('check-all-update');
+    if (chkAllUp) chkAllUp.checked = true;
+    const chkAllCr = document.getElementById('check-all-create');
+    if (chkAllCr) chkAllCr.checked = true;
+    const chkAllMi = document.getElementById('check-all-missing');
+    if (chkAllMi) chkAllMi.checked = false;
+  }
+
+  btnConfirmPreview?.addEventListener('click', async () => {
+    if (!currentPreviewData) return;
+
+    const selectedCreateTempIds = new Set(
+      Array.from(document.querySelectorAll('.chk-create-item:checked')).map(cb => cb.dataset.tempid)
+    );
+    const selectedUpdateIds = new Set(
+      Array.from(document.querySelectorAll('.chk-update-item:checked')).map(cb => cb.dataset.id)
+    );
+    const selectedDeleteIds = Array.from(document.querySelectorAll('.chk-missing-item:checked')).map(cb => cb.dataset.id);
+
+    const finalCreateList = (currentPreviewData.toCreate || []).filter(item => selectedCreateTempIds.has(item.tempId));
+    const finalUpdateList = (currentPreviewData.toUpdate || []).filter(item => selectedUpdateIds.has(item.id));
+
+    const totalSelected = finalCreateList.length + finalUpdateList.length + selectedDeleteIds.length;
+    if (totalSelected === 0) {
+      alert('ไม่มีรายการใดถูกเลือก กรุณาเลือกอย่างน้อย 1 รายการเพื่อดำเนินการ');
+      return;
+    }
+
+    let confirmMsg = `ยืนยันการบันทึกข้อมูลบุคลากร?\n\n`;
+    confirmMsg += `• เพิ่มรายชื่อใหม่: ${finalCreateList.length} รายการ\n`;
+    confirmMsg += `• อัปเดตการแก้ไข: ${finalUpdateList.length} รายการ\n`;
+    confirmMsg += `• ลบผู้พ้นสภาพ/ลาออก: ${selectedDeleteIds.length} รายการ`;
+
+    if (!confirm(confirmMsg)) return;
+
+    btnConfirmPreview.disabled = true;
+    btnConfirmPreview.textContent = 'กำลังบันทึกข้อมูล...';
+
+    try {
+      const payload = {
+        createList: finalCreateList,
+        updateList: finalUpdateList,
+        deleteList: selectedDeleteIds
+      };
+
+      const res = await fetch(`${API_BASE}/personnel/import-confirm`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload)
+      });
+      const result = await res.json();
+
+      if (res.ok) {
+        alert(result.message || 'บันทึกข้อมูลสำเร็จ');
+        closePreviewModal();
+        pnImportContainer.classList.add('hide');
         await loadPersonnel();
         fetchUniqueDuties();
-        pnImportCancelBtn.click();
       } else {
-        alert(result.message || 'นำเข้าข้อมูลล้มเหลว');
+        alert('เกิดข้อผิดพลาด: ' + (result.message || 'Unknown error'));
       }
-    } catch { alert('Error importing file'); }
-    finally { btn.disabled = false; btn.textContent = 'เริ่มนำเข้า'; }
+    } catch (err) {
+      alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + err.message);
+    } finally {
+      btnConfirmPreview.disabled = false;
+      btnConfirmPreview.textContent = '💾 ยืนยันการบันทึกข้อมูล';
+    }
   });
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
 
   // Tag Management & Auto-Suggestion Logic
   dutyUnifiedField?.addEventListener('click', () => newDutyInput?.focus());
