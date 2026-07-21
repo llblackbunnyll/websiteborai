@@ -944,7 +944,7 @@ function getAuthHeaders() {
 
       const res = await fetch(`${API_BASE}/personnel/import-confirm`, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       const result = await res.json();
