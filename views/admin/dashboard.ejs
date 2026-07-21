@@ -615,10 +615,14 @@
             </div>
 
             <div class="form-group form-full">
-              <label for="pr-images">รูปภาพ (เลือกได้หลายรูป)</label>
-              <!-- multiple attribute added -->
+              <label for="pr-images">รูปภาพ (เลือกเพิ่มได้หลายรูป)</label>
               <input id="pr-images" name="images" type="file" accept="image/*" multiple class="form-control file-input" />
               <small class="text-muted">รูปแรกจะถูกใช้เป็นภาพหน้าปก</small>
+              
+              <div id="pr-existing-images-container" class="mt-2 hide" style="background: #f8fafc; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                <label style="font-size: 0.85rem; font-weight: 600; color: #475569; display: block; margin-bottom: 8px;">รูปภาพที่มีอยู่ในปัจจุบัน (คลิก ❌ บนรูปหากต้องการลบออก):</label>
+                <div id="pr-existing-images-list" style="display: flex; gap: 12px; flex-wrap: wrap;"></div>
+              </div>
             </div>
 
             <div class="form-group form-full">

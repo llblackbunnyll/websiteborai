@@ -1,17 +1,39 @@
 /**
  * Thai & ISO Date Parser Utility
- * Parses Thai text date formats (e.g. '15 มี.ค. 2569', '15 มกราคม 2567'),
- * DD/MM/YYYY, or ISO YYYY-MM-DD strings into a valid JS Date object.
+ * Parses Thai text date formats (e.g. '๑๕ มี.ค. ๒๕๖๗', '15 - 18 มีนาคม 2567'),
+ * Thai numerals, date ranges, DD/MM/YYYY, or ISO YYYY-MM-DD strings into a valid JS Date object.
  */
+
+function convertThaiNumeralsToArabic(str) {
+  if (!str) return '';
+  const thaiNums = ['๐', '๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙'];
+  let res = String(str);
+  for (let i = 0; i < 10; i++) {
+    res = res.replace(new RegExp(thaiNums[i], 'g'), String(i));
+  }
+  return res;
+}
 
 function parseThaiOrIsoDate(dateStr) {
   if (!dateStr || typeof dateStr !== 'string') return new Date();
   
-  const trimmed = dateStr.trim();
+  // Convert Thai digits [๐-๙] to Arabic digits [0-9]
+  let trimmed = convertThaiNumeralsToArabic(dateStr).trim();
   if (!trimmed) return new Date();
 
+  // Remove common prefix words like "วันที่", "ระหว่างวันที่", "ประจำวันที่", "พ.ศ."
+  let cleanText = trimmed
+    .replace(/(ระหว่าง|ประจำ)?วันที่\s*/g, '')
+    .replace(/พ\.ศ\./g, '')
+    .replace(/พศ\./g, '')
+    .trim();
+
+  // Handle Date Ranges e.g. "15 - 18 มี.ค. 2567" or "15-18 มีนาคม 2567" or "15 ถึง 18 มีนาคม 2567"
+  // Keep only the start day (15) for sorting
+  cleanText = cleanText.replace(/^(\d{1,2})\s*[\-\–\—\~ถึง]+\s*\d{1,2}\s+/, '$1 ');
+
   // 1. Check ISO format YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss
-  const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const isoMatch = cleanText.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (isoMatch) {
     let year = parseInt(isoMatch[1], 10);
     if (year > 2400) year -= 543;
@@ -22,7 +44,7 @@ function parseThaiOrIsoDate(dateStr) {
   }
 
   // 2. Check DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY
-  const dmyMatch = trimmed.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
+  const dmyMatch = cleanText.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
   if (dmyMatch) {
     let day = parseInt(dmyMatch[1], 10);
     let month = parseInt(dmyMatch[2], 10) - 1;
@@ -33,26 +55,26 @@ function parseThaiOrIsoDate(dateStr) {
     if (!isNaN(d.getTime())) return d;
   }
 
-  // 3. Thai Month names (abbr & full)
-  const thaiMonths = {
-    'ม.ค.': 0, 'มกราคม': 0,
-    'ก.พ.': 1, 'กุมภาพันธ์': 1,
-    'มี.ค.': 2, 'มีนาคม': 2,
-    'เม.ย.': 3, 'เมษายน': 3,
-    'พ.ค.': 4, 'พฤษภาคม': 4,
-    'มิ.ย.': 5, 'มิถุนายน': 5,
-    'ก.ค.': 6, 'กรกฎาคม': 6,
-    'ส.ค.': 7, 'สิงหาคม': 7,
-    'ก.ย.': 8, 'กันยายน': 8,
-    'ต.ค.': 9, 'ตุลาคม': 9,
-    'พ.ย.': 10, 'พฤศจิกายน': 10,
-    'ธ.ค.': 11, 'ธันวาคม': 11
-  };
+  // 3. Thai Month names (full names first, then abbreviations)
+  const thaiMonths = [
+    { names: ['มกราคม', 'ม.ค.'], index: 0 },
+    { names: ['กุมภาพันธ์', 'ก.พ.'], index: 1 },
+    { names: ['มีนาคม', 'มี.ค.'], index: 2 },
+    { names: ['เมษายน', 'เม.ย.'], index: 3 },
+    { names: ['พฤษภาคม', 'พ.ค.'], index: 4 },
+    { names: ['มิถุนายน', 'มิ.ย.'], index: 5 },
+    { names: ['กรกฎาคม', 'ก.ค.'], index: 6 },
+    { names: ['สิงหาคม', 'ส.ค.'], index: 7 },
+    { names: ['กันยายน', 'ก.ย.'], index: 8 },
+    { names: ['ตุลาคม', 'ต.ค.'], index: 9 },
+    { names: ['พฤศจิกายน', 'พ.ย.'], index: 10 },
+    { names: ['ธันวาคม', 'ธ.ค.'], index: 11 }
+  ];
 
-  const cleanText = trimmed.replace(/พ\.ศ\./g, '').trim();
-
-  for (const [mName, mIndex] of Object.entries(thaiMonths)) {
-    if (cleanText.includes(mName)) {
+  for (const item of thaiMonths) {
+    const matchedName = item.names.find(n => cleanText.includes(n));
+    if (matchedName) {
+      const mIndex = item.index;
       const parts = cleanText.split(/[\s,]+/);
       let yearPart = parts.find(p => /^\d{4}$/.test(p));
       let dayPart = parts.find(p => /^\d{1,2}$/.test(p) && p !== yearPart);
@@ -81,7 +103,7 @@ function parseThaiOrIsoDate(dateStr) {
     }
   }
 
-  const fallback = new Date(trimmed);
+  const fallback = new Date(cleanText);
   return !isNaN(fallback.getTime()) ? fallback : new Date();
 }
 
@@ -113,5 +135,6 @@ function formatIsoDate(dateObj) {
 module.exports = {
   parseThaiOrIsoDate,
   formatThaiDate,
-  formatIsoDate
+  formatIsoDate,
+  convertThaiNumeralsToArabic
 };

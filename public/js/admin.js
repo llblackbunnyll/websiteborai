@@ -139,6 +139,34 @@ function getAuthHeaders() {
     }
   });
 
+  let currentKeptImages = [];
+  const existingImagesContainer = document.getElementById('pr-existing-images-container');
+  const existingImagesList = document.getElementById('pr-existing-images-list');
+
+  function renderExistingImages() {
+    if (!existingImagesContainer || !existingImagesList) return;
+    if (currentKeptImages.length === 0) {
+      existingImagesContainer.classList.add('hide');
+      existingImagesList.innerHTML = '';
+      return;
+    }
+
+    existingImagesContainer.classList.remove('hide');
+    existingImagesList.innerHTML = currentKeptImages.map((imgUrl, index) => `
+      <div style="position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #cbd5e1; background: #fff;">
+        <img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://placehold.co/80x80/f1f5f9/94a3b8?text=Error'">
+        <button type="button" onclick="removeKeptImage(${index})" title="ลบรูปนี้" style="position: absolute; top: 2px; right: 2px; background: rgba(220, 38, 38, 0.85); color: #fff; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px;">✕</button>
+      </div>
+    `).join('');
+  }
+
+  window.removeKeptImage = (index) => {
+    if (index >= 0 && index < currentKeptImages.length) {
+      currentKeptImages.splice(index, 1);
+      renderExistingImages();
+    }
+  };
+
   const prDatePicker = document.getElementById('pr-date-picker');
   const prDateInput = document.getElementById('pr-date');
 
@@ -153,6 +181,8 @@ function getAuthHeaders() {
   prAddBtn?.addEventListener('click', () => {
     prForm.reset();
     document.getElementById('pr-id').value = '';
+    currentKeptImages = [];
+    renderExistingImages();
 
     const today = new Date();
     const isoToday = today.toISOString().split('T')[0];
@@ -228,6 +258,16 @@ function getAuthHeaders() {
     document.getElementById('pr-date').value = item.date;
     document.getElementById('pr-content').value = item.content || '';
 
+    // Populate existing images preview
+    let imgs = [];
+    if (Array.isArray(item.images) && item.images.length > 0) {
+      imgs = [...item.images];
+    } else if (item.image && typeof item.image === 'string' && !item.image.includes('unsplash')) {
+      imgs = [item.image];
+    }
+    currentKeptImages = imgs;
+    renderExistingImages();
+
     if (item.createdAt && prDatePicker) {
       const d = new Date(item.createdAt);
       if (!isNaN(d.getTime())) {
@@ -259,6 +299,9 @@ function getAuthHeaders() {
     
     try {
       const formData = new FormData(prForm);
+      if (isEdit) {
+        formData.set('existingImages', JSON.stringify(currentKeptImages));
+      }
       const url = isEdit ? `${API_BASE}/pr/${id}` : `${API_BASE}/pr`;
       const method = isEdit ? 'PUT' : 'POST';
       const res = await fetch(url, { method, headers: getAuthHeaders(), body: formData });
