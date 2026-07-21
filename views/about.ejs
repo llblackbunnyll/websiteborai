@@ -454,14 +454,14 @@
 
     /* Vision/mission cards */
     .vm-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
       margin: 20px 0;
     }
 
     .vm-card {
-      padding: 20px;
+      padding: 18px 20px;
       border-radius: 16px;
       background: #fff;
       border-left: 4px solid var(--a-purple);
@@ -469,12 +469,12 @@
       transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .vm-card:nth-child(2) {
+    .vm-card--philosophy {
       border-left-color: var(--a-blue);
     }
 
     .vm-card:hover {
-      transform: translateY(-4px);
+      transform: translateY(-3px);
       box-shadow: 0 10px 24px rgba(112, 66, 248, 0.1);
     }
 
@@ -487,15 +487,23 @@
       margin-bottom: 6px;
     }
 
-    .vm-card:nth-child(2) .vm-label {
+    .vm-card--philosophy .vm-label {
       color: var(--a-blue);
     }
 
     .vm-text {
-      font-size: 1rem;
-      font-weight: 700;
+      font-size: 0.88rem;
+      font-weight: 600;
       color: var(--a-text);
-      line-height: 1.4;
+      line-height: 1.6;
+    }
+
+    .vm-text--philosophy {
+      font-size: 1.05rem;
+      font-weight: 700;
+      font-style: italic;
+      color: var(--a-purple);
+      letter-spacing: 0.01em;
     }
 
     /* Quick facts */
@@ -1223,20 +1231,30 @@
       </div>
     </section>
 
+    <%
+      let totalStudentsCount = 0;
+      if (locals.enrollments && Array.isArray(enrollments)) {
+        enrollments.forEach(en => {
+          totalStudentsCount += (en.pvc1 + en.pvc2 + en.pvc3 + en.pvs1 + en.pvs2);
+        });
+      }
+      const totalPersonnelCount = (locals.allPersonnel && Array.isArray(allPersonnel)) ? allPersonnel.length : 0;
+    %>
+
     <!-- ═══ STAT BAR ══════════════════════════════════════════════════════ -->
     <div style="padding: 0 24px;">
       <div class="stat-bar reveal">
-        <div class="stat-item">
-          <span class="stat-value">100 ไร่</span>
-          <span class="stat-label">พื้นที่วิทยาลัย</span>
-        </div>
         <div class="stat-item">
           <span class="stat-value">2540</span>
           <span class="stat-label">ปีที่ก่อตั้ง (พ.ศ.)</span>
         </div>
         <div class="stat-item">
-          <span class="stat-value">300+</span>
-          <span class="stat-label">นักเรียน/นักศึกษา</span>
+          <span class="stat-value"><%= totalPersonnelCount > 0 ? totalPersonnelCount : '30+' %></span>
+          <span class="stat-label">ครูและบุคลากร (คน)</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value"><%= totalStudentsCount > 0 ? totalStudentsCount : '300+' %></span>
+          <span class="stat-label">นักเรียน/นักศึกษา (คน)</span>
         </div>
       </div>
     </div>
@@ -1365,14 +1383,12 @@
               </div>
               <h2 class="section-h2">ประวัติวิทยาลัย</h2>
               <div class="section-body">
-                <p>วิทยาลัยฯ ประกาศจัดตั้งเมื่อวันที่ <strong>18 มิถุนายน พ.ศ. 2540</strong> ตั้งอยู่ที่ตำบลช้างทูน
-                  อำเภอบ่อไร่ จังหวัดตราด เดิมพื้นที่แห่งนี้เรียกว่า "ทุ่งก๊าย"
-                  ซึ่งเป็นพื้นที่ทางประวัติศาสตร์และเศรษฐกิจที่สำคัญของท้องถิ่น</p>
+                <p>วิทยาลัยการอาชีพบ่อไร่ ได้ประกาศจัดตั้งขึ้นเมื่อวันที่ <strong>18 มิถุนายน พ.ศ. 2540</strong> ตั้งอยู่ที่ตำบลช้างทูน อำเภอบ่อไร่ จังหวัดตราด เดิมเป็นที่สาธารณประโยชน์ เรียกว่า <strong>"ทุ่งก๊าย"</strong> อยู่ในความดูแลของกระทรวงมหาดไทย ให้สร้างเป็นสถานศึกษา มีเนื้อที่ <strong>82 ไร่ 2 งาน 23 ตารางวา</strong> และได้รับอนุญาตจากสำนักงานการปฏิรูปที่ดินเพื่อการเกษตร เพื่อเข้าทำประโยชน์ในที่ดินเป็นที่ตั้งสถานศึกษาในเขตปฏิรูปที่ดิน</p>
               </div>
 
               <div class="facts-row">
                 <div class="fact-block">
-                  <span class="fact-val">100 ไร่ 2 งาน</span>
+                  <span class="fact-val">82 ไร่ 2 งาน 23 ตร.ว.</span>
                   <span class="fact-lbl">พื้นที่วิทยาลัย</span>
                 </div>
                 <div class="fact-block">
@@ -1388,11 +1404,11 @@
               <div class="vm-grid">
                 <div class="vm-card">
                   <div class="vm-label">วิสัยทัศน์ (Vision)</div>
-                  <div class="vm-text">ผลิตพัฒนากำลังคนสู่ระดับสากล</div>
+                  <div class="vm-text">มุ่งจัดการศึกษาและการฝึกอบรมวิชาชีพให้ผู้เรียนมีคุณภาพและคุณธรรม ตามมาตรฐานการอาชีวศึกษา สอดคล้องกับความต้องการของชุมชนและตลาดแรงงานบนพื้นฐานความพอเพียง</div>
                 </div>
-                <div class="vm-card">
+                <div class="vm-card vm-card--philosophy">
                   <div class="vm-label">ปรัชญา (Philosophy)</div>
-                  <div class="vm-text">มุ่งคุภาพเด่น เน้นคุณธรรม นำวิชาการ สร้างสรรค์ชุมชน</div>
+                  <div class="vm-text vm-text--philosophy">" มุ่งคุณภาพเด่น &nbsp; เน้นคุณธรรม &nbsp; นำวิชาการ &nbsp; สร้างสรรค์ชุมชน "</div>
                 </div>
               </div>
 
@@ -1562,10 +1578,20 @@
                         <div class="swatch sw-purple" style="background: #921010;"></div>
 
                       </div>
-                      <p style="margin-left: 14px;">แดงทับทิม</p>
+                      <p style="margin-left: 14px;">สีแดงทับทิมสยาม</p>
                     </div>
 
                   </div>
+                </div>
+
+                <div class="id-row">
+                  <div class="id-lbl">ดอกไม้ประจำวิทยาลัย</div>
+                  <div class="id-val">เอื้องดอกมะลิ</div>
+                </div>
+
+                <div class="id-row">
+                  <div class="id-lbl">ต้นไม้ประจำวิทยาลัย</div>
+                  <div class="id-val">ต้นทองกวาว</div>
                 </div>
 
                 <div class="id-row">
