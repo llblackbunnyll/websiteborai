@@ -8,6 +8,7 @@ const xlsx = require('xlsx');
 const { authenticateToken } = require('../middleware/auth');
 const { processAndSaveImage, deleteImage } = require('../utils/imageProcessor');
 const { saveFile, deleteFile } = require('../utils/fileProcessor');
+const { parseThaiOrIsoDate } = require('../utils/dateParser');
 
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret';
@@ -55,6 +56,25 @@ router.get('/auth/verify', authenticateToken, (req, res) => {
 router.get('/pr', async (req, res) => {
   try {
     const items = await prisma.pRItem.findMany({ orderBy: { createdAt: 'desc' } });
+    
+    // Auto-sync legacy PR dates to createdAt in background if needed
+    (async () => {
+      try {
+        for (const item of items) {
+          if (item.date) {
+            const parsed = parseThaiOrIsoDate(item.date);
+            const curDate = new Date(item.createdAt);
+            if (Math.abs(curDate.getTime() - parsed.getTime()) > 86400000 * 2) {
+              await prisma.pRItem.update({
+                where: { id: item.id },
+                data: { createdAt: parsed }
+              });
+            }
+          }
+        }
+      } catch (e) {}
+    })();
+
     res.json(items);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch PR items' });
@@ -74,6 +94,8 @@ router.post('/pr', authenticateToken, upload.array('images', 10), async (req, re
       coverImage = imagesArr[0]; // first image is cover
     }
 
+    const parsedDate = parseThaiOrIsoDate(date);
+
     const newItem = await prisma.pRItem.create({
       data: { 
         title, 
@@ -82,7 +104,8 @@ router.post('/pr', authenticateToken, upload.array('images', 10), async (req, re
         departmentTag: departmentTag || null,
         content, 
         image: coverImage,
-        images: imagesArr || []
+        images: imagesArr || [],
+        createdAt: parsedDate
       },
     });
 
@@ -102,7 +125,6 @@ router.put('/pr/:id', authenticateToken, upload.array('images', 10), async (req,
     const { id } = req.params;
     const { title, date, category, departmentTag, content } = req.body;
 
-    // Handle existing images passed from frontend to keep
     let keptImages = [];
     if (req.body.existingImages) {
       try {
@@ -118,7 +140,6 @@ router.put('/pr/:id', authenticateToken, upload.array('images', 10), async (req,
     const existing = await prisma.pRItem.findUnique({ where: { id } });
     if (!existing) return res.status(404).json({ message: 'Item not found' });
 
-    // Calculate which old images were deleted by user
     let oldImages = [];
     if (Array.isArray(existing.images)) {
       oldImages = existing.images;
@@ -132,7 +153,6 @@ router.put('/pr/:id', authenticateToken, upload.array('images', 10), async (req,
       }
     });
 
-    // Process new uploaded images
     let newImagesUrls = [];
     if (req.files && req.files.length > 0) {
       const uploadPromises = req.files.map((file, idx) => processAndSaveImage(file.buffer, `pr-upd-${idx}`));
@@ -141,6 +161,7 @@ router.put('/pr/:id', authenticateToken, upload.array('images', 10), async (req,
 
     const finalImages = [...keptImages, ...newImagesUrls];
     const finalCover = finalImages.length > 0 ? finalImages[0] : (existing.image || 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=800');
+    const parsedDate = parseThaiOrIsoDate(date);
 
     const updated = await prisma.pRItem.update({
       where: { id },
@@ -151,9 +172,12 @@ router.put('/pr/:id', authenticateToken, upload.array('images', 10), async (req,
         departmentTag: departmentTag || null,
         content, 
         image: finalCover,
-        images: finalImages || []
+        images: finalImages || [],
+        createdAt: parsedDate
       },
     });
+
+    res.json(updated);
 
     res.json(updated);
   } catch (error) {
@@ -2091,6 +2115,7 @@ router.post('/pr/webhook', async (req, res) => {
     }
 
     // 5. Save to Prisma DB
+    const parsedDate = parseThaiOrIsoDate(created_time || formattedDate);
     const newItem = await prisma.pRItem.create({
       data: {
         title,
@@ -2099,7 +2124,8 @@ router.post('/pr/webhook', async (req, res) => {
         image: coverImage,
         images: imagesArr,
         content: content,
-        departmentTag: null
+        departmentTag: null,
+        createdAt: parsedDate
       }
     });
 

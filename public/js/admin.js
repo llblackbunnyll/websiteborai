@@ -139,9 +139,27 @@ function getAuthHeaders() {
     }
   });
 
+  const prDatePicker = document.getElementById('pr-date-picker');
+  const prDateInput = document.getElementById('pr-date');
+
+  prDatePicker?.addEventListener('change', () => {
+    if (!prDatePicker.value) return;
+    const [y, m, d] = prDatePicker.value.split('-').map(Number);
+    const thaiMonthsAbbr = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+    const thaiYear = y + 543;
+    if (prDateInput) prDateInput.value = `${d} ${thaiMonthsAbbr[m - 1]} ${thaiYear}`;
+  });
+
   prAddBtn?.addEventListener('click', () => {
     prForm.reset();
     document.getElementById('pr-id').value = '';
+
+    const today = new Date();
+    const isoToday = today.toISOString().split('T')[0];
+    if (prDatePicker) prDatePicker.value = isoToday;
+    const thaiMonthsAbbr = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+    if (prDateInput) prDateInput.value = `${today.getDate()} ${thaiMonthsAbbr[today.getMonth()]} ${today.getFullYear() + 543}`;
+
     prFormContainer.classList.remove('hide');
     prAddBtn.style.display = 'none';
   });
@@ -209,6 +227,13 @@ function getAuthHeaders() {
     document.getElementById('pr-departmentTag').value = item.departmentTag || '';
     document.getElementById('pr-date').value = item.date;
     document.getElementById('pr-content').value = item.content || '';
+
+    if (item.createdAt && prDatePicker) {
+      const d = new Date(item.createdAt);
+      if (!isNaN(d.getTime())) {
+        prDatePicker.value = d.toISOString().split('T')[0];
+      }
+    }
     
     if (item.category === 'ประกาศ') {
       prDeptGroup?.classList.remove('hide');

@@ -606,8 +606,12 @@
             </div>
 
             <div class="form-group">
-              <label for="pr-date">วันที่ (ข้อความ)</label>
-              <input id="pr-date" name="date" type="text" class="form-control" placeholder="เช่น 15 มี.ค. 2569" required />
+              <label for="pr-date">วันที่ระบุในข่าว</label>
+              <div style="display: flex; gap: 8px;">
+                <input id="pr-date" name="date" type="text" class="form-control" placeholder="เช่น 15 มี.ค. 2569" required style="flex: 1;" />
+                <input id="pr-date-picker" type="date" class="form-control" style="width: 150px;" title="เลือกวันที่จากปฏิทิน" />
+              </div>
+              <small class="text-muted">เลือกจากปฏิทินหรือระบุข้อความ (ข่าวจะถูกจัดลำดับตามวันที่ระบุนี้)</small>
             </div>
 
             <div class="form-group form-full">
